@@ -1,0 +1,53 @@
+/* font-family: "DM Sans", serif; */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: 'DM Sans', serif !important;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #f8fafc;
+}
+
+/* Scroll Bar start */
+.scrollbar-hide::-webkit-scrollbar {
+  width: 5px;
+  height: 8px;
+  background-color: #cccccc5b;
+  border-radius: 10px;
+}
+
+.scrollbar-hide::-webkit-scrollbar-thumb {
+  border-radius: 100px;
+  background: #ccc;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Scroll Bar end */
+
+/* light Scroll Bar Start */
+.light-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.light-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 100px;
+  background: #939fb0;
+}
+
+.light-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: 5px;
+}
+
+/* light Scroll Bar end */

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Run commitlint to check the commit message format
+pnpm dlx commitlint --edit $1

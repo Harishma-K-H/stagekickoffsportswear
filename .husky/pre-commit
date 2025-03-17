@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Get the current branch name
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Check if the branch is 'develop' and prevent commit if it is
+if [ "$branch" = "develop" ]; then
+    echo "Direct commits to the 'develop' branch are not allowed."
+    echo "Please create a new branch and commit there instead."
+    exit 1
+fi
+
+# Run Prettier format
+pnpm prettier --write . --log-level silent
+
+# Run lint with auto-fix
+pnpm lint:fix
+
+# Run your build check
+pnpm build

@@ -1,0 +1,9 @@
+# Ignore compiled files
+dist
+build
+node_modules
+.github
+README.md
+pnpm-lock.yaml
+package.json
+eslint.config.js
