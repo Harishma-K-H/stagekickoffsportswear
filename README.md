@@ -11,5 +11,6 @@ pnpm install
 ```
 
 ```
-pnpm dev
+start:local => for local server
+start:dev => for live sever
 ```
