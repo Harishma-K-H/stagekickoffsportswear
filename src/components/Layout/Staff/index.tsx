@@ -22,7 +22,7 @@ const SubscriberLayout: React.FC<{}> = () => {
 
   return (
     <div className="bg-[#F8FAFC]">
-      <ScrollToTopButton containerRef={containerRef} />
+      {/* <ScrollToTopButton containerRef={containerRef} /> */}
 
       <div className="flex h-screen overflow-hidden">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
