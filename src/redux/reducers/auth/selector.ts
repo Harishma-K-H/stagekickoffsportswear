@@ -3,18 +3,20 @@ import { createDraftSafeSelector } from '@reduxjs/toolkit';
 
 const selectDomain = (state: RootState) => state.auth;
 
-export const selectUserData = createDraftSafeSelector(
+export const selectUserName = createDraftSafeSelector(
   [selectDomain],
-  (authState) => authState?.userData,
+  (authState) => authState?.userName,
 );
 export const selectAccessToken = createDraftSafeSelector(
   [selectDomain],
   (authState) => authState?.accessToken,
 );
-export const selectUserId = createDraftSafeSelector(
+
+export const selectRefreshToken = createDraftSafeSelector(
   [selectDomain],
-  (authState) => authState?.userId,
+  (authState) => authState?.refreshToken,
 );
+
 export const selectUserRole = createDraftSafeSelector(
   [selectDomain],
   (authState) => authState?.userRole,

@@ -1,11 +1,10 @@
 import { AuthState } from '@models/Reducer';
 import { createSlice } from '@reduxjs/toolkit';
-import { jwtDecode } from 'jwt-decode';
 
 const initialState: AuthState = {
+  refreshToken: null,
   accessToken: null,
-  userId: null,
-  userData: null,
+  userName: null,
   userRole: null,
 };
 
@@ -14,22 +13,22 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setToken: (state, action) => {
-      state.accessToken = action.payload;
-      state.userData = jwtDecode(action.payload);
+      state.refreshToken = action.payload.refresh;
+      state.accessToken = action.payload.access;
+      state.userName = action.payload.name;
     },
-    setUserIdAndRole: (state, action) => {
-      state.userId = action.payload?.id;
-      state.userRole = action.payload?.role;
+    setUserRole: (state, action) => {
+      state.userRole = action.payload;
     },
     resetUser: (state) => {
       localStorage.clear();
+      state.refreshToken = null;
       state.accessToken = null;
-      state.userId = null;
-      state.userData = null;
+      state.userName = null;
       state.userRole = null;
     },
   },
 });
 
-export const { setToken, setUserIdAndRole, resetUser } = authSlice.actions;
+export const { setToken, setUserRole, resetUser } = authSlice.actions;
 export default authSlice.reducer;

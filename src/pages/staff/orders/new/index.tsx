@@ -1,19 +1,26 @@
+import './style.css';
+
 import Breadcrumb from '@components/Common/Breadcrumb';
 import Button from '@components/Common/Button';
-import React, { useState } from 'react';
-import { Radio, Form, Input, Select, message, Popconfirm, Table, TableProps } from 'antd';
-import { GstVerification } from './api';
 import { useApiJSON } from '@services/ApiService/Api.service';
-import { FaPlus } from "react-icons/fa";
+import {
+  Form,
+  Input,
+  message,
+  Popconfirm,
+  Radio,
+  Select,
+  Table,
+  TableProps,
+} from 'antd';
+import React, { useState } from 'react';
+import { FaPlus } from 'react-icons/fa';
 
-
-import './style.css'
+import { GstVerification } from './api';
 
 type ColumnTypes = Exclude<TableProps['columns'], undefined>;
 
-
 const NewOrders: React.FC = () => {
-
   const { get } = useApiJSON();
 
   const [value, setValue] = useState<number>(1);
@@ -31,8 +38,8 @@ const NewOrders: React.FC = () => {
 
     if (!gstn) {
       form.setFieldsValue({ businessName: null });
-      return
-    };
+      return;
+    }
 
     setLoading(true);
 
@@ -56,7 +63,7 @@ const NewOrders: React.FC = () => {
   const [dataSource, setDataSource] = useState([
     {
       key: '0',
-    }
+    },
   ]);
 
   const [count, setCount] = useState(2);
@@ -66,7 +73,10 @@ const NewOrders: React.FC = () => {
     setDataSource(newData);
   };
 
-  const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
+  const defaultColumns: (ColumnTypes[number] & {
+    editable?: boolean;
+    dataIndex: string;
+  })[] = [
     {
       title: 'Model',
       dataIndex: 'model',
@@ -87,7 +97,7 @@ const NewOrders: React.FC = () => {
             ]}
           />
         </Form.Item>
-      )
+      ),
     },
     {
       title: 'Material',
@@ -109,7 +119,7 @@ const NewOrders: React.FC = () => {
             ]}
           />
         </Form.Item>
-      )
+      ),
     },
     {
       title: 'Print Type',
@@ -131,7 +141,7 @@ const NewOrders: React.FC = () => {
             ]}
           />
         </Form.Item>
-      )
+      ),
     },
     {
       title: 'Sleeve',
@@ -153,7 +163,7 @@ const NewOrders: React.FC = () => {
             ]}
           />
         </Form.Item>
-      )
+      ),
     },
     {
       title: 'Size',
@@ -175,7 +185,7 @@ const NewOrders: React.FC = () => {
             ]}
           />
         </Form.Item>
-      )
+      ),
     },
     {
       title: 'Quantity',
@@ -193,7 +203,7 @@ const NewOrders: React.FC = () => {
             onBlur={handleGSTVerification} // Trigger API onBlur
           />
         </Form.Item>
-      )
+      ),
     },
     {
       title: 'Action',
@@ -202,7 +212,10 @@ const NewOrders: React.FC = () => {
       align: 'center',
       render: (_, record) =>
         dataSource.length >= 1 ? (
-          <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.key)}>
+          <Popconfirm
+            title="Sure to delete?"
+            onConfirm={() => handleDelete(record.key)}
+          >
             <span className="text-red-600 cursor-pointer">Delete</span>
           </Popconfirm>
         ) : null,
@@ -223,10 +236,12 @@ const NewOrders: React.FC = () => {
     setCount(count + 1);
   };
 
-
   return (
-    <Form form={form}
-      layout="vertical" className="flex flex-col gap-4 custom-form">
+    <Form
+      form={form}
+      layout="vertical"
+      className="flex flex-col gap-4 custom-form"
+    >
       <div className="flex items-center justify-between pb-2 border-b-2">
         <div className="flex">
           <Breadcrumb rootClass="rounded" />
@@ -256,20 +271,31 @@ const NewOrders: React.FC = () => {
               className="!mb-0"
               label="Customer Name"
               name="customerName"
-              rules={[{ required: true, message: 'Please enter the Customer Name' }]}
+              rules={[
+                { required: true, message: 'Please enter the Customer Name' },
+              ]}
             >
-              <Input placeholder="Enter customer name" className="w-full py-2 h-9 placeholder:text-gray-400" />
+              <Input
+                placeholder="Enter customer name"
+                className="w-full py-2 h-9 placeholder:text-gray-400"
+              />
             </Form.Item>
 
             <Form.Item
               className="!mb-0"
               label="Business Name"
               name="businessName"
-              rules={[{ required: true, message: 'Please enter the Business Name' }]}
+              rules={[
+                { required: true, message: 'Please enter the Business Name' },
+              ]}
             >
-              <Input placeholder="Enter business name" className="w-full h-9" disabled />
+              <Input
+                placeholder="Enter business name"
+                className="w-full h-9"
+                disabled
+              />
             </Form.Item>
-            
+
             <Form.Item
               className="!mb-0"
               label="Email"
@@ -279,7 +305,10 @@ const NewOrders: React.FC = () => {
                 { type: 'email', message: 'Invalid email format' },
               ]}
             >
-              <Input placeholder="Enter email" className="w-full py-2 h-9 placeholder:text-gray-400" />
+              <Input
+                placeholder="Enter email"
+                className="w-full py-2 h-9 placeholder:text-gray-400"
+              />
             </Form.Item>
 
             <Form.Item
@@ -288,15 +317,17 @@ const NewOrders: React.FC = () => {
               name="address1"
               rules={[{ required: true, message: 'Please enter Address 1' }]}
             >
-              <Input placeholder="Enter address 1" className="w-full py-2 h-9 placeholder:text-gray-400" />
+              <Input
+                placeholder="Enter address 1"
+                className="w-full py-2 h-9 placeholder:text-gray-400"
+              />
             </Form.Item>
 
-            <Form.Item
-              className="!mb-0"
-              label="Address 2"
-              name="address2"
-            >
-              <Input placeholder="Enter address 2" className="w-full py-2 h-9 placeholder:text-gray-400" />
+            <Form.Item className="!mb-0" label="Address 2" name="address2">
+              <Input
+                placeholder="Enter address 2"
+                className="w-full py-2 h-9 placeholder:text-gray-400"
+              />
             </Form.Item>
 
             <Form.Item
@@ -305,22 +336,26 @@ const NewOrders: React.FC = () => {
               name="phone1"
               rules={[{ required: true, message: 'Please enter Mobile' }]}
             >
-              <Input placeholder="Enter mobile" className="w-full py-2 h-9 placeholder:text-gray-400" />
+              <Input
+                placeholder="Enter mobile"
+                className="w-full py-2 h-9 placeholder:text-gray-400"
+              />
             </Form.Item>
 
-            <Form.Item
-              className="!mb-0"
-              label="Mobile 2"
-              name="phone2"
-            >
-              <Input placeholder="Enter mobile 2" className="w-full py-2 h-9 placeholder:text-gray-400" />
+            <Form.Item className="!mb-0" label="Mobile 2" name="phone2">
+              <Input
+                placeholder="Enter mobile 2"
+                className="w-full py-2 h-9 placeholder:text-gray-400"
+              />
             </Form.Item>
 
             <Form.Item
               className="!mb-0"
               label="GSTN"
               name="gstn"
-              rules={[{ required: true, message: 'Please enter your GST Number' }]}
+              rules={[
+                { required: true, message: 'Please enter your GST Number' },
+              ]}
             >
               <Input
                 placeholder="Enter GST Number"
@@ -353,9 +388,7 @@ const NewOrders: React.FC = () => {
         )}
       </div>
       <div className="relative p-3 bg-white rounded-md md:p-5">
-        <h5 className="mb-4 text-xl font-medium">
-          Item Details :
-        </h5>
+        <h5 className="mb-4 text-xl font-medium">Item Details :</h5>
         <Table
           scroll={{ y: 55 * 10 }}
           rowClassName={() => 'editable-row'}
@@ -366,11 +399,22 @@ const NewOrders: React.FC = () => {
           columns={defaultColumns as ColumnTypes}
         />
         <div className="absolute bottom-0 -right-7 w-fit">
-          <Button title="" icon={<FaPlus className="w-5 h-5" />} handleClick={handleAdd} type="button" className="bg-secondary rounded-md w-full !px-4 text-white font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95" />
+          <Button
+            title=""
+            icon={<FaPlus className="w-5 h-5" />}
+            handleClick={handleAdd}
+            type="button"
+            className="bg-secondary rounded-md w-full !px-4 text-white font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
+          />
         </div>
       </div>
       <div className="w-full">
-        <Button title="Submit" type="submit" loading={loading} className="bg-primary rounded-md w-full text-white h-12 font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95" />
+        <Button
+          title="Submit"
+          type="submit"
+          loading={loading}
+          className="bg-primary rounded-md w-full text-white h-12 font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
+        />
       </div>
     </Form>
   );

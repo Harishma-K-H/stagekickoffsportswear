@@ -29,7 +29,7 @@ const Paths: PathsType = {
     customers: '/staff/customers',
     orders: {
       index: '/staff/orders',
-      new: '/staff/orders/new'
+      new: '/staff/orders/new',
     },
     invoices: '/staff/invoices',
     settings: '/staff/settings',

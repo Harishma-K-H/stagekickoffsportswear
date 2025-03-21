@@ -1,16 +1,6 @@
-export interface Data {
-  id: string;
-  name: string;
-  email: string;
-  emailVerified: boolean;
-  role: string;
-  roleValue: number;
-  avatar: string;
-}
-
 export interface AuthState {
+  refreshToken: string | null;
   accessToken: string | null;
-  userId: string | null;
-  userData: Data | null;
+  userName: string | null;
   userRole: string | null;
 }

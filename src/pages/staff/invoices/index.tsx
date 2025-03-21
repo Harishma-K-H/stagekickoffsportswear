@@ -1,12 +1,10 @@
-import Button from '@components/Common/Button';
+import './style.css';
 
-import { Table, Modal } from 'antd';
+import Button from '@components/Common/Button';
+import { Modal, Table } from 'antd';
 import React, { useState } from 'react';
 
-import './style.css'
-
 const Invoices: React.FC = () => {
-
   const dataSource = [
     {
       key: '1',
@@ -112,7 +110,7 @@ const Invoices: React.FC = () => {
   const [orderId, setOrderId] = useState('');
 
   const showModal = (orderId: string) => {
-    setOrderId(orderId)
+    setOrderId(orderId);
     setIsModalOpen(true);
   };
 

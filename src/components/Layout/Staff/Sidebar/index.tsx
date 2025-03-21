@@ -1,19 +1,16 @@
 import Button from '@components/Common/Button';
 import { SidebarProps } from '@models/Sidebar';
 import { resetUser } from '@redux/reducers/auth/reducer';
-import { selectUserData } from '@redux/reducers/auth/selector';
+import { selectUserName, selectUserRole } from '@redux/reducers/auth/selector';
 import Paths from '@routes/paths';
 import React, { useState } from 'react';
 import { CgLogOut } from 'react-icons/cg';
-import { MdDashboardCustomize } from "react-icons/md";
-import { FaUsers } from "react-icons/fa";
-import { MdOutlineChecklistRtl } from "react-icons/md";
-import { FaFileInvoice } from "react-icons/fa";
-
-import { useDispatch, useSelector } from 'react-redux';
-import { NavLink, useLocation, useNavigate, Link } from 'react-router';
+import { FaFileInvoice, FaUserAlt, FaUsers } from 'react-icons/fa';
 import { FaPlus } from 'react-icons/fa6';
-import { IoSettings } from "react-icons/io5";
+import { IoSettings } from 'react-icons/io5';
+import { MdDashboardCustomize, MdOutlineChecklistRtl } from 'react-icons/md';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
@@ -61,7 +58,8 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
     navigate(Paths.signIn);
   };
 
-  const userData = useSelector(selectUserData);
+  const uerName = useSelector(selectUserName);
+  const userRole = useSelector(selectUserRole);
 
   return (
     <div className="border-r-2">
@@ -115,24 +113,14 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
           <h3 className="text-[#64748B] text-sm">Profile</h3>
           <div className="flex items-center gap-2 ">
             <div className="flex-1 w-10 h-10 rounded-full bg-slate-500">
-              <img
-                src={userData?.avatar}
-                alt="profile"
-                className="w-full h-full bg-cover rounded-full"
-              />
+              <FaUserAlt className="w-full h-full bg-cover rounded-full" />
             </div>
             <div>
-              <h5
-                className="text-[#191D23] text-base truncate w-[180px] hover:cursor-pointer"
-                title={userData?.name}
-              >
-                {userData?.name}
+              <h5 className="text-[#191D23] text-base truncate w-[180px] hover:cursor-pointer">
+                {uerName}
               </h5>
-              <h6
-                className="text-[#A0ABBB] text-sm truncate w-[180px]"
-                title={userData?.email}
-              >
-                {userData?.email}
+              <h6 className="text-[#A0ABBB] text-sm truncate w-[180px]">
+                {userRole}
               </h6>
             </div>
           </div>

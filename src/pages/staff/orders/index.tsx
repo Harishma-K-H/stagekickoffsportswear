@@ -1,15 +1,12 @@
+import './style.css';
+
 import Button from '@components/Common/Button';
 import Paths from '@routes/paths';
-
-import { Table, Modal } from 'antd';
+import { Modal, Table } from 'antd';
 import React, { useState } from 'react';
 import { Link } from 'react-router';
 
-
-import './style.css'
-
 const Orders: React.FC = () => {
-
   const dataSource = [
     {
       key: '1',
@@ -123,7 +120,7 @@ const Orders: React.FC = () => {
   const [orderId, setOrderId] = useState('');
 
   const showModal = (orderId: string) => {
-    setOrderId(orderId)
+    setOrderId(orderId);
     setIsModalOpen(true);
   };
 
@@ -140,9 +137,12 @@ const Orders: React.FC = () => {
               Order List
             </h3>
           </div>
-          <Link to={Paths.Staff.orders.new}
+          <Link
+            to={Paths.Staff.orders.new}
             className="px-[25px] py-3 transition-all text-white bg-[#CC3232] rounded-md invisible xl:visible"
-          >New</Link>
+          >
+            New
+          </Link>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
           <Table
