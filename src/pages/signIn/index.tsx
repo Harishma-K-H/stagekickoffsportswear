@@ -33,10 +33,8 @@ const SignIn: React.FC = () => {
 
       if (role.toUpperCase() === import.meta.env.VITE_STAFF_ROLE) {
         navigate(Paths.Staff.dashboard);
-        console.log('Staff');
       } else if (role.toUpperCase() === import.meta.env.VITE_ADMIN_ROLE) {
         navigate(Paths.Admin.dashboard);
-        console.log('Admin');
       }
       setApiLoader(false);
     } catch (error: any) {
