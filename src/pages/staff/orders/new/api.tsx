@@ -3,9 +3,7 @@ export const GstVerification = async (gstn: string): Promise<any> => {
   const response = await fetch(
     `https://cleartax.in/f/compliance-report/${gstn}`,
   );
-  console.log({ response });
-
-  // return { data: response.data, status: response.status, ok: response.ok };
+  return { data: response, status: response.status, ok: response.ok };
 };
 
 // Define the get models function
@@ -38,10 +36,60 @@ export const fetchPrintTypes = async (
 
 // Define the get item cost function
 export const fetchItemCost = async (
-  post: (url: string, payload: any) => Promise<any>,
-  payload: any,
+  get: (url: string) => Promise<any>,
+  payload: {
+    modelId: number;
+    materialId: number;
+    printId: number;
+    sleeveCase: string;
+  },
 ): Promise<any> => {
-  const response = await post(`/itemcost/`, payload);
+  const { modelId, materialId, printId, sleeveCase } = payload;
+  const response = await get(
+    `/itemcost/?model=${modelId}&material=${materialId}&print_type=${printId}&sleevecase=${sleeveCase}`,
+  );
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
+
+// Define the create new customer function
+export const newCustomer = async (
+  post: (url: string, payload: any) => Promise<any>,
+  payload: {
+    name: string;
+    address1: string;
+    address2: string | null;
+    mobile_number1: string;
+    mobile_number2: string | null;
+    email: string;
+    gst_no: string | null;
+    business_name: string;
+  },
+): Promise<any> => {
+  const response = await post('/customers/', payload);
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
+
+// Define the new order function
+export const newOrder = async (
+  post: (url: string, payload: any) => Promise<any>,
+  payload: {
+    customer: number;
+    delivery_date: string;
+    net_cost: number;
+    items: {
+      model: any;
+      material: any;
+      print_type_id: any;
+      sleeve_case: any;
+      size: number;
+      qty: number;
+      discount: number;
+    }[];
+  },
+): Promise<any> => {
+  const response = await post('/api_order/', payload);
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
