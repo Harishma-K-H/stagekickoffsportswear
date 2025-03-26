@@ -3,21 +3,22 @@ import './style.css';
 import Breadcrumb from '@components/Common/Breadcrumb';
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
-import { useApiJSON } from '@services/ApiService/Api.service';
+import { useApiJSON, useApiFormData } from '@services/ApiService/Api.service';
 import { debounce } from '@utils/common/debounce';
 import {
   Form,
   Input,
-  message,
   Popconfirm,
   Radio,
   Select,
   Table,
   TableProps,
+  DatePicker,
 } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
-
+import { generateOrderId } from './api';
+import dayjs from 'dayjs'; // Ensure dayjs is imported
 import {
   fetchItemCost,
   fetchMaterial,
@@ -32,6 +33,7 @@ type ColumnTypes = Exclude<TableProps['columns'], undefined>;
 
 const NewOrders: React.FC = () => {
   const { get, post } = useApiJSON();
+  const { post: FormDataPost } = useApiFormData(); // Use FormData-specific post
 
   const [itemForm] = Form.useForm();
   const [customerForm] = Form.useForm();
@@ -43,7 +45,7 @@ const NewOrders: React.FC = () => {
   const [models, setModels] = useState<any[]>([]);
   const [materialOptions, setMaterialOptions] = useState<Record<string, any[]>>(
     {},
-  ); // Keyed by row key
+  );
   const [printType, setPrintType] = useState<any[]>([]);
   const [sleeve] = useState<any[]>([
     { value: 'full', label: 'Full Sleeve' },
@@ -57,7 +59,10 @@ const NewOrders: React.FC = () => {
     { value: '30', label: '30' },
   ]);
   const [baseCosts, setBaseCosts] = useState<Record<string, number>>({});
+  const [totalCosts, setTotalCosts] = useState<Record<string, number>>({});
+  const [modelName, setModelName] = useState<any>({});
   const [dataSource, setDataSource] = useState<any[]>([{ key: '0' }]);
+  const [selectedDate, setSelectedDate] = useState(null); // State to store selected date
 
   // Fetch models
   const getModels = useCallback(async () => {
@@ -71,9 +76,10 @@ const NewOrders: React.FC = () => {
 
   // Fetch materials based on modelId for a specific row
   const getMaterials = useCallback(
-    async (modelId: string | number, rowKey: string) => {
-      if (!modelId || materialOptions[rowKey]) return;
+    async (modelId: string | number, rowKey: string, modelName: string) => {
+      if (!modelId) return;
       try {
+        setModelName((prev: any) => ({ ...prev, [rowKey]: modelName }));
         const { data } = await fetchMaterial(get, modelId);
         setMaterialOptions((prev) => ({ ...prev, [rowKey]: data }));
       } catch (error: any) {
@@ -107,6 +113,16 @@ const NewOrders: React.FC = () => {
       try {
         const { data } = await fetchItemCost(get, payload);
         setBaseCosts((prev) => ({ ...prev, [rowKey]: data.cost || 0 }));
+        if (areAllFieldsFilled()) {
+          const quantity = itemForm.getFieldValue(['data', rowKey, 'quantity']);
+          const discount = itemForm.getFieldValue(['data', rowKey, 'discount']);
+
+          setTotalCosts((prev) => ({
+            ...prev,
+            [rowKey]:
+              calculateTotalCost(rowKey, quantity, discount, data.cost) || 0,
+          }));
+        }
       } catch (error: any) {
         notify('Failed to fetch item cost', 'error');
         setBaseCosts((prev) => ({ ...prev, [rowKey]: 0 }));
@@ -131,6 +147,16 @@ const NewOrders: React.FC = () => {
       delete newCosts[key as string];
       return newCosts;
     });
+    setTotalCosts((prev) => {
+      const newTotalCost = { ...prev };
+      delete newTotalCost[key as string];
+      return newTotalCost;
+    });
+    setModelName((prev: any) => {
+      const newModelName = { ...prev };
+      delete newModelName[key as string];
+      return newModelName;
+    });
   };
 
   // Calculate total cost based on base cost, quantity, and discount (per product)
@@ -138,30 +164,32 @@ const NewOrders: React.FC = () => {
     rowKey: string,
     quantity: string,
     discount: string,
+    baseCostValue?: number,
   ): number => {
-    const baseCost = baseCosts[rowKey] || 0;
+    const baseCost = baseCostValue ? baseCostValue : baseCosts[rowKey] || 0; // Fallback to 0 if undefined
     const qty = parseFloat(quantity) || 0;
-    const discPerProduct = parseFloat(discount) || 0; // Discount per product
+    const discPerProduct = parseFloat(discount) || 0;
     const totalCostBeforeDiscount = baseCost * qty;
-    const totalDiscount = discPerProduct * qty; // Total discount = discount per product * quantity
+    const totalDiscount = discPerProduct * qty;
     const totalCost = totalCostBeforeDiscount - totalDiscount;
-    return totalCost > 0 ? totalCost : 0; // Ensure cost doesn’t go negative
+    return totalCost > 0 ? totalCost : 0;
   };
 
   // Handle form field changes to fetch cost and update total
   const handleFieldChange = (changedFields: any, allFields: any) => {
     const rowData = allFields.data || {};
-    Object.keys(rowData).forEach((rowKey) => {
+    Object.keys(rowData).forEach(async (rowKey) => {
       const row = rowData[rowKey];
       const changedField = Object.keys(changedFields.data?.[rowKey] || {})[0]; // Get the changed field name
       if (
-        ['model', 'material', 'print_type', 'sleevecase'].includes(
+        ['model', 'material', 'print_type', 'sleevecase', 'size'].includes(
           changedField,
         ) && // Only refetch for these fields
         row?.model &&
         row?.material &&
         row?.print_type &&
-        row?.sleevecase
+        row?.sleevecase &&
+        row?.size
       ) {
         const payload = {
           modelId: row.model,
@@ -169,32 +197,46 @@ const NewOrders: React.FC = () => {
           printId: row.print_type,
           sleeveCase: row.sleevecase,
         };
-        getItemCost(rowKey, payload);
+        await getItemCost(rowKey, payload);
       } else if (
         ['quantity', 'discount'].includes(changedField) && // Recalculate totals for these fields
         areAllFieldsFilled()
       ) {
-        calculateTotals();
+        handleRowTotalCost(rowKey);
+      }
+      // Clear baseCosts for this row when model changes to avoid outdated cost
+      if (changedField === 'model') {
+        setBaseCosts((prev) => {
+          const newCosts = { ...prev };
+          delete newCosts[rowKey]; // Remove old cost
+          return newCosts;
+        });
       }
     });
+  };
+
+  const handleRowTotalCost = async (rowKey: string) => {
+    const quantity = itemForm.getFieldValue(['data', rowKey, 'quantity']);
+    const discount = itemForm.getFieldValue(['data', rowKey, 'discount']);
+    const totalCost = calculateTotalCost(rowKey, quantity, discount);
+    setTotalCosts((prev) => ({ ...prev, [rowKey]: totalCost || 0 }));
   };
 
   // Handle full submission
   const handleSubmit = async () => {
     const customerValues = await customerForm.validateFields();
     const itemValues = await itemForm.validateFields();
+    console.log({ customerValues, itemValues, selectedDate });
 
-    if (!customerValues && !itemValues) {
+    if (!customerValues || !itemValues) {
       return;
     }
 
     setLoading(true);
     try {
-      // Step 1: Validate and submit CustomerDetails form
       let customerId: number;
 
       if (userType === 1) {
-        // New customer: Create and get ID
         const newCustomerPayload = {
           name: customerValues.customerName,
           address1: customerValues.address1,
@@ -205,49 +247,64 @@ const NewOrders: React.FC = () => {
           gst_no: customerValues.gstn || '',
           business_name: customerValues.businessName,
         };
-        const { data } = await newCustomer(post, newCustomerPayload);
-        customerId = data.id; // Assuming response includes customer ID
-        message.success('Customer created successfully!');
+        const { data } = await newCustomer(post, newCustomerPayload); // Still uses JSON
+        customerId = data.id;
+        notify('Customer created successfully!', 'success');
       } else {
-        // Existing customer: Use selected ID
         customerId = customerValues.existingUser;
       }
 
-      // Step 2: Validate and prepare ItemDetails form data
       const items = Object.keys(itemValues.data || {}).map((key) => {
         const row = itemValues.data[key];
         return {
+          name: modelName[key],
           model: row.model,
           material: row.material,
           print_type_id: row.print_type,
           sleeve_case: row.sleevecase,
-          size: parseInt(row.size, 10), // Convert size to integer
-          qty: parseInt(row.quantity, 10), // Convert quantity to integer
-          discount: parseFloat(row.discount) || 0, // Convert discount to float, default 0
+          size: parseInt(row.size, 10),
+          qty: parseInt(row.quantity, 10),
+          discount: parseFloat(row.discount) || 0,
         };
       });
 
       const { grandTotal } = calculateTotals();
+      const { data } = await generateOrderId(get); // generate orderId
 
-      // Step 4: Construct final payload
-      const orderPayload = {
-        customer: customerId,
-        delivery_date: '05/04/2025', // Hardcoded as per your model; adjust if dynamic
-        net_cost: grandTotal, // Use grandTotal as net_cost
-        items: items,
-      };
+      const formData = new FormData();
+      formData.append('customer', customerId.toString());
+      formData.append('delivery_date', itemValues?.selectedDate);
+      formData.append('orderID', data?.order_number);
+      formData.append('net_cost', grandTotal.toString());
+      formData.append('remarks', itemValues?.remarks);
 
-      // Step 5: Submit to orders API
-      await newOrder(post, orderPayload);
-      message.success('Order created successfully!');
+      items.forEach((item, index) => {
+        formData.append(`items[${index}][name]`, item.name);
+        formData.append(`items[${index}][model]`, item.model.toString());
+        formData.append(`items[${index}][material]`, item.material.toString());
+        formData.append(
+          `items[${index}][print_type]`,
+          item.print_type_id.toString(),
+        );
+        formData.append(`items[${index}][sleeve_case]`, item.sleeve_case);
+        formData.append(`items[${index}][size]`, item.size.toString());
+        formData.append(`items[${index}][qty]`, item.qty.toString());
+        formData.append(`items[${index}][discount]`, item.discount.toString());
+      });
+
+      await newOrder(FormDataPost, formData);
+
+      notify('Order created successfully!', 'success');
       customerForm.resetFields();
       itemForm.resetFields();
-      setDataSource([{ key: '0' }]); // Reset table
+      setDataSource([{ key: '0' }]);
       setBaseCosts({});
+      setTotalCosts({});
+      setModelName({});
       setCount(1);
       setUserType(1);
     } catch (error) {
-      message.error('Failed to create order. Please try again.');
+      notify('Failed to create order. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -256,7 +313,6 @@ const NewOrders: React.FC = () => {
   // Check if all required fields are filled
   const areAllFieldsFilled = () => {
     const rowData = itemForm.getFieldsValue().data || {};
-    console.log({ rowData });
     return (
       Object.keys(rowData).length > 0 &&
       Object.keys(rowData).every((rowKey) => {
@@ -306,7 +362,19 @@ const NewOrders: React.FC = () => {
           <Select
             size="middle"
             placeholder="Select Model"
-            onChange={(value) => getMaterials(value, record.key)} // Fetch materials on change
+            onChange={(value: number, option: any) => {
+              const selectedLabel = option.label;
+              setTotalCosts((prev) => ({ ...prev, [record.key]: 0 }));
+              // Clear the material field for this row when model changes
+              itemForm.setFieldsValue({
+                data: {
+                  [record.key]: {
+                    material: undefined, // Reset material to undefined
+                  },
+                },
+              });
+              getMaterials(value, record.key, selectedLabel);
+            }}
             options={models.map((model: any) => ({
               value: model.id,
               label: model.name,
@@ -397,6 +465,7 @@ const NewOrders: React.FC = () => {
           record.key,
           'size',
         ]);
+
         return sizeSelected && baseCosts[record.key]
           ? baseCosts[record.key].toFixed(2)
           : '-';
@@ -434,21 +503,12 @@ const NewOrders: React.FC = () => {
       align: 'center',
       width: '6%',
       render: (_, record) => {
-        const quantity = itemForm.getFieldValue([
-          'data',
-          record.key,
-          'quantity',
-        ]);
-        const discount = itemForm.getFieldValue([
-          'data',
-          record.key,
-          'discount',
-        ]);
-        const totalCost = calculateTotalCost(record.key, quantity, discount);
         return (
           <>
             {/* <h5 className="text-xs">{quantity * baseCosts[record.key]}<span className="w-full text-right text-green-500">-{(quantity * discount)}</span></h5> */}
-            <span className="text-base font-semibold">{totalCost}</span> <br />
+            <span className="text-base font-semibold">
+              {totalCosts[record.key] ? totalCosts[record.key].toFixed(2) : '-'}
+            </span>
           </>
         );
       },
@@ -469,6 +529,18 @@ const NewOrders: React.FC = () => {
         ) : null,
     },
   ];
+
+  // Function to disable dates before today
+  const disabledDate = (current: any) => {
+    // Disable dates before the start of today
+    return current && current < dayjs().startOf('day');
+  };
+
+  // Handle date selection
+  const handleDateChange = (date: any) => {
+    setSelectedDate(date); // Store the selected date in state
+    console.log('Selected Date:', date ? date.format('YYYY-MM-DD') : null); // Optional: Log formatted date
+  };
 
   // Initial data fetching on component mount
   useEffect(() => {
@@ -498,6 +570,7 @@ const NewOrders: React.FC = () => {
       <Form
         form={itemForm}
         onValuesChange={handleFieldChange}
+        layout="vertical"
         className="relative p-3 bg-white rounded-md md:p-5"
       >
         <h5 className="mb-4 text-xl font-medium">Item Details :</h5>
@@ -517,22 +590,45 @@ const NewOrders: React.FC = () => {
           />
         </div>
         {/* Totals Section */}
-        <div className="flex flex-col items-end mt-4">
-          <div className="flex justify-between w-64">
-            <span className="font-medium">Sub Total:</span>
-            <span>{subTotal.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between w-64">
-            <span className="font-medium">CGST (2.5%):</span>
-            <span>{cgst.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between w-64">
-            <span className="font-medium">SGST (2.5%):</span>
-            <span>{sgst.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between w-64 pt-2 mt-2 border-t">
-            <span className="font-bold">Grand Total:</span>
-            <span className="font-bold">{grandTotal.toFixed(2)}</span>
+        <div className="grid justify-between grid-cols-4 gap-5">
+          <Form.Item
+            name="selectedDate"
+            label="Delivery Date"
+            className="!mb-0"
+            rules={[{ required: true, message: 'Please select a date' }]}
+          >
+            <DatePicker
+              disabledDate={disabledDate}
+              placeholder="Delivery Date"
+              onChange={handleDateChange} // Update state on change
+              format="DD-MM-YYYY" // Display format
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="remarks"
+            label="Remarks"
+            className="col-span-2 !mb-0"
+          >
+            <Input.TextArea rows={4} placeholder="Enter Remarks here" />
+          </Form.Item>
+          <div className="flex flex-col items-end mt-4">
+            <div className="flex justify-between w-64">
+              <span className="font-medium">Sub Total:</span>
+              <span>{subTotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between w-64">
+              <span className="font-medium">CGST (2.5%):</span>
+              <span>{cgst.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between w-64">
+              <span className="font-medium">SGST (2.5%):</span>
+              <span>{sgst.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between w-64 pt-2 mt-2 border-t">
+              <span className="font-bold">Grand Total:</span>
+              <span className="font-bold">{grandTotal.toFixed(2)}</span>
+            </div>
           </div>
         </div>
       </Form>
@@ -576,7 +672,7 @@ const CustomerDetails: React.FC<any> = ({
         );
         setCustomers(data || []); // Assuming data is an array of customer objects
       } catch (error) {
-        message.error('Failed to fetch existing customers.');
+        notify('Failed to fetch existing customers.', 'error');
       }
     },
     [get],
@@ -593,17 +689,17 @@ const CustomerDetails: React.FC<any> = ({
             businessName: data?.taxpayerInfo?.tradeNam,
           });
           setIsBusinessNameDisabled(true);
-          message.success('Business name auto-filled successfully!');
+          notify('Business name auto-filled successfully!', 'success');
         } else {
           setIsBusinessNameDisabled(false);
-          message.error('Invalid GST Number or details not found.');
+          notify('Invalid GST Number or details not found.', 'error');
         }
       } else {
         setIsBusinessNameDisabled(false);
       }
     } catch (error) {
       setIsBusinessNameDisabled(false);
-      message.error('Failed to verify GST Number. Please try again.');
+      notify('Failed to verify GST Number. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -639,11 +735,11 @@ const CustomerDetails: React.FC<any> = ({
         is_active: true, // Default to true as per the model
       };
       const { data } = await post('/customers/', payload);
-      message.success('Customer created successfully!');
+      notify('Customer created successfully!', 'success');
       customerForm.resetFields(); // Reset form after successful creation
       return data; // Return created customer data if needed by parent component
     } catch (error) {
-      message.error('Failed to create customer. Please try again.');
+      notify('Failed to create customer. Please try again.', 'error');
     } finally {
       setLoading(false);
     }

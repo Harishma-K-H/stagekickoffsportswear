@@ -92,4 +92,8 @@ const useApi = (
   return { get, post, put, patch, deleteRequest };
 };
 
+// Export for JSON payloads
 export const useApiJSON = () => useApi('application/json', API_CONFIG);
+
+// Export for FormData payloads
+export const useApiFormData = () => useApi('multipart/form-data', API_CONFIG); // Note: 'multipart/form-data' is placeholder; actual header set by browser

@@ -71,25 +71,23 @@ export const newCustomer = async (
   return { data: response.data, status: response.status, ok: response.ok };
 };
 
+// Define the generate new orderId function
+export const generateOrderId = async (
+  get: (url: string) => Promise<any>,
+): Promise<any> => {
+  const response = await get(`/order_no_generate/`);
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
+
 // Define the new order function
 export const newOrder = async (
-  post: (url: string, payload: any) => Promise<any>,
-  payload: {
-    customer: number;
-    delivery_date: string;
-    net_cost: number;
-    items: {
-      model: any;
-      material: any;
-      print_type_id: any;
-      sleeve_case: any;
-      size: number;
-      qty: number;
-      discount: number;
-    }[];
-  },
+  post: (url: string, payload: any, config?: any) => Promise<any>,
+  payload: any,
 ): Promise<any> => {
-  const response = await post('/api_order/', payload);
+  const response = await post('/api_order/', payload, {
+    'Content-Type': 'multipart/form-data',
+  });
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
