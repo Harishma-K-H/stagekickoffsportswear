@@ -3,9 +3,10 @@ import './style.css';
 import Breadcrumb from '@components/Common/Breadcrumb';
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
-import { useApiJSON, useApiFormData } from '@services/ApiService/Api.service';
+import { useApiFormData, useApiJSON } from '@services/ApiService/Api.service';
 import { debounce } from '@utils/common/debounce';
 import {
+  DatePicker,
   Form,
   Input,
   Popconfirm,
@@ -13,17 +14,17 @@ import {
   Select,
   Table,
   TableProps,
-  DatePicker,
 } from 'antd';
+import dayjs from 'dayjs'; // Ensure dayjs is imported
 import React, { useCallback, useEffect, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
-import { generateOrderId } from './api';
-import dayjs from 'dayjs'; // Ensure dayjs is imported
+
 import {
   fetchItemCost,
   fetchMaterial,
   fetchModels,
   fetchPrintTypes,
+  generateOrderId,
   GstVerification,
   newCustomer,
   newOrder,
@@ -37,6 +38,7 @@ const NewOrders: React.FC = () => {
 
   const [itemForm] = Form.useForm();
   const [customerForm] = Form.useForm();
+  const [remarksForm] = Form.useForm();
 
   const [userType, setUserType] = useState<number>(1);
   const [loading, setLoading] = useState(false);
@@ -62,7 +64,7 @@ const NewOrders: React.FC = () => {
   const [totalCosts, setTotalCosts] = useState<Record<string, number>>({});
   const [modelName, setModelName] = useState<any>({});
   const [dataSource, setDataSource] = useState<any[]>([{ key: '0' }]);
-  const [selectedDate, setSelectedDate] = useState(null); // State to store selected date
+  // const [_selectedDate, setSelectedDate] = useState(null); // State to store selected date
 
   // Fetch models
   const getModels = useCallback(async () => {
@@ -132,7 +134,12 @@ const NewOrders: React.FC = () => {
   );
 
   // Handle adding a new row
-  const handleAdd = () => {
+  const handleAdd = async () => {
+    const itemValues = await itemForm.validateFields();
+
+    if (!itemValues) {
+      return;
+    }
     const newData = { key: String(count) };
     setDataSource([...dataSource, newData]);
     setCount(count + 1);
@@ -199,7 +206,7 @@ const NewOrders: React.FC = () => {
         };
         await getItemCost(rowKey, payload);
       } else if (
-        ['quantity', 'discount'].includes(changedField) && // Recalculate totals for these fields
+        ['quantity', 'discount'].includes(changedField) || // Recalculate totals for these fields
         areAllFieldsFilled()
       ) {
         handleRowTotalCost(rowKey);
@@ -226,9 +233,9 @@ const NewOrders: React.FC = () => {
   const handleSubmit = async () => {
     const customerValues = await customerForm.validateFields();
     const itemValues = await itemForm.validateFields();
-    console.log({ customerValues, itemValues, selectedDate });
+    const remarksValues = await remarksForm.validateFields();
 
-    if (!customerValues || !itemValues) {
+    if (!customerValues || !itemValues || !remarksValues) {
       return;
     }
 
@@ -265,6 +272,7 @@ const NewOrders: React.FC = () => {
           size: parseInt(row.size, 10),
           qty: parseInt(row.quantity, 10),
           discount: parseFloat(row.discount) || 0,
+          total_item_cost: totalCosts[key],
         };
       });
 
@@ -273,10 +281,13 @@ const NewOrders: React.FC = () => {
 
       const formData = new FormData();
       formData.append('customer', customerId.toString());
-      formData.append('delivery_date', itemValues?.selectedDate);
+      formData.append(
+        'delivery_date',
+        dayjs(remarksValues?.selectedDate).format('DD-MM-YYYY'),
+      );
       formData.append('orderID', data?.order_number);
       formData.append('net_cost', grandTotal.toString());
-      formData.append('remarks', itemValues?.remarks);
+      formData.append('remarks', remarksValues?.remarks);
 
       items.forEach((item, index) => {
         formData.append(`items[${index}][name]`, item.name);
@@ -290,6 +301,10 @@ const NewOrders: React.FC = () => {
         formData.append(`items[${index}][size]`, item.size.toString());
         formData.append(`items[${index}][qty]`, item.qty.toString());
         formData.append(`items[${index}][discount]`, item.discount.toString());
+        formData.append(
+          `items[${index}][total_item_cost]`,
+          item.total_item_cost.toString(),
+        );
       });
 
       await newOrder(FormDataPost, formData);
@@ -365,11 +380,19 @@ const NewOrders: React.FC = () => {
             onChange={(value: number, option: any) => {
               const selectedLabel = option.label;
               setTotalCosts((prev) => ({ ...prev, [record.key]: 0 }));
-              // Clear the material field for this row when model changes
+              // Clear material and sleeve fields when model changes
               itemForm.setFieldsValue({
                 data: {
                   [record.key]: {
-                    material: undefined, // Reset material to undefined
+                    material: undefined,
+                    sleevecase:
+                      selectedLabel === 'SHORTS' || selectedLabel === 'LOWER'
+                        ? undefined
+                        : itemForm.getFieldValue([
+                            'data',
+                            record.key,
+                            'sleevecase',
+                          ]), // Reset sleeve only for SHORTS or LOWER
                   },
                 },
               });
@@ -431,15 +454,38 @@ const NewOrders: React.FC = () => {
     {
       title: 'SLEEVE',
       dataIndex: 'sleeve',
-      render: (_, record) => (
-        <Form.Item
-          name={['data', record.key, 'sleevecase']}
-          rules={[{ required: true, message: 'Please select a sleeve' }]}
-          className="!mb-0 "
-        >
-          <Select size="middle" placeholder="Select Sleeve" options={sleeve} />
-        </Form.Item>
-      ),
+      render: (_, record) => {
+        const selectedModelId = itemForm.getFieldValue([
+          'data',
+          record.key,
+          'model',
+        ]);
+        const selectedModel = models.find(
+          (model) => model.id === selectedModelId,
+        );
+        const isSleeveDisabled =
+          selectedModel?.name === 'SHORTS' || selectedModel?.name === 'LOWER';
+
+        return (
+          <Form.Item
+            name={['data', record.key, 'sleevecase']}
+            rules={[
+              {
+                required: !isSleeveDisabled,
+                message: 'Please select a sleeve',
+              },
+            ]}
+            className="!mb-0"
+          >
+            <Select
+              size="middle"
+              placeholder="Select Sleeve"
+              options={sleeve}
+              disabled={isSleeveDisabled} // Disable if model is SHORTS or LOWER
+            />
+          </Form.Item>
+        );
+      },
     },
     {
       title: 'Size',
@@ -536,12 +582,6 @@ const NewOrders: React.FC = () => {
     return current && current < dayjs().startOf('day');
   };
 
-  // Handle date selection
-  const handleDateChange = (date: any) => {
-    setSelectedDate(date); // Store the selected date in state
-    console.log('Selected Date:', date ? date.format('YYYY-MM-DD') : null); // Optional: Log formatted date
-  };
-
   // Initial data fetching on component mount
   useEffect(() => {
     getModels();
@@ -567,30 +607,36 @@ const NewOrders: React.FC = () => {
         setUserType={setUserType}
       />
       {/* Item Details Table */}
-      <Form
-        form={itemForm}
-        onValuesChange={handleFieldChange}
-        layout="vertical"
-        className="relative p-3 bg-white rounded-md md:p-5"
-      >
-        <h5 className="mb-4 text-xl font-medium">Item Details :</h5>
-        <Table
-          pagination={false}
-          bordered
-          dataSource={dataSource}
-          columns={defaultColumns as ColumnTypes}
-        />
-        <div className="absolute bottom-0 -right-7 w-fit">
-          <Button
-            title=""
-            icon={<FaPlus className="w-5 h-5" />}
-            handleClick={handleAdd}
-            type="button"
-            className="bg-secondary rounded-md w-full !px-4 text-white font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
+      <div className="relative p-3 bg-white rounded-md md:p-5">
+        <Form
+          form={itemForm}
+          onValuesChange={handleFieldChange}
+          layout="vertical"
+        >
+          <h5 className="mb-4 text-xl font-medium">Item Details :</h5>
+          <Table
+            pagination={false}
+            bordered
+            dataSource={dataSource}
+            columns={defaultColumns as ColumnTypes}
           />
-        </div>
+          <div className="absolute bottom-0 -right-7 w-fit">
+            <Button
+              title=""
+              icon={<FaPlus className="w-5 h-5" />}
+              handleClick={handleAdd}
+              type="button"
+              className="bg-secondary rounded-md w-full !px-4 text-white font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
+            />
+          </div>
+        </Form>
         {/* Totals Section */}
-        <div className="grid justify-between grid-cols-4 gap-5">
+        <Form
+          form={remarksForm}
+          onValuesChange={handleFieldChange}
+          layout="vertical"
+          className="grid justify-between grid-cols-4 gap-5"
+        >
           <Form.Item
             name="selectedDate"
             label="Delivery Date"
@@ -600,7 +646,7 @@ const NewOrders: React.FC = () => {
             <DatePicker
               disabledDate={disabledDate}
               placeholder="Delivery Date"
-              onChange={handleDateChange} // Update state on change
+              // onChange={handleDateChange} // Update state on change
               format="DD-MM-YYYY" // Display format
               style={{ width: '100%' }}
             />
@@ -630,8 +676,8 @@ const NewOrders: React.FC = () => {
               <span className="font-bold">{grandTotal.toFixed(2)}</span>
             </div>
           </div>
-        </div>
-      </Form>
+        </Form>
+      </div>
       <div className="w-full">
         <Button
           title="Submit"

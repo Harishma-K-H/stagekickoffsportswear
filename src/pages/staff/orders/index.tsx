@@ -3,20 +3,20 @@ import './style.css';
 import Button from '@components/Common/Button';
 import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
+import PaymentHistory from '@components/Staff/PaymentHistory';
 import Paths from '@routes/paths';
 import { useApiJSON } from '@services/ApiService/Api.service';
+import { paidAmount } from '@utils/staff/paidAmount';
 import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 
-import { orders } from './api';
+import { orderById, orders, payment } from './api';
 
 const Orders: React.FC = () => {
-  const { get } = useApiJSON();
-  const contentRef = useRef<HTMLDivElement>(null);
-  const reactToPrintFn = useReactToPrint({ contentRef });
+  const { get, post } = useApiJSON();
 
   const [ordersList, setOrdersList] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -28,6 +28,10 @@ const Orders: React.FC = () => {
     pageNumber: 1,
     pageSize: 20,
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalId, setModalId] = useState<number>(1);
+  const [orderId, setOrderId] = useState<number | null>(null);
+  const [orderDetails, setOrderDetails] = useState<any>({});
 
   const columns = [
     {
@@ -60,22 +64,31 @@ const Orders: React.FC = () => {
       dataIndex: 'action',
       key: 'action',
       width: 170,
+      render: (_: any, record: any) => {
+        const totalPaid = paidAmount(record.payment_details);
+        const currentBalance = parseInt(record.total_cost || '0') - totalPaid;
+
+        return (
+          <div className="flex gap-2">
+            <Button
+              handleClick={() => showModal(ordersList[record?.key]?.id, 1)}
+              title="View"
+              type="button"
+              className="text-white bg-gray-500 rounded-md !py-2"
+            />
+            <Button
+              handleClick={() => showModal(ordersList[record?.key]?.id, 2)}
+              title={currentBalance <= 0 ? 'Paid' : 'Pay'}
+              type="button"
+              className={`text-white ${currentBalance <= 0 ? 'bg-gray-500' : 'bg-green-700'}  rounded-md !py-2`}
+            />
+          </div>
+        );
+      },
     },
   ];
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [_orderId, setOrderId] = useState('');
-
-  const showModal = (orderId: string) => {
-    setOrderId(orderId);
-    setIsModalOpen(true);
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
-
-  const getOrders = async () => {
+  const getOrders = useCallback(async () => {
     try {
       const { data } = await orders(get, pageNumber, pageSize);
       setOrdersList(data.results);
@@ -87,42 +100,65 @@ const Orders: React.FC = () => {
         pageSize: data?.pageSize,
       });
     } catch (error: any) {
-      notify(`Failed to fetch data`, 'error');
+      notify('Failed to fetch data', 'error');
     }
-  };
+  }, [get, pageNumber, pageSize]);
 
-  useEffect(() => {
-    getOrders();
-  }, [pageNumber, pageSize]);
+  // Memoized function to fetch order by ID
+  const getOrderById = useCallback(async () => {
+    if (orderId === null) return; // Skip if orderId is null
 
-  const handlePageChange = (page: number) => {
+    try {
+      const { data } = await orderById(get, orderId);
+      console.log(data);
+      setOrderDetails(data);
+    } catch (error: any) {
+      notify('Failed to fetch order details', 'error');
+    }
+  }, [get, orderId]);
+
+  // Memoized function to create new payment
+  const CreteNewPayment = useCallback(
+    async (payload: any) => {
+      try {
+        await payment(post, payload);
+        await getOrderById(); // Refresh order details after payment
+      } catch (error: any) {
+        notify('Failed payment submission', 'error');
+      }
+    },
+    [post, getOrderById],
+  );
+
+  // Memoized function to show modal
+  const showModal = useCallback((orId: number, modalId: number) => {
+    setModalId(modalId);
+    setOrderId(orId); // Set orderId to trigger getOrderById
+    setIsModalOpen(true);
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
     setPageNumber(page);
-  };
+  }, []);
 
   const tableDataSource = ordersList.map((order: any, i: number) => ({
     key: i,
     slNo: i + 1,
     OrderId: order?.orderID,
     customerName: order?.customer?.name,
-    orderDate: dayjs(order?.order_date).format('DD, MM, YYYY'),
-    deliveryDate: dayjs(order?.delivery_date).format('DD, MM, YYYY'),
-    action: (
-      <div className="flex gap-2">
-        <Button
-          handleClick={() => showModal(order?.orderID)}
-          title="View"
-          type="button"
-          className="text-white bg-gray-500 rounded-md !py-2"
-        />
-        <Button
-          handleClick={() => showModal(order?.orderID)}
-          title="Pay"
-          type="button"
-          className="text-white bg-green-700 rounded-md !py-2"
-        />
-      </div>
-    ),
+    orderDate: dayjs(order?.order_date).format('DD-MM-YYYY'),
+    deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
+    payment_details: order?.payment_details, // Pass payment_details to the record
+    total_cost: order?.total_cost, // Pass total_cost to the record
   }));
+
+  useEffect(() => {
+    getOrders();
+  }, [getOrders]);
+
+  useEffect(() => {
+    getOrderById();
+  }, [getOrderById]);
 
   return (
     <>
@@ -157,19 +193,68 @@ const Orders: React.FC = () => {
           />
         </div>
       </div>
-      <Modal
-        open={isModalOpen}
-        width={1000}
-        onCancel={handleCancel}
-        footer={null}
-      >
-        <button onClick={() => reactToPrintFn()}>Print</button>
-        <div ref={contentRef}>
-          {' '}
-          <Invoice />
-        </div>
-      </Modal>
+      <ModalDetails
+        orderDetails={orderDetails}
+        CreteNewPayment={CreteNewPayment}
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        modalId={modalId}
+        setOrderId={setOrderId}
+      />
     </>
+  );
+};
+
+const ModalDetails: React.FC<any> = ({
+  orderDetails,
+  CreteNewPayment,
+  isModalOpen,
+  setIsModalOpen,
+  modalId,
+  setOrderId,
+}) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Configure react-to-print with a custom document title
+  const reactToPrintFn = useReactToPrint({
+    contentRef,
+    documentTitle: orderDetails?.orderID
+      ? `Order_${orderDetails.orderID}_${dayjs().format('YYYYMMDD')}`
+      : 'Order_Invoice', // Fallback if orderDetails is not yet set
+  });
+
+  const handleCancel = useCallback(() => {
+    setIsModalOpen(false);
+    setOrderId(null); // Reset orderId when closing modal
+  }, []);
+
+  return (
+    <Modal
+      open={isModalOpen}
+      width={1000}
+      centered
+      onCancel={handleCancel}
+      footer={null}
+    >
+      {modalId === 1 && orderDetails && (
+        <>
+          <button onClick={() => reactToPrintFn()}>Print</button>
+          <div ref={contentRef}>
+            {' '}
+            <Invoice type={'ORDER'} data={orderDetails} />
+          </div>
+        </>
+      )}
+
+      {modalId === 2 && orderDetails && (
+        <>
+          <PaymentHistory
+            orderDetails={orderDetails}
+            CreteNewPayment={CreteNewPayment}
+          />
+        </>
+      )}
+    </Modal>
   );
 };
 

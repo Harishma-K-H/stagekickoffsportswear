@@ -7,4 +7,7 @@
   .no-print {
     display: none;
   }
+  .print-p-8 {
+    padding: 2rem;
+  }
 }

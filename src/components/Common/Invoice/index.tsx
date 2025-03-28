@@ -1,138 +1,32 @@
 import './style.css';
 
-interface Address {
-  fullName: string;
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  phone: string;
-}
+import { paidAmount } from '@utils/staff/paidAmount';
+import dayjs from 'dayjs';
+import React from 'react';
 
-interface Item {
-  name: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
+const Invoice: React.FC<{ type: 'ORDER' | 'INVOICE'; data: any }> = ({
+  type = 'ORDER',
+  data,
+}) => {
+  const {
+    orderID,
+    order_date,
+    delivery_date,
+    net_cost,
+    gst,
+    total_cost,
+    customer,
+    items,
+    payment_details,
+  } = data;
 
-interface InvoiceData {
-  invoiceNumber: string;
-  dateGenerated: string;
-  orderNumber: string;
-  orderDate: string;
-  trackingNumber: string;
-  orderStatus: string;
-  shipping: Address;
-  billing: Address;
-  items: Item[];
-  subtotal: number;
-  shippingCharge: number;
-  tax: number;
-  discount: number;
-  total: number;
-}
-
-const Invoice = () => {
-  const mockData: InvoiceData = {
-    invoiceNumber: 'INV-2024-001',
-    dateGenerated: '2024-01-20',
-    orderNumber: 'ORD-2024-001',
-    orderDate: '2024-01-19',
-    trackingNumber: 'TRK123456789',
-    orderStatus: 'Delivered',
-    shipping: {
-      fullName: 'John Doe',
-      street: '123 Main Street',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      country: 'United States',
-      phone: '+1 (555) 123-4567',
-    },
-    billing: {
-      fullName: 'John Doe',
-      street: '123 Main Street',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      country: 'United States',
-      phone: '+1 (555) 123-4567',
-    },
-    items: [
-      {
-        name: 'Premium Wireless Headphones',
-        quantity: 2,
-        unitPrice: 199.99,
-        total: 399.98,
-      },
-      {
-        name: 'Smart Watch Pro',
-        quantity: 1,
-        unitPrice: 299.99,
-        total: 299.99,
-      },
-      {
-        name: 'Premium Wireless Headphones',
-        quantity: 2,
-        unitPrice: 199.99,
-        total: 399.98,
-      },
-      {
-        name: 'Smart Watch Pro',
-        quantity: 1,
-        unitPrice: 299.99,
-        total: 299.99,
-      },
-      {
-        name: 'Premium Wireless Headphones',
-        quantity: 2,
-        unitPrice: 199.99,
-        total: 399.98,
-      },
-      {
-        name: 'Smart Watch Pro',
-        quantity: 1,
-        unitPrice: 299.99,
-        total: 299.99,
-      },
-      {
-        name: 'Premium Wireless Headphones',
-        quantity: 2,
-        unitPrice: 199.99,
-        total: 399.98,
-      },
-      {
-        name: 'Smart Watch Pro',
-        quantity: 1,
-        unitPrice: 299.99,
-        total: 299.99,
-      },
-      {
-        name: 'Premium Wireless Headphones',
-        quantity: 2,
-        unitPrice: 199.99,
-        total: 399.98,
-      },
-      {
-        name: 'Smart Watch Pro',
-        quantity: 1,
-        unitPrice: 299.99,
-        total: 299.99,
-      },
-    ],
-    subtotal: 699.97,
-    shippingCharge: 15.0,
-    tax: 56.0,
-    discount: 50.0,
-    total: 720.97,
-  };
+  const totalPaid = paidAmount(payment_details);
+  const currentBalance = parseInt(total_cost) - totalPaid;
 
   return (
     <div
       id="invoice-print"
-      className="p-8 bg-white rounded-lg dark:bg-gray-800"
+      className="p-1 bg-white rounded-lg dark:bg-gray-800 print:p-8"
     >
       {/* Header */}
       <div className="grid items-center grid-cols-3 gap-4 pb-3 mb-4 border-b-2">
@@ -153,89 +47,101 @@ const Invoice = () => {
           </p>
         </div>
         <div className="text-right">
-          <h5 className="mb-2 text-xl font-extrabold">TAX INVOICE</h5>
-          <p className="text-sm font-semibold">INVOICE :6402</p>
+          <h5 className="mb-2 text-xl font-extrabold">
+            {type == 'INVOICE' ? `TAX INVOICE` : `ORDER`}
+          </h5>
+          {/* <p className="text-sm font-semibold">{`${type} ID : ${id}`}</p> */}
         </div>
-        {/* <h1 className="text-2xl font-bold dark:text-white">Invoice</h1>
-                    <p className="text-gray-600 dark:text-gray-300">#{mockData.invoiceNumber}</p>
-                    <p className="text-gray-600 dark:text-gray-300">Date: {mockData.dateGenerated}</p> */}
       </div>
 
       {/* Order Details */}
       <div className="grid grid-cols-2 gap-8 mb-8">
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold dark:text-white">
-            Order Information
-          </h2>
-          <div className="p-4 rounded bg-gray-50 dark:bg-gray-700">
-            <p className="text-gray-600 dark:text-gray-300">
-              Order Number: {mockData.orderNumber}
-            </p>
-            <p className="text-gray-600 dark:text-gray-300">
-              Order Date: {mockData.orderDate}
-            </p>
-            <p className="text-gray-600 dark:text-gray-300">
-              Tracking Number: {mockData.trackingNumber}
-            </p>
-            <p className="text-gray-600 dark:text-gray-300">
-              Status: {mockData.orderStatus}
-            </p>
-          </div>
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold dark:text-white">Bill To:</h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            {customer?.business_name} <br />
+            {customer?.name} <br />
+            {customer?.address1} <br />
+            {customer?.mobile_number1} <br />
+            {customer?.email} <br />
+            GSTNO: {customer?.gst_no}
+          </p>
         </div>
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold dark:text-white">
-            Order Information
-          </h2>
-          <div className="p-4 rounded bg-gray-50 dark:bg-gray-700">
-            <p className="text-gray-600 dark:text-gray-300">
-              Order Number: {mockData.orderNumber}
-            </p>
-            <p className="text-gray-600 dark:text-gray-300">
-              Order Date: {mockData.orderDate}
-            </p>
-            <p className="text-gray-600 dark:text-gray-300">
-              Tracking Number: {mockData.trackingNumber}
-            </p>
-            <p className="text-gray-600 dark:text-gray-300">
-              Status: {mockData.orderStatus}
-            </p>
-          </div>
+        <div className="space-y-1 text-right">
+          <p className="font-bold text-gray-900 dark:text-gray-300">
+            {type} ID:{' '}
+            <span className="font-normal text-gray-600">{orderID}</span> <br />
+            {type} Date:{' '}
+            <span className="font-normal text-gray-600">
+              {dayjs(order_date).format('DD-MM-YYYY')}
+            </span>{' '}
+            <br />
+            Delivery Date:{' '}
+            <span className="font-normal text-gray-600">
+              {dayjs(delivery_date).format('DD-MM-YYYY')}
+            </span>{' '}
+            <br />
+          </p>
         </div>
       </div>
 
       {/* Order Items Table */}
       <div className="mb-8">
-        <h2 className="mb-4 text-xl font-semibold dark:text-white">
-          Order Items
-        </h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-gray-100 dark:bg-gray-700">
-                <th className="px-4 py-2 text-left dark:text-white">#</th>
-                <th className="px-4 py-2 text-left dark:text-white">Item</th>
-                <th className="px-4 py-2 text-right dark:text-white">
-                  Quantity
+                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                  #
                 </th>
-                <th className="px-4 py-2 text-right dark:text-white">
-                  Unit Price
+                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                  Model
                 </th>
-                <th className="px-4 py-2 text-right dark:text-white">Total</th>
+                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                  Material
+                </th>
+                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                  Print Type
+                </th>
+                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                  Sleeve Case
+                </th>
+                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                  Size
+                </th>
+                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                  Unit Cost
+                </th>
+                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                  Qty
+                </th>
+                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                  Item Cost
+                </th>
               </tr>
             </thead>
             <tbody>
-              {mockData.items.map((item, index) => (
-                <tr key={index} className="border-b dark:border-gray-700">
+              {items?.map((item: any, index: number) => (
+                <tr
+                  key={index}
+                  className="uppercase border-b dark:border-gray-700"
+                >
                   <td className="px-4 py-2 dark:text-white">{index + 1}</td>
-                  <td className="px-4 py-2 dark:text-white">{item.name}</td>
-                  <td className="px-4 py-2 text-right dark:text-white">
-                    {item.quantity}
+                  <td className="px-4 py-2 dark:text-white">{item.model}</td>
+                  <td className="px-4 py-2 dark:text-white">{item.material}</td>
+                  <td className="px-4 py-2 dark:text-white">
+                    {item.print_type}
                   </td>
-                  <td className="px-4 py-2 text-right dark:text-white">
-                    ${item.unitPrice.toFixed(2)}
+                  <td className="px-4 py-2 dark:text-white">
+                    {item.sleeve_case}
                   </td>
-                  <td className="px-4 py-2 text-right dark:text-white">
-                    ${item.total.toFixed(2)}
+                  <td className="px-4 py-2 dark:text-white">{item.size}</td>
+                  <td className="px-4 py-2 dark:text-white">
+                    {item.unit_cost}
+                  </td>
+                  <td className="px-4 py-2 dark:text-white">{item.qty}</td>
+                  <td className="px-4 py-2 dark:text-white">
+                    {item.total_item_cost}
                   </td>
                 </tr>
               ))}
@@ -253,7 +159,7 @@ const Invoice = () => {
                 Subtotal:
               </span>
               <span className="font-medium dark:text-white">
-                ${mockData.subtotal.toFixed(2)}
+                {parseInt(net_cost)?.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between">
@@ -261,7 +167,7 @@ const Invoice = () => {
                 CGST2.5 (2.5%):
               </span>
               <span className="font-medium dark:text-white">
-                ${mockData.shippingCharge.toFixed(2)}
+                {(parseInt(gst) / 2).toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between">
@@ -269,21 +175,37 @@ const Invoice = () => {
                 SGST2.5 (2.5%):
               </span>
               <span className="font-medium dark:text-white">
-                ${mockData.tax.toFixed(2)}
+                {(parseInt(gst) / 2)?.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-300">
+                Paid Amount:
+              </span>
+              <span className="font-medium dark:text-white">
+                {totalPaid?.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-300">
+                Balance Amount:
+              </span>
+              <span className="font-medium dark:text-white">
+                {currentBalance?.toFixed(2)}
+              </span>
+            </div>
+            {/* <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-300">
                 Discount:
               </span>
               <span className="font-medium text-green-500">
-                -${mockData.discount.toFixed(2)}
+                {parseInt(net_cost).toFixed(2)}
               </span>
-            </div>
+            </div> */}
             <div className="flex justify-between pt-2 border-t">
               <span className="font-semibold dark:text-white">Total:</span>
               <span className="font-semibold dark:text-white">
-                ${mockData.total.toFixed(2)}
+                {parseInt(total_cost).toFixed(2)}
               </span>
             </div>
           </div>

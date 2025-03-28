@@ -1,81 +1,30 @@
 import './style.css';
 
 import Button from '@components/Common/Button';
-import { Modal, Table } from 'antd';
-import React, { useState } from 'react';
+import { notify } from '@components/Common/Toastify';
+import { useApiJSON } from '@services/ApiService/Api.service';
+import { Modal, Pagination, Table } from 'antd';
+import dayjs from 'dayjs';
+import React, { useCallback, useEffect, useState } from 'react';
+
+import { invoices } from './api';
 
 const Invoices: React.FC = () => {
-  const dataSource = [
-    {
-      key: '1',
-      slNo: '1',
-      OrderId: '123',
-      customerName: 'Jane',
-      invoiceNumber: '22-02-2025abc',
-      action: (
-        <div className="flex gap-2">
-          <Button
-            handleClick={() => showModal('123')}
-            title="View"
-            type="button"
-            className="text-white bg-gray-500 rounded-md !py-2"
-          />
-          <Button
-            handleClick={() => showModal('123')}
-            title="Print"
-            type="button"
-            className="text-white bg-green-700 rounded-md !py-2"
-          />
-        </div>
-      ),
-    },
-    {
-      key: '2',
-      slNo: '2',
-      OrderId: '124',
-      customerName: 'Cooper',
-      invoiceNumber: '25-2-2025abc',
-      action: (
-        <div className="flex gap-2">
-          <Button
-            handleClick={() => showModal('124')}
-            title="View"
-            type="button"
-            className="text-white bg-gray-500 rounded-md !py-2"
-          />
-          <Button
-            handleClick={() => showModal('124')}
-            title="Print"
-            type="button"
-            className="text-white bg-green-700 rounded-md !py-2"
-          />
-        </div>
-      ),
-    },
-    {
-      key: '3',
-      slNo: '3',
-      OrderId: '125',
-      customerName: 'Cooper',
-      invoiceNumber: '25-2-2025abc',
-      action: (
-        <div className="flex gap-2">
-          <Button
-            handleClick={() => showModal('125')}
-            title="View"
-            type="button"
-            className="text-white bg-gray-500 rounded-md !py-2"
-          />
-          <Button
-            handleClick={() => showModal('125')}
-            title="Print"
-            type="button"
-            className="text-white bg-green-700 rounded-md !py-2"
-          />
-        </div>
-      ),
-    },
-  ];
+  const { get } = useApiJSON();
+
+  const [invoicesList, setInvoicesList] = useState<any>([]);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [pageSize] = useState<number>(10);
+  const [paginationData, setPaginationData] = useState({
+    count: 0,
+    hasPreviousPage: false,
+    hasNextPage: false,
+    pageNumber: 1,
+    pageSize: 20,
+  });
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [orderId, setOrderId] = useState('');
 
   const columns = [
     {
@@ -106,9 +55,6 @@ const Invoices: React.FC = () => {
     },
   ];
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [orderId, setOrderId] = useState('');
-
   const showModal = (orderId: string) => {
     setOrderId(orderId);
     setIsModalOpen(true);
@@ -117,6 +63,55 @@ const Invoices: React.FC = () => {
   const handleCancel = () => {
     setIsModalOpen(false);
   };
+
+  const handlePageChange = useCallback((page: number) => {
+    setPageNumber(page);
+  }, []);
+
+  const getInvoicesList = useCallback(async () => {
+    try {
+      const { data } = await invoices(get, pageNumber, pageSize);
+      setInvoicesList(data.results);
+      setPaginationData({
+        count: data?.count,
+        hasPreviousPage: data?.hasPreviousPage,
+        hasNextPage: data?.hasNextPage,
+        pageNumber: data?.pageNumber,
+        pageSize: data?.pageSize,
+      });
+    } catch (error: any) {
+      notify('Failed to fetch models', 'error');
+    }
+  }, [get]);
+
+  const tableDataSource = invoicesList.map((order: any, i: number) => ({
+    key: i,
+    slNo: i + 1,
+    OrderId: order?.orderID,
+    customerName: order?.customer?.name,
+    orderDate: dayjs(order?.order_date).format('DD, MM, YYYY'),
+    deliveryDate: dayjs(order?.delivery_date).format('DD, MM, YYYY'),
+    action: (
+      <div className="flex gap-2">
+        <Button
+          handleClick={() => showModal(order?.orderID)}
+          title="View"
+          type="button"
+          className="text-white bg-gray-500 rounded-md !py-2"
+        />
+        <Button
+          handleClick={() => showModal(order?.orderID)}
+          title="Pay"
+          type="button"
+          className="text-white bg-green-700 rounded-md !py-2"
+        />
+      </div>
+    ),
+  }));
+
+  useEffect(() => {
+    getInvoicesList();
+  }, [getInvoicesList]);
 
   return (
     <>
@@ -129,10 +124,17 @@ const Invoices: React.FC = () => {
         <div className="p-3 bg-white md:p-5 custom-table">
           <Table
             bordered
-            dataSource={dataSource}
+            dataSource={tableDataSource}
             columns={columns}
             pagination={false}
             scroll={{ x: '700' }}
+          />
+          <Pagination
+            current={paginationData.pageNumber}
+            total={paginationData.count}
+            pageSize={paginationData.pageSize}
+            onChange={handlePageChange}
+            rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
           />
         </div>
       </div>
