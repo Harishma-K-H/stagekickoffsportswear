@@ -312,6 +312,7 @@ const NewOrders: React.FC = () => {
       notify('Order created successfully!', 'success');
       customerForm.resetFields();
       itemForm.resetFields();
+      remarksValues.resetFields();
       setDataSource([{ key: '0' }]);
       setBaseCosts({});
       setTotalCosts({});
