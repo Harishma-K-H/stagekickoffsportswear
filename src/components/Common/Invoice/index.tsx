@@ -9,6 +9,7 @@ const Invoice: React.FC<{ type: 'ORDER' | 'INVOICE'; data: any }> = ({
   data,
 }) => {
   const {
+    invoice_id,
     orderID,
     order_date,
     delivery_date,
@@ -64,30 +65,34 @@ const Invoice: React.FC<{ type: 'ORDER' | 'INVOICE'; data: any }> = ({
             {customer?.address1} <br />
             {customer?.mobile_number1} <br />
             {customer?.email} <br />
-            GSTNO: {customer?.gst_no}
           </p>
         </div>
         <div className="space-y-1 text-right">
           <p className="font-bold text-gray-900 dark:text-gray-300">
             {type} ID:{' '}
-            <span className="font-normal text-gray-600">{orderID}</span> <br />
+            <span className="font-normal text-gray-600">
+              {type == 'INVOICE' ? `#${invoice_id}` : orderID}
+            </span>{' '}
+            <br />
             {type} Date:{' '}
             <span className="font-normal text-gray-600">
               {dayjs(order_date).format('DD-MM-YYYY')}
-            </span>{' '}
+            </span>
             <br />
             Delivery Date:{' '}
-            <span className="font-normal text-gray-600">
-              {dayjs(delivery_date).format('DD-MM-YYYY')}
-            </span>{' '}
+            <span className="font-normal text-gray-600">{delivery_date}</span>
             <br />
+            GSTNO:{' '}
+            <span className="font-normal text-gray-600">
+              {customer?.gst_no}
+            </span>
           </p>
         </div>
       </div>
 
       {/* Order Items Table */}
       <div className="mb-8">
-        <div className="overflow-x-auto">
+        <div className="">
           <table className="w-full">
             <thead>
               <tr className="bg-gray-100 dark:bg-gray-700">
@@ -178,7 +183,9 @@ const Invoice: React.FC<{ type: 'ORDER' | 'INVOICE'; data: any }> = ({
                 {(parseInt(gst) / 2)?.toFixed(2)}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div
+              className={`flex justify-between ${type === 'INVOICE' && 'hidden'}`}
+            >
               <span className="text-gray-600 dark:text-gray-300">
                 Paid Amount:
               </span>
@@ -186,7 +193,9 @@ const Invoice: React.FC<{ type: 'ORDER' | 'INVOICE'; data: any }> = ({
                 {totalPaid?.toFixed(2)}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div
+              className={`flex justify-between ${type === 'INVOICE' && 'hidden'}`}
+            >
               <span className="text-gray-600 dark:text-gray-300">
                 Balance Amount:
               </span>
@@ -194,14 +203,6 @@ const Invoice: React.FC<{ type: 'ORDER' | 'INVOICE'; data: any }> = ({
                 {currentBalance?.toFixed(2)}
               </span>
             </div>
-            {/* <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-300">
-                Discount:
-              </span>
-              <span className="font-medium text-green-500">
-                {parseInt(net_cost).toFixed(2)}
-              </span>
-            </div> */}
             <div className="flex justify-between pt-2 border-t">
               <span className="font-semibold dark:text-white">Total:</span>
               <span className="font-semibold dark:text-white">

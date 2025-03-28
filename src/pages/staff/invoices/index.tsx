@@ -1,16 +1,20 @@
 import './style.css';
 
 import Button from '@components/Common/Button';
+import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
+import { paidAmount } from '@utils/staff/paidAmount';
 import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useReactToPrint } from 'react-to-print';
 
-import { invoices } from './api';
+import { invoiceById, invoices } from './api';
 
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const [invoicesList, setInvoicesList] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -22,9 +26,17 @@ const Invoices: React.FC = () => {
     pageNumber: 1,
     pageSize: 20,
   });
-
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [orderId, setOrderId] = useState('');
+  const [invoiceId, setInvoiceId] = useState<number | null>(null);
+  const [invoiceDetails, setInvoiceDetails] = useState<any>({});
+
+  // Configure react-to-print with a custom document title
+  const reactToPrintFn = useReactToPrint({
+    contentRef,
+    documentTitle: invoiceDetails?.invoice_id
+      ? `Invoice_${invoiceDetails.invoice_id}_${dayjs().format('YYYYMMDD')}`
+      : 'Order_Invoice', // Fallback if invoiceDetails is not yet set
+  });
 
   const columns = [
     {
@@ -40,7 +52,7 @@ const Invoices: React.FC = () => {
     {
       title: 'Customer Name',
       dataIndex: 'customerName',
-      key: 'customerName',
+      key: 'name',
     },
     {
       title: 'Invoice number',
@@ -48,27 +60,42 @@ const Invoices: React.FC = () => {
       key: 'invoiceNumber',
     },
     {
+      title: 'Delivery Date',
+      dataIndex: 'deliveryDate',
+      key: 'deliveryDate',
+    },
+    {
       title: 'Action',
       dataIndex: 'action',
       key: 'action',
       width: 170,
+      render: (_: any, record: any) => {
+        const totalPaid = paidAmount(record.payment_details);
+        const currentBalance = parseInt(record.total_cost || '0') - totalPaid;
+
+        return (
+          <div className="flex gap-2">
+            <Button
+              handleClick={() =>
+                showModal(invoicesList[record?.key]?.invoice_id)
+              }
+              title="View"
+              type="button"
+              className="text-white bg-gray-500 rounded-md !py-2"
+            />
+            <Button
+              handleClick={reactToPrintFn}
+              title="Print"
+              type="button"
+              className={`text-white ${currentBalance <= 0 ? 'bg-gray-500' : 'bg-green-700'}  rounded-md !py-2`}
+            />
+          </div>
+        );
+      },
     },
   ];
 
-  const showModal = (orderId: string) => {
-    setOrderId(orderId);
-    setIsModalOpen(true);
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
-
-  const handlePageChange = useCallback((page: number) => {
-    setPageNumber(page);
-  }, []);
-
-  const getInvoicesList = useCallback(async () => {
+  const getInvoices = useCallback(async () => {
     try {
       const { data } = await invoices(get, pageNumber, pageSize);
       setInvoicesList(data.results);
@@ -80,38 +107,49 @@ const Invoices: React.FC = () => {
         pageSize: data?.pageSize,
       });
     } catch (error: any) {
-      notify('Failed to fetch models', 'error');
+      notify('Failed to fetch data', 'error');
     }
-  }, [get]);
+  }, [get, pageNumber, pageSize]);
 
-  const tableDataSource = invoicesList.map((order: any, i: number) => ({
+  // Memoized function to fetch invoice by ID
+  const getInvoiceById = useCallback(async () => {
+    if (invoiceId === null) return; // Skip if invoice id is null
+
+    try {
+      const { data } = await invoiceById(get, invoiceId);
+      setInvoiceDetails(data);
+    } catch (error: any) {
+      notify('Failed to fetch invoice details', 'error');
+    }
+  }, [get, invoiceId]);
+
+  // Memoized function to show modal
+  const showModal = useCallback((invId: number) => {
+    setInvoiceId(invId); // Set invoiceId to trigger getInvoiceById
+    setIsModalOpen(true);
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setPageNumber(page);
+  }, []);
+
+  const tableDataSource = invoicesList.map((invoice: any, i: number) => ({
     key: i,
     slNo: i + 1,
-    OrderId: order?.orderID,
-    customerName: order?.customer?.name,
-    orderDate: dayjs(order?.order_date).format('DD, MM, YYYY'),
-    deliveryDate: dayjs(order?.delivery_date).format('DD, MM, YYYY'),
-    action: (
-      <div className="flex gap-2">
-        <Button
-          handleClick={() => showModal(order?.orderID)}
-          title="View"
-          type="button"
-          className="text-white bg-gray-500 rounded-md !py-2"
-        />
-        <Button
-          handleClick={() => showModal(order?.orderID)}
-          title="Pay"
-          type="button"
-          className="text-white bg-green-700 rounded-md !py-2"
-        />
-      </div>
-    ),
+    OrderId: invoice?.orderID,
+    customerName: invoice?.customer_id?.name,
+    invoiceNumber: invoice?.invoice_id,
+    // orderDate: dayjs(invoice?.order_date).format('DD-MM-YYYY'),
+    deliveryDate: invoice?.delivery_date,
   }));
 
   useEffect(() => {
-    getInvoicesList();
-  }, [getInvoicesList]);
+    getInvoices();
+  }, [getInvoices]);
+
+  useEffect(() => {
+    getInvoiceById();
+  }, [getInvoiceById]);
 
   return (
     <>
@@ -138,10 +176,42 @@ const Invoices: React.FC = () => {
           />
         </div>
       </div>
-      <Modal title="Modal" open={isModalOpen} onCancel={handleCancel} footer>
-        <p>{orderId}</p>
-      </Modal>
+      <ModalDetails
+        invoiceDetails={invoiceDetails}
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        setInvoiceId={setInvoiceId}
+        contentRef={contentRef}
+      />
     </>
+  );
+};
+
+const ModalDetails: React.FC<any> = ({
+  invoiceDetails,
+  isModalOpen,
+  setIsModalOpen,
+  setInvoiceId,
+  contentRef,
+}) => {
+  const handleCancel = useCallback(() => {
+    setIsModalOpen(false);
+    setInvoiceId(null); // Reset orderId when closing modal
+  }, []);
+
+  return (
+    <Modal
+      open={isModalOpen}
+      width={1000}
+      centered
+      onCancel={handleCancel}
+      footer={null}
+    >
+      <div ref={contentRef}>
+        {' '}
+        <Invoice type={'INVOICE'} data={invoiceDetails} />
+      </div>
+    </Modal>
   );
 };
 

@@ -21,8 +21,9 @@ const PaymentHistory: React.FC<any> = ({ orderDetails, CreteNewPayment }) => {
       slNo: i + 1,
       date: dayjs(payment.created_at).format('DD-MM-YYYY'),
       paid: parseFloat(payment.paid_amount).toFixed(2),
-      balance:
-        parseFloat(payment.total_amount) - parseFloat(payment.paid_amount),
+      balance: (
+        parseFloat(payment.total_amount) - parseFloat(payment.paid_amount)
+      ).toFixed(2),
       paymentMethod: payment.payment_method,
     }),
   );

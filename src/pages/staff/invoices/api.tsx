@@ -10,3 +10,13 @@ export const invoices = async (
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
+
+// Define the Invoice details function
+export const invoiceById = async (
+  get: (url: string) => Promise<any>,
+  invoiceId: number | string | null,
+): Promise<any> => {
+  const response = await get(`/invoices/${invoiceId}/`);
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
