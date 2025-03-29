@@ -4,13 +4,15 @@ import Button from '@components/Common/Button';
 import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
-import { paidAmount } from '@utils/staff/paidAmount';
 import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 
 import { invoiceById, invoices } from './api';
+import { FaPrint } from 'react-icons/fa';
+import { FaDownload } from 'react-icons/fa6';
+import { handleDownloadPDF } from '@utils/staff/downloadPdf';
 
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();
@@ -70,9 +72,6 @@ const Invoices: React.FC = () => {
       key: 'action',
       width: 170,
       render: (_: any, record: any) => {
-        const totalPaid = paidAmount(record.payment_details);
-        const currentBalance = parseInt(record.total_cost || '0') - totalPaid;
-
         return (
           <div className="flex gap-2">
             <Button
@@ -81,13 +80,7 @@ const Invoices: React.FC = () => {
               }
               title="View"
               type="button"
-              className="text-white bg-gray-500 rounded-md !py-2"
-            />
-            <Button
-              handleClick={reactToPrintFn}
-              title="Print"
-              type="button"
-              className={`text-white ${currentBalance <= 0 ? 'bg-gray-500' : 'bg-green-700'}  rounded-md !py-2`}
+              className="text-white bg-gray-500 rounded-md !py-2 w-full"
             />
           </div>
         );
@@ -182,6 +175,7 @@ const Invoices: React.FC = () => {
         setIsModalOpen={setIsModalOpen}
         setInvoiceId={setInvoiceId}
         contentRef={contentRef}
+        reactToPrintFn={reactToPrintFn}
       />
     </>
   );
@@ -193,11 +187,17 @@ const ModalDetails: React.FC<any> = ({
   setIsModalOpen,
   setInvoiceId,
   contentRef,
+  reactToPrintFn,
 }) => {
   const handleCancel = useCallback(() => {
     setIsModalOpen(false);
-    setInvoiceId(null); // Reset orderId when closing modal
-  }, []);
+    setInvoiceId(null); // Reset invoiceId when closing modal
+  }, [setIsModalOpen, setInvoiceId]);
+
+  // Office Print: printForOffice = true
+  const handleOfficePrint = useCallback(() => {
+    reactToPrintFn(); // Trigger print
+  }, [reactToPrintFn]);
 
   return (
     <Modal
@@ -208,8 +208,29 @@ const ModalDetails: React.FC<any> = ({
       footer={null}
     >
       <div ref={contentRef}>
-        {' '}
         <Invoice type={'INVOICE'} data={invoiceDetails} />
+      </div>
+      <div className="flex justify-end gap-3">
+        <Button
+          handleClick={handleOfficePrint}
+          title="Print"
+          type="button"
+          icon={<FaPrint />}
+          className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+        />
+        <Button
+          handleClick={() =>
+            handleDownloadPDF({
+              type: 'INVOICE',
+              contentRef,
+              invoiceId: invoiceDetails?.invoice_id,
+            })
+          }
+          title="Download"
+          type="button"
+          icon={<FaDownload />}
+          className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+        />
       </div>
     </Modal>
   );

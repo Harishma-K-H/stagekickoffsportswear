@@ -18,6 +18,8 @@ import {
 import dayjs from 'dayjs'; // Ensure dayjs is imported
 import React, { useCallback, useEffect, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
+import { useNavigate } from 'react-router';
+import Paths from '@routes/paths';
 
 import {
   fetchItemCost,
@@ -35,6 +37,7 @@ type ColumnTypes = Exclude<TableProps['columns'], undefined>;
 const NewOrders: React.FC = () => {
   const { get, post } = useApiJSON();
   const { post: FormDataPost } = useApiFormData(); // Use FormData-specific post
+  const navigate = useNavigate();
 
   const [itemForm] = Form.useForm();
   const [customerForm] = Form.useForm();
@@ -64,7 +67,6 @@ const NewOrders: React.FC = () => {
   const [totalCosts, setTotalCosts] = useState<Record<string, number>>({});
   const [modelName, setModelName] = useState<any>({});
   const [dataSource, setDataSource] = useState<any[]>([{ key: '0' }]);
-  // const [_selectedDate, setSelectedDate] = useState(null); // State to store selected date
 
   // Fetch models
   const getModels = useCallback(async () => {
@@ -195,7 +197,7 @@ const NewOrders: React.FC = () => {
         row?.model &&
         row?.material &&
         row?.print_type &&
-        row?.sleevecase &&
+        // row?.sleevecase &&
         row?.size
       ) {
         const payload = {
@@ -229,6 +231,29 @@ const NewOrders: React.FC = () => {
     setTotalCosts((prev) => ({ ...prev, [rowKey]: totalCost || 0 }));
   };
 
+  // crete new customer
+  const creteNewCustomer = useCallback(async (payload: any) => {
+    try {
+      const { data } = await newCustomer(post, payload); // Still uses JSON
+      notify('Customer created successfully!', 'success');
+      return data.id;
+    } catch (error: any) {
+      const errorData = error.response?.data; // API error object
+      if (errorData && typeof errorData === 'object') {
+        const fieldErrors = Object.keys(errorData).map((field) => ({
+          name: field, // Use API field names directly (mobile_number1, email)
+          errors: errorData[field], // Array of error messages
+        }));
+        customerForm.setFields(fieldErrors);
+      } else {
+        notify(
+          'Failed to submit form: ' + (error.message || 'Unknown error'),
+          'error',
+        );
+      }
+    }
+  }, []);
+
   // Handle full submission
   const handleSubmit = async () => {
     const customerValues = await customerForm.validateFields();
@@ -248,32 +273,37 @@ const NewOrders: React.FC = () => {
           name: customerValues.customerName,
           address1: customerValues.address1,
           address2: customerValues.address2 || '',
-          mobile_number1: customerValues.phone1,
-          mobile_number2: customerValues.phone2 || '',
+          mobile_number1: customerValues.mobile_number1,
+          mobile_number2: customerValues.mobile_number2 || '',
           email: customerValues.email,
           gst_no: customerValues.gstn || '',
           business_name: customerValues.businessName,
         };
-        const { data } = await newCustomer(post, newCustomerPayload); // Still uses JSON
-        customerId = data.id;
-        notify('Customer created successfully!', 'success');
+
+        customerId = await creteNewCustomer(newCustomerPayload);
+        console.log(customerId, 'creteNewCustomer(newCustomerPayload)');
       } else {
         customerId = customerValues.existingUser;
       }
 
       const items = Object.keys(itemValues.data || {}).map((key) => {
         const row = itemValues.data[key];
-        return {
+        const item: any = {
           name: modelName[key],
           model: row.model,
           material: row.material,
           print_type_id: row.print_type,
-          sleeve_case: row.sleevecase,
           size: parseInt(row.size, 10),
           qty: parseInt(row.quantity, 10),
           discount: parseFloat(row.discount) || 0,
           total_item_cost: totalCosts[key],
         };
+
+        if (modelName[key] !== 'SHORTS' && modelName[key] !== 'LOWER') {
+          item.sleeve_case = row.sleevecase;
+        }
+
+        return item;
       });
 
       const { grandTotal } = calculateTotals();
@@ -297,7 +327,6 @@ const NewOrders: React.FC = () => {
           `items[${index}][print_type]`,
           item.print_type_id.toString(),
         );
-        formData.append(`items[${index}][sleeve_case]`, item.sleeve_case);
         formData.append(`items[${index}][size]`, item.size.toString());
         formData.append(`items[${index}][qty]`, item.qty.toString());
         formData.append(`items[${index}][discount]`, item.discount.toString());
@@ -305,20 +334,16 @@ const NewOrders: React.FC = () => {
           `items[${index}][total_item_cost]`,
           item.total_item_cost.toString(),
         );
+
+        // Append sleeve_case only if it exists
+        if (item.sleeve_case !== undefined) {
+          formData.append(`items[${index}][sleeve_case]`, item.sleeve_case);
+        }
       });
 
       await newOrder(FormDataPost, formData);
-
+      navigate(Paths.Staff.orders.index);
       notify('Order created successfully!', 'success');
-      customerForm.resetFields();
-      itemForm.resetFields();
-      remarksValues.resetFields();
-      setDataSource([{ key: '0' }]);
-      setBaseCosts({});
-      setTotalCosts({});
-      setModelName({});
-      setCount(1);
-      setUserType(1);
     } catch (error) {
       notify('Failed to create order. Please try again.', 'error');
     } finally {
@@ -698,7 +723,7 @@ const CustomerDetails: React.FC<any> = ({
   userType,
   setUserType,
 }) => {
-  const { get, post } = useApiJSON(); // Assuming useApiJSON provides get and post methods
+  const { get } = useApiJSON(); // Assuming useApiJSON provides get and post methods
 
   // GST pattern regex
   const GST_PATTERN =
@@ -767,31 +792,6 @@ const CustomerDetails: React.FC<any> = ({
     }
   };
 
-  // Handle form submission for creating a new customer
-  const handleCreateCustomer = async (values: any) => {
-    setLoading(true);
-    try {
-      const payload = {
-        name: values.customerName,
-        address1: values.address1,
-        address2: values.address2 || '', // Optional field
-        mobile_number1: values.phone1,
-        mobile_number2: values.phone2 || '', // Optional field
-        email: values.email,
-        gst_no: values.gstn,
-        is_active: true, // Default to true as per the model
-      };
-      const { data } = await post('/customers/', payload);
-      notify('Customer created successfully!', 'success');
-      customerForm.resetFields(); // Reset form after successful creation
-      return data; // Return created customer data if needed by parent component
-    } catch (error) {
-      notify('Failed to create customer. Please try again.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Handle search for existing customers
   const handleSearch = (searchTerm: string) => {
     fetchCustomers(searchTerm);
@@ -812,7 +812,6 @@ const CustomerDetails: React.FC<any> = ({
   return (
     <Form
       form={customerForm}
-      onFinish={userType === 1 ? handleCreateCustomer : undefined}
       layout="vertical"
       className="p-3 bg-white rounded-md md:p-5"
     >
@@ -898,17 +897,39 @@ const CustomerDetails: React.FC<any> = ({
           <Form.Item
             className="!mb-0"
             label="Mobile 1"
-            name="phone1"
-            rules={[{ required: true, message: 'Please enter Mobile' }]}
+            name="mobile_number1"
+            rules={[
+              { required: true, message: 'Please enter Mobile' },
+              {
+                pattern: /^[0-9]{10}$/,
+                message: 'Mobile 1 must be exactly 10 digits',
+              },
+            ]}
           >
             <Input
+              type="tel"
               placeholder="Enter mobile"
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
 
-          <Form.Item className="!mb-0" label="Mobile 2" name="phone2">
+          <Form.Item
+            className="!mb-0"
+            label="Mobile 2"
+            name="mobile_number2"
+            rules={[
+              {
+                validator: (_, value) =>
+                  !value || /^[0-9]{10}$/.test(value)
+                    ? Promise.resolve()
+                    : Promise.reject(
+                        new Error('Mobile 2 must be exactly 10 digits'),
+                      ),
+              },
+            ]}
+          >
             <Input
+              type="tel"
               placeholder="Enter mobile 2"
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />

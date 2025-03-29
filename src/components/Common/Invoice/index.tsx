@@ -4,10 +4,11 @@ import { paidAmount } from '@utils/staff/paidAmount';
 import dayjs from 'dayjs';
 import React from 'react';
 
-const Invoice: React.FC<{ type: 'ORDER' | 'INVOICE'; data: any }> = ({
-  type = 'ORDER',
-  data,
-}) => {
+const Invoice: React.FC<{
+  type: 'ORDER' | 'INVOICE';
+  data: any;
+  printForOffice?: boolean;
+}> = ({ type = 'ORDER', data, printForOffice = false }) => {
   const {
     invoice_id,
     orderID,
@@ -156,8 +157,8 @@ const Invoice: React.FC<{ type: 'ORDER' | 'INVOICE'; data: any }> = ({
       </div>
 
       {/* Total Calculations */}
-      <div className="flex justify-end">
-        <div className="w-2/3">
+      <div className={`flex justify-end ${printForOffice && 'print:hidden'}`}>
+        <div className="w-2/5">
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-300">

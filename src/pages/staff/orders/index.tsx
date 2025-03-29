@@ -12,8 +12,11 @@ import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
+import { FaPrint } from 'react-icons/fa';
 
 import { orderById, orders, payment } from './api';
+import { FaDownload } from 'react-icons/fa6';
+import { handleDownloadPDF } from '@utils/staff/downloadPdf';
 
 const Orders: React.FC = () => {
   const { get, post } = useApiJSON();
@@ -123,11 +126,12 @@ const Orders: React.FC = () => {
       try {
         await payment(post, payload);
         await getOrderById(); // Refresh order details after payment
+        await getOrders(); // Refresh order list after payment
       } catch (error: any) {
         notify('Failed payment submission', 'error');
       }
     },
-    [post, getOrderById],
+    [post, getOrderById, getOrders],
   );
 
   // Memoized function to show modal
@@ -214,6 +218,7 @@ const ModalDetails: React.FC<any> = ({
   setOrderId,
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [printForOffice, setPrintForOffice] = useState<boolean>(false); // State for printForOffice
 
   // Configure react-to-print with a custom document title
   const reactToPrintFn = useReactToPrint({
@@ -228,6 +233,26 @@ const ModalDetails: React.FC<any> = ({
     setOrderId(null); // Reset orderId when closing modal
   }, []);
 
+  const handleOfficePrint = useCallback(() => {
+    setPrintForOffice(true);
+    setTimeout(() => {
+      reactToPrintFn();
+      setPrintForOffice(false);
+    }, 100);
+  }, []);
+
+  const handleOfficeDownload = useCallback(() => {
+    setPrintForOffice(true);
+    setTimeout(() => {
+      handleDownloadPDF({
+        type: 'ORDER',
+        contentRef,
+        invoiceId: orderDetails.orderID,
+      });
+      setPrintForOffice(false);
+    }, 100);
+  }, []);
+
   return (
     <Modal
       open={isModalOpen}
@@ -238,10 +263,49 @@ const ModalDetails: React.FC<any> = ({
     >
       {modalId === 1 && orderDetails && (
         <>
-          <button onClick={() => reactToPrintFn()}>Print</button>
           <div ref={contentRef}>
             {' '}
-            <Invoice type={'ORDER'} data={orderDetails} />
+            <Invoice
+              type={'ORDER'}
+              data={orderDetails}
+              printForOffice={printForOffice}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              handleClick={reactToPrintFn}
+              title="Customer Print"
+              type="button"
+              icon={<FaPrint />}
+              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+            <Button
+              handleClick={() =>
+                handleDownloadPDF({
+                  type: 'ORDER',
+                  contentRef,
+                  invoiceId: orderDetails.orderID,
+                })
+              }
+              title=""
+              type="button"
+              icon={<FaDownload />}
+              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+            <Button
+              handleClick={handleOfficePrint}
+              title="Office Print"
+              type="button"
+              icon={<FaPrint />}
+              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+            <Button
+              handleClick={handleOfficeDownload}
+              title=""
+              type="button"
+              icon={<FaDownload />}
+              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
           </div>
         </>
       )}

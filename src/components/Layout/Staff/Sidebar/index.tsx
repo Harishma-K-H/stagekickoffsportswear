@@ -28,12 +28,6 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
       Icon: <MdDashboardCustomize className="w-[22px] h-auto" />,
     },
     {
-      title: 'Customers',
-      link: Paths.Staff.customers,
-      route: Paths.Staff.customers,
-      Icon: <FaUsers className="w-[22px] h-auto" />,
-    },
-    {
       title: 'Orders',
       link: Paths.Staff.orders.index,
       route: Paths.Staff.orders.index,
@@ -44,6 +38,12 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
       link: Paths.Staff.invoices,
       route: Paths.Staff.invoices,
       Icon: <FaFileInvoice className="w-[22px] h-auto" />,
+    },
+    {
+      title: 'Customers',
+      link: Paths.Staff.customers,
+      route: Paths.Staff.customers,
+      Icon: <FaUsers className="w-[22px] h-auto" />,
     },
     {
       title: 'Settings',
