@@ -32,25 +32,22 @@ const Invoice: React.FC<{
     >
       {/* Header */}
       <div className="grid items-center grid-cols-1 gap-4 pb-3 mb-4 border-b-2 md:grid-cols-3 print:grid-cols-3">
-        <img
-          src="/logo.png"
-          alt="Company Logo"
-          className="max-w-[200px]"
-        />
+        <img src="/logo.png" alt="Company Logo" className="max-w-[200px]" />
         <h5 className="mb-2 text-xl font-extrabold text-center">
           {type == 'INVOICE' ? `TAX INVOICE` : `ORDER`}
         </h5>
         <div className="text-right">
           <h5 className="text-lg font-extrabold leading-5 ">
             KICKOFF SPORTS WEAR. <br />
-            <span className="text-sm font-semibold">SMART TRADE CITY, KOTTAKKAL</span>
+            <span className="text-sm font-semibold">
+              SMART TRADE CITY, KOTTAKKAL
+            </span>
           </h5>
           <p className="text-xs">
             MALAPPURAM Kerala 676503, India <br />
             GSTIN: 32BKYPS7094H1ZA
           </p>
         </div>
-
       </div>
 
       {/* Order Details */}
