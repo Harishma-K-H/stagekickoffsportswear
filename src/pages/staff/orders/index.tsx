@@ -69,7 +69,13 @@ const Orders: React.FC = () => {
       width: 170,
       render: (_: any, record: any) => {
         const totalPaid = paidAmount(record.payment_details);
-        const currentBalance = parseInt(record.total_cost || '0') - totalPaid;
+        const balanceAmount =
+          record.payment_details?.length > 0 &&
+          record.payment_details[record.payment_details?.length - 1]
+            ?.balance_amount;
+        const currentBalance = balanceAmount
+          ? parseFloat(balanceAmount)
+          : Math.round(parseFloat(record.total_cost || '0') - totalPaid);
 
         return (
           <div className="flex gap-2">
@@ -125,6 +131,7 @@ const Orders: React.FC = () => {
     async (payload: any) => {
       try {
         await payment(post, payload);
+        notify('Payment Success', 'success');
         await getOrderById(); // Refresh order details after payment
         await getOrders(); // Refresh order list after payment
       } catch (error: any) {
@@ -312,6 +319,32 @@ const ModalDetails: React.FC<any> = ({
 
       {modalId === 2 && orderDetails && (
         <>
+          <h3 className="mb-3 text-xl font-semibold">Customer Details</h3>
+          <div className="p-4 mb-3 bg-gray-100 rounded-md">
+            <div className="grid grid-cols-1 gap-x-3 gap-y-1 md:grid-cols-2">
+              <div>
+                <span className="font-semibold text-gray-950">
+                  Customer Name:
+                </span>{' '}
+                {orderDetails.customer?.name}
+              </div>
+              <div>
+                <span className="font-semibold text-gray-950">
+                  Business Name:
+                </span>{' '}
+                {orderDetails.customer?.business_name}
+              </div>
+              <div>
+                <span className="font-semibold text-gray-950">Address:</span>{' '}
+                {orderDetails.customer?.address1}{' '}
+                {orderDetails.customer?.address2}
+              </div>
+              <div>
+                <span className="font-semibold text-gray-950">Mobile:</span>{' '}
+                {orderDetails.customer?.mobile_number1}
+              </div>
+            </div>
+          </div>
           <PaymentHistory
             orderDetails={orderDetails}
             CreteNewPayment={CreteNewPayment}

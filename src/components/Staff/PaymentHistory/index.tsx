@@ -8,10 +8,12 @@ interface PaymentDetail {
   paid_amount: string;
   total_amount: string;
   payment_method: string;
+  balance_amount: string;
 }
 
 const PaymentHistory: React.FC<any> = ({ orderDetails, CreteNewPayment }) => {
   const { id, total_cost, payment_details } = orderDetails;
+
   const [form] = Form.useForm();
 
   // Table data source for payment history
@@ -21,16 +23,19 @@ const PaymentHistory: React.FC<any> = ({ orderDetails, CreteNewPayment }) => {
       slNo: i + 1,
       date: dayjs(payment.created_at).format('DD-MM-YYYY'),
       paid: parseFloat(payment.paid_amount).toFixed(2),
-      balance: (
-        parseFloat(payment.total_amount) - parseFloat(payment.paid_amount)
-      ).toFixed(2),
+      balance: parseFloat(payment.balance_amount).toFixed(2),
       paymentMethod: payment.payment_method,
     }),
   );
 
   // Calculate total paid amount and current balance
-  const totalPaid = paidAmount(payment_details);
-  const currentBalance = parseInt(total_cost) - totalPaid;
+  const totalPaid = Math.round(paidAmount(payment_details));
+  const balanceAmount =
+    payment_details?.length > 0 &&
+    payment_details[payment_details?.length - 1]?.balance_amount;
+  const currentBalance = balanceAmount
+    ? parseFloat(balanceAmount)
+    : Math.round(parseFloat(total_cost) - totalPaid);
 
   const columns = [
     { title: 'Sl No.', dataIndex: 'slNo', key: 'slNo', width: '8%' },
@@ -47,13 +52,15 @@ const PaymentHistory: React.FC<any> = ({ orderDetails, CreteNewPayment }) => {
   // Payment method options
   const paymentMethods = [
     { value: 'Cash', label: 'Cash' },
-    { value: 'Card', label: 'Card' },
-    { value: 'Online', label: 'Online' },
+    { value: 'UPI', label: 'UPI (GPay/PhonePe/Paytm)' },
+    { value: 'Debit/Credit_Card', label: 'Debit/Credit Card' },
+    { value: 'Bank Transfer', label: 'Bank Transfer' },
   ];
 
   // Handle form submission
   const handleSubmit = (values: { paymentMethod: string; amount: string }) => {
     const paidAmount = parseFloat(values.amount);
+
     if (paidAmount > currentBalance) {
       form.setFields([
         {
@@ -69,7 +76,7 @@ const PaymentHistory: React.FC<any> = ({ orderDetails, CreteNewPayment }) => {
     const payload = {
       order_id: id,
       total_amount: total_cost,
-      balance_amount: currentBalance - paidAmount,
+      balance_amount: Math.round(currentBalance - paidAmount),
       paid_amount: paidAmount,
       payment_method: values.paymentMethod,
     };
@@ -116,6 +123,7 @@ const PaymentHistory: React.FC<any> = ({ orderDetails, CreteNewPayment }) => {
             <Form.Item
               name="paymentMethod"
               label="Payment Method"
+              className="!mb-0"
               rules={[
                 { required: true, message: 'Please select a payment method' },
               ]}
@@ -129,6 +137,7 @@ const PaymentHistory: React.FC<any> = ({ orderDetails, CreteNewPayment }) => {
             <Form.Item
               name="amount"
               label="Amount"
+              className="!mb-0"
               rules={[
                 { required: true, message: 'Please enter an amount' },
                 {
@@ -189,13 +198,13 @@ const PaymentHistory: React.FC<any> = ({ orderDetails, CreteNewPayment }) => {
                 Balance Amount:
               </span>
               <span className="font-medium dark:text-white">
-                {currentBalance?.toFixed(2)}
+                {currentBalance.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between pt-2 border-t">
               <span className="font-semibold dark:text-white">Total:</span>
               <span className="font-semibold dark:text-white">
-                {parseFloat(total_cost).toFixed(2)}
+                {Math.round(parseFloat(total_cost)).toFixed(2)}
               </span>
             </div>
           </div>

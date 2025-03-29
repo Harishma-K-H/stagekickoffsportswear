@@ -136,15 +136,52 @@ const NewOrders: React.FC = () => {
   );
 
   // Handle adding a new row
-  const handleAdd = async () => {
-    const itemValues = await itemForm.validateFields();
+  // const handleAdd = async () => {
+  //   const itemValues = await itemForm.validateFields();
 
-    if (!itemValues) {
-      return;
+  //   if (!itemValues) {
+  //     return;
+  //   }
+  //   const newData = { key: String(count) };
+  //   setDataSource([...dataSource, newData]);
+  //   setCount(count + 1);
+  // };
+
+  // Handle adding a new row
+  const handleAdd = async () => {
+    try {
+      // Validate the current form fields
+      await itemForm.validateFields();
+
+      // Get the current form values
+      const itemValues = itemForm.getFieldsValue();
+      const currentData = itemValues.data || {};
+
+      // Update existing rows: set discount to 0 if undefined
+      Object.keys(currentData).forEach((rowKey) => {
+        if (!currentData[rowKey].discount) {
+          // If discount is undefined or empty, set it to '0'
+          itemForm.setFieldsValue({
+            data: {
+              [rowKey]: {
+                ...currentData[rowKey],
+                discount: '0', // Set as string to match Input component
+              },
+            },
+          });
+          // Recalculate total cost for this row
+          handleRowTotalCost(rowKey);
+        }
+      });
+
+      // Add the new row
+      const newData = { key: String(count) };
+      setDataSource([...dataSource, newData]);
+      setCount(count + 1);
+    } catch (error) {
+      // Validation failed, do not add a new row
+      console.log('Validation failed:', error);
     }
-    const newData = { key: String(count) };
-    setDataSource([...dataSource, newData]);
-    setCount(count + 1);
   };
 
   // Handle deleting a row
@@ -275,7 +312,7 @@ const NewOrders: React.FC = () => {
           address2: customerValues.address2 || '',
           mobile_number1: customerValues.mobile_number1,
           mobile_number2: customerValues.mobile_number2 || '',
-          email: customerValues.email,
+          email: customerValues.email || '',
           gst_no: customerValues.gstn || '',
           business_name: customerValues.businessName,
         };
@@ -645,14 +682,15 @@ const NewOrders: React.FC = () => {
             bordered
             dataSource={dataSource}
             columns={defaultColumns as ColumnTypes}
+            scroll={{ x: 900 }}
           />
-          <div className="absolute bottom-0 -right-7 w-fit">
+          <div className="fixed z-50 shadow-lg bottom-5 right-5 w-fit">
             <Button
               title=""
               icon={<FaPlus className="w-5 h-5" />}
               handleClick={handleAdd}
               type="button"
-              className="bg-secondary rounded-md w-full !px-4 text-white font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
+              className="bg-secondary rounded-md w-full !px-6 text-white font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
             />
           </div>
         </Form>
@@ -661,29 +699,8 @@ const NewOrders: React.FC = () => {
           form={remarksForm}
           onValuesChange={handleFieldChange}
           layout="vertical"
-          className="grid justify-between grid-cols-4 gap-5"
+          className=""
         >
-          <Form.Item
-            name="selectedDate"
-            label="Delivery Date"
-            className="!mb-0"
-            rules={[{ required: true, message: 'Please select a date' }]}
-          >
-            <DatePicker
-              disabledDate={disabledDate}
-              placeholder="Delivery Date"
-              // onChange={handleDateChange} // Update state on change
-              format="DD-MM-YYYY" // Display format
-              style={{ width: '100%' }}
-            />
-          </Form.Item>
-          <Form.Item
-            name="remarks"
-            label="Remarks"
-            className="col-span-2 !mb-0"
-          >
-            <Input.TextArea rows={4} placeholder="Enter Remarks here" />
-          </Form.Item>
           <div className="flex flex-col items-end mt-4">
             <div className="flex justify-between w-64">
               <span className="font-medium">Sub Total:</span>
@@ -701,6 +718,29 @@ const NewOrders: React.FC = () => {
               <span className="font-bold">Grand Total:</span>
               <span className="font-bold">{grandTotal.toFixed(2)}</span>
             </div>
+          </div>
+          <div className="grid justify-between grid-cols-1 gap-5 mt-3 md:grid-cols-3">
+            <Form.Item
+              name="selectedDate"
+              label="Delivery Date"
+              className="!mb-0"
+              rules={[{ required: true, message: 'Please select a date' }]}
+            >
+              <DatePicker
+                disabledDate={disabledDate}
+                placeholder="Delivery Date"
+                // onChange={handleDateChange} // Update state on change
+                format="DD-MM-YYYY" // Display format
+                style={{ width: '100%' }}
+              />
+            </Form.Item>
+            <Form.Item
+              name="remarks"
+              label="Remarks"
+              className="md:col-span-2 !mb-0"
+            >
+              <Input.TextArea rows={4} placeholder="Enter Remarks here" />
+            </Form.Item>
           </div>
         </Form>
       </div>
@@ -730,6 +770,7 @@ const CustomerDetails: React.FC<any> = ({
     /^[0-3][0-9][A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
   const [customers, setCustomers] = useState<any[]>([]); // Store existing customers
+  const [customerDetails, setCustomerDetails] = useState<any>(null); // Store existing customers
   const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false); // Track if businessName is disabled
   const onChange = (e: any) => {
     setUserType(e.target.value);
@@ -865,7 +906,7 @@ const CustomerDetails: React.FC<any> = ({
             label="Email"
             name="email"
             rules={[
-              { required: true, message: 'Please enter your Email' },
+              { required: false, message: 'Please enter your Email' },
               { type: 'email', message: 'Invalid email format' },
             ]}
           >
@@ -901,14 +942,20 @@ const CustomerDetails: React.FC<any> = ({
             rules={[
               { required: true, message: 'Please enter Mobile' },
               {
-                pattern: /^[0-9]{10}$/,
-                message: 'Mobile 1 must be exactly 10 digits',
+                pattern: /^\d{10}$/,
+                message: 'Mobile must be exactly 10 digits',
               },
             ]}
           >
             <Input
               type="tel"
               placeholder="Enter mobile"
+              onInput={(e) => {
+                e.currentTarget.value = e.currentTarget.value.replace(
+                  /\D/g,
+                  '',
+                ); // Remove non-numeric characters
+              }}
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
@@ -920,10 +967,10 @@ const CustomerDetails: React.FC<any> = ({
             rules={[
               {
                 validator: (_, value) =>
-                  !value || /^[0-9]{10}$/.test(value)
+                  !value || /^\d{10}$/.test(value)
                     ? Promise.resolve()
                     : Promise.reject(
-                        new Error('Mobile 2 must be exactly 10 digits'),
+                        new Error('Mobile must be exactly 10 digits'),
                       ),
               },
             ]}
@@ -931,6 +978,12 @@ const CustomerDetails: React.FC<any> = ({
             <Input
               type="tel"
               placeholder="Enter mobile 2"
+              onInput={(e) => {
+                e.currentTarget.value = e.currentTarget.value.replace(
+                  /\D/g,
+                  '',
+                ); // Remove non-numeric characters
+              }}
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
@@ -969,15 +1022,45 @@ const CustomerDetails: React.FC<any> = ({
               placeholder="Search for a user"
               className="h-full"
               allowClear
+              onChange={(_value: number, option: any) => {
+                setCustomerDetails(option?.data);
+              }}
               onClear={handleClear} // Refetch list on clear
               onSearch={handleSearch} // Trigger search on typing
               filterOption={false} // Disable local filtering, rely on API
               options={customers.map((customer) => ({
                 value: customer.id, // Assuming customer has an id field
                 label: customer.name, // Display customer name
+                data: customer,
               }))}
             />
           </Form.Item>
+          {customerDetails && (
+            <div className="p-4 mt-2 bg-gray-100 rounded-md">
+              <div className="grid grid-cols-1 gap-x-3 gap-y-1 md:grid-cols-2">
+                <div>
+                  <span className="font-semibold text-gray-950">
+                    Customer Name:
+                  </span>{' '}
+                  {customerDetails?.name}
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-950">
+                    Business Name:
+                  </span>{' '}
+                  {customerDetails?.business_name}
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-950">Address:</span>{' '}
+                  {customerDetails?.address1} {customerDetails?.address2}
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-950">Mobile:</span>{' '}
+                  {customerDetails?.mobile_number1}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </Form>

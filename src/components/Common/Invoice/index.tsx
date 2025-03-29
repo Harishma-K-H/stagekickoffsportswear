@@ -63,9 +63,10 @@ const Invoice: React.FC<{
           <p className="text-gray-600 dark:text-gray-300">
             {customer?.business_name} <br />
             {customer?.name} <br />
-            {customer?.address1} <br />
-            {customer?.mobile_number1} <br />
-            {customer?.email} <br />
+            {customer?.address1}, {customer?.address2} <br />
+            {customer?.mobile_number1}
+            <br />
+            {customer?.gst_no && `GSTNO: ${customer?.gst_no}`}
           </p>
         </div>
         <div className="space-y-1 text-right">
@@ -82,11 +83,6 @@ const Invoice: React.FC<{
             <br />
             Delivery Date:{' '}
             <span className="font-normal text-gray-600">{delivery_date}</span>
-            <br />
-            GSTNO:{' '}
-            <span className="font-normal text-gray-600">
-              {customer?.gst_no}
-            </span>
           </p>
         </div>
       </div>
