@@ -225,7 +225,8 @@ const ModalDetails: React.FC<any> = ({
   setOrderId,
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [printForOffice, setPrintForOffice] = useState<boolean>(false); // State for printForOffice
+  const [printForOffice, setPrintForOffice] = useState<boolean>(false);
+  const [downloadForOffice, setDownloadForOffice] = useState<boolean>(false);
 
   // Configure react-to-print with a custom document title
   const reactToPrintFn = useReactToPrint({
@@ -249,14 +250,14 @@ const ModalDetails: React.FC<any> = ({
   }, []);
 
   const handleOfficeDownload = useCallback(() => {
-    setPrintForOffice(true);
+    setDownloadForOffice(true);
     setTimeout(() => {
       handleDownloadPDF({
         type: 'ORDER',
         contentRef,
         invoiceId: orderDetails.orderID,
       });
-      setPrintForOffice(false);
+      setDownloadForOffice(false);
     }, 100);
   }, []);
 
@@ -276,6 +277,7 @@ const ModalDetails: React.FC<any> = ({
               type={'ORDER'}
               data={orderDetails}
               printForOffice={printForOffice}
+              downloadForOffice={downloadForOffice}
             />
           </div>
           <div className="flex justify-end gap-2">

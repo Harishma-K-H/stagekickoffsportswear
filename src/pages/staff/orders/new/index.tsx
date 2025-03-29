@@ -136,18 +136,6 @@ const NewOrders: React.FC = () => {
   );
 
   // Handle adding a new row
-  // const handleAdd = async () => {
-  //   const itemValues = await itemForm.validateFields();
-
-  //   if (!itemValues) {
-  //     return;
-  //   }
-  //   const newData = { key: String(count) };
-  //   setDataSource([...dataSource, newData]);
-  //   setCount(count + 1);
-  // };
-
-  // Handle adding a new row
   const handleAdd = async () => {
     try {
       // Validate the current form fields
@@ -589,7 +577,13 @@ const NewOrders: React.FC = () => {
           rules={[{ required: true, message: 'Please enter Quantity' }]}
           className="!mb-0 "
         >
-          <Input placeholder="Enter Quantity" className="w-full h-9" />
+          <Input
+            placeholder="Enter Quantity"
+            className="w-full h-9"
+            onInput={(e) => {
+              e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
+            }}
+          />
         </Form.Item>
       ),
     },
@@ -602,7 +596,13 @@ const NewOrders: React.FC = () => {
           rules={[{ required: false, message: 'Please enter Discount' }]} // Optional field
           className="!mb-0 "
         >
-          <Input placeholder="Enter Discount" className="w-full h-9" />
+          <Input
+            placeholder="Enter Discount"
+            className="w-full h-9"
+            onInput={(e) => {
+              e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
+            }}
+          />
         </Form.Item>
       ),
     },

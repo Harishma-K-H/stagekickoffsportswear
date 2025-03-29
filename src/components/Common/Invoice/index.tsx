@@ -8,7 +8,13 @@ const Invoice: React.FC<{
   type: 'ORDER' | 'INVOICE';
   data: any;
   printForOffice?: boolean;
-}> = ({ type = 'ORDER', data, printForOffice = false }) => {
+  downloadForOffice?: boolean;
+}> = ({
+  type = 'ORDER',
+  data,
+  printForOffice = false,
+  downloadForOffice = false,
+}) => {
   const {
     invoice_id,
     orderID,
@@ -105,13 +111,17 @@ const Invoice: React.FC<{
                 <th className="px-4 py-2 text-sm text-left dark:text-white">
                   Size
                 </th>
-                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                <th
+                  className={`px-4 py-2 text-sm text-left dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+                >
                   Unit Cost
                 </th>
                 <th className="px-4 py-2 text-sm text-left dark:text-white">
                   Qty
                 </th>
-                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                <th
+                  className={`px-4 py-2 text-sm text-left dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+                >
                   Item Cost
                 </th>
               </tr>
@@ -132,11 +142,15 @@ const Invoice: React.FC<{
                     {item.sleeve_case}
                   </td>
                   <td className="px-4 py-2 dark:text-white">{item.size}</td>
-                  <td className="px-4 py-2 dark:text-white">
+                  <td
+                    className={`px-4 py-2 dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+                  >
                     {item.unit_cost}
                   </td>
                   <td className="px-4 py-2 dark:text-white">{item.qty}</td>
-                  <td className="px-4 py-2 dark:text-white">
+                  <td
+                    className={`px-4 py-2 dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+                  >
                     {item.total_item_cost}
                   </td>
                 </tr>
@@ -147,7 +161,9 @@ const Invoice: React.FC<{
       </div>
 
       {/* Total Calculations */}
-      <div className={`flex justify-end ${printForOffice && 'print:hidden'}`}>
+      <div
+        className={`flex justify-end ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+      >
         <div className="w-2/5">
           <div className="space-y-2">
             <div className="flex justify-between">
