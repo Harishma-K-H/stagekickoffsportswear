@@ -4,15 +4,15 @@ import Button from '@components/Common/Button';
 import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
+import { handleDownloadPDF } from '@utils/staff/downloadPdf';
 import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FaPrint } from 'react-icons/fa';
+import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
 
 import { invoiceById, invoices } from './api';
-import { FaPrint } from 'react-icons/fa';
-import { FaDownload } from 'react-icons/fa6';
-import { handleDownloadPDF } from '@utils/staff/downloadPdf';
 
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();

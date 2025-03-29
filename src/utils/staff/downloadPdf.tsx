@@ -1,6 +1,6 @@
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import dayjs from 'dayjs';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const handleDownloadPDF: ({
   type,

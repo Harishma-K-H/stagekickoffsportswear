@@ -6,17 +6,17 @@ import { notify } from '@components/Common/Toastify';
 import PaymentHistory from '@components/Staff/PaymentHistory';
 import Paths from '@routes/paths';
 import { useApiJSON } from '@services/ApiService/Api.service';
+import { handleDownloadPDF } from '@utils/staff/downloadPdf';
 import { paidAmount } from '@utils/staff/paidAmount';
 import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FaPrint } from 'react-icons/fa';
+import { FaDownload } from 'react-icons/fa6';
 import { Link } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
-import { FaPrint } from 'react-icons/fa';
 
 import { orderById, orders, payment } from './api';
-import { FaDownload } from 'react-icons/fa6';
-import { handleDownloadPDF } from '@utils/staff/downloadPdf';
 
 const Orders: React.FC = () => {
   const { get, post } = useApiJSON();
