@@ -265,7 +265,7 @@ const NewOrders: React.FC = () => {
     } catch (error: any) {
       const errorData = error.response?.data; // API error object
       if (errorData && typeof errorData === 'object') {
-        const fieldErrors = Object.keys(errorData).map((field) => ({
+        const fieldErrors = Object.keys(errorData)?.map((field) => ({
           name: field, // Use API field names directly (mobile_number1, email)
           errors: errorData[field], // Array of error messages
         }));
@@ -311,7 +311,7 @@ const NewOrders: React.FC = () => {
         customerId = customerValues.existingUser;
       }
 
-      const items = Object.keys(itemValues.data || {}).map((key) => {
+      const items = Object.keys(itemValues.data || {})?.map((key) => {
         const row = itemValues.data[key];
         const item: any = {
           name: modelName[key],
@@ -449,7 +449,7 @@ const NewOrders: React.FC = () => {
               });
               getMaterials(value, record.key, selectedLabel);
             }}
-            options={models.map((model: any) => ({
+            options={models?.map((model: any) => ({
               value: model.id,
               label: model.name,
             }))}
@@ -1028,7 +1028,7 @@ const CustomerDetails: React.FC<any> = ({
               onClear={handleClear} // Refetch list on clear
               onSearch={handleSearch} // Trigger search on typing
               filterOption={false} // Disable local filtering, rely on API
-              options={customers.map((customer) => ({
+              options={customers?.map((customer) => ({
                 value: customer.id, // Assuming customer has an id field
                 label: customer.name, // Display customer name
                 data: customer,

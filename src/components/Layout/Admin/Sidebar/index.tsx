@@ -55,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
             <div className="flex flex-col overflow-y-auto duration-300 ease-linear w- scrollbar-hide">
               <nav className="px-3 py-4 mt-5 lg:mt-0 lg:px-3">
                 <ul className="mb-6 flex flex-col gap-2 text-[#191D23]">
-                  {menuList.map((menu, index) => {
+                  {menuList?.map((menu, index) => {
                     return (
                       <li
                         key={index}

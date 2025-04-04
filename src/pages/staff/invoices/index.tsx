@@ -126,7 +126,7 @@ const Invoices: React.FC = () => {
     setPageNumber(page);
   }, []);
 
-  const tableDataSource = invoicesList.map((invoice: any, i: number) => ({
+  const tableDataSource = invoicesList?.map((invoice: any, i: number) => ({
     key: i,
     slNo: i + 1,
     OrderId: invoice?.orderID,

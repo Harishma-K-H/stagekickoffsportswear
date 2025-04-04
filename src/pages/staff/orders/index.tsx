@@ -152,7 +152,7 @@ const Orders: React.FC = () => {
     setPageNumber(page);
   }, []);
 
-  const tableDataSource = ordersList.map((order: any, i: number) => ({
+  const tableDataSource = ordersList?.map((order: any, i: number) => ({
     key: i,
     slNo: i + 1,
     OrderId: order?.orderID,
