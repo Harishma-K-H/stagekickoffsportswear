@@ -29,7 +29,7 @@ const SubscriberLayout: React.FC<{}> = () => {
         >
           <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           <main>
-            <div className="p-3 pb-20 mx-auto w-screen-2xl xl:p-4 2xl:p-8">
+            <div className="p-3 pb-20 mx-auto w-screen-2xl xl:p-4 2xl:p-6">
               <Outlet />
             </div>
           </main>

@@ -28,7 +28,7 @@ const DropdownUser: React.FC = () => {
         to="#"
       >
         <span className="h-12 w-12 rounded-[16px] overflow-hidden border-[1px]">
-          <img src="/assets/user.jpg" alt="User" className="w-[90px]" />
+          <img src="/user.jpg" alt="User" className="w-[90px]" />
         </span>
         <div className="flex gap-6">
           <span className="hidden text-left lg:block">

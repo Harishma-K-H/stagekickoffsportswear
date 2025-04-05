@@ -1,21 +1,14 @@
-import Button from '@components/Common/Button';
 import { SidebarProps } from '@models/Sidebar';
-import { resetUser } from '@redux/reducers/auth/reducer';
-import { selectUserName, selectUserRole } from '@redux/reducers/auth/selector';
 import Paths from '@routes/paths';
 import React, { useState } from 'react';
-import { CgLogOut } from 'react-icons/cg';
-import { FaFileInvoice, FaUserAlt, FaUsers } from 'react-icons/fa';
+import { FaFileInvoice, FaUsers } from 'react-icons/fa';
 import { FaPlus } from 'react-icons/fa6';
 import { IoSettings } from 'react-icons/io5';
 import { MdDashboardCustomize, MdOutlineChecklistRtl } from 'react-icons/md';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router';
+import { Link, NavLink, useLocation } from 'react-router';
 
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
-  const dispatch = useDispatch<any>();
-  const navigate = useNavigate();
   const { pathname } = location;
 
   const isRoute = (route: string) => pathname.includes(route);
@@ -53,14 +46,6 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
     },
   ]);
 
-  const logout = () => {
-    dispatch(resetUser());
-    navigate(Paths.signIn);
-  };
-
-  const uerName = useSelector(selectUserName);
-  const userRole = useSelector(selectUserRole);
-
   return (
     <div className="border-r-2">
       <div className="hidden lg:flex items-center justify-between gap-2 px-6 py-4.5 lg:justify-center bg-white">
@@ -83,10 +68,10 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
             <FaPlus />
             New Order
           </Link>
-          <h3 className="px-3 lg:px-3 text-[#64748B] text-sm">Menu</h3>
+          {/* <h3 className="px-3 lg:px-3 text-[#64748B] text-sm">Menu</h3> */}
           <div className="overflow-y-scroll light-scrollbar">
             <div className="flex flex-col overflow-y-auto duration-300 ease-linear w- scrollbar-hide">
-              <nav className="px-3 py-4 mt-5 lg:mt-0 lg:px-3">
+              <nav className="py-4 pl-3 mt-5 lg:mt-0 lg:pl-3">
                 <ul className="mb-6 flex flex-col gap-2 text-[#191D23]">
                   {menuList?.map((menu, index) => {
                     return (
@@ -109,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
             </div>
           </div>
         </div>
-        <div className="flex flex-col justify-between gap-3 px-4 py-5.5 lg:py-6.5 lg:justify-center xl:mb-[100px]">
+        {/* <div className="flex flex-col justify-between gap-3 px-4 py-5.5 lg:py-6.5 lg:justify-center xl:mb-[100px]">
           <h3 className="text-[#64748B] text-sm">Profile</h3>
           <div className="flex items-center gap-2 ">
             <div className="flex-1 w-10 h-10 rounded-full bg-slate-500">
@@ -132,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
             className="text-[#191D23] flex items-center gap-2 py-[10px] text-[16px] rounded-[5px] bg-[#F7F8F9] font-semibold justify-center"
             tooltip="Log out"
           />
-        </div>
+        </div> */}
       </aside>
     </div>
   );

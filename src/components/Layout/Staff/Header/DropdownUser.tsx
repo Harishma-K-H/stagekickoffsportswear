@@ -1,10 +1,8 @@
 import { resetUser } from '@redux/reducers/auth/reducer';
-import { selectUserName } from '@redux/reducers/auth/selector';
 import Paths from '@routes/paths';
 import React, { useState } from 'react';
 import { BiLogOut } from 'react-icons/bi';
-import { MdOutlineKeyboardArrowDown } from 'react-icons/md';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router';
 
 const DropdownUser: React.FC = () => {
@@ -12,7 +10,6 @@ const DropdownUser: React.FC = () => {
   const navigate = useNavigate();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const userName = useSelector(selectUserName);
 
   const logout = () => {
     dispatch(resetUser());
@@ -28,19 +25,19 @@ const DropdownUser: React.FC = () => {
         to="#"
       >
         <span className="h-12 w-12 rounded-[16px] overflow-hidden border-[1px]">
-          <img src="/assets/user.jpg" alt="User" className="w-[90px]" />
+          <img src="/user.jpg" alt="User" className="w-[90px]" />
         </span>
-        <div className="flex gap-6">
+        {/* <div className="flex gap-6">
           <span className="hidden text-left lg:block">
             <span className="block text-sm font-medium text-black capitalize">
               {userName}
             </span>
-            <span className="block text-xs text-text-secondary">Student</span>
+            <span className="block text-xs text-text-secondary">{userRole}</span>
           </span>
           <MdOutlineKeyboardArrowDown
             className={`hidden fill-current w-6 h-6 sm:block ${dropdownOpen && 'rotate-180'}`}
           />
-        </div>
+        </div> */}
       </Link>
       {dropdownOpen && (
         <div
@@ -48,10 +45,10 @@ const DropdownUser: React.FC = () => {
           onBlur={() => setDropdownOpen(false)}
           className={`absolute right-0 top-10 mt-4 flex w-48 flex-col rounded-md border border-stroke bg-white shadow-default ${dropdownOpen === true ? 'block' : 'hidden'}`}
         >
-          <button className="flex items-center gap-3 px-6 py-2 text-sm font-medium text-black capitalize duration-300 ease-in-out lg:hidden lg:text-base">
+          {/* <button className="flex items-center gap-3 px-6 py-2 text-sm font-medium text-black capitalize duration-300 ease-in-out lg:hidden lg:text-base">
             {userName}
           </button>
-          <hr />
+          <hr /> */}
           <button
             onClick={logout}
             className="flex items-center gap-3 px-6 py-4 text-sm font-medium text-red-500 duration-300 ease-in-out hover:text-white hover:bg-red-500 lg:text-base"

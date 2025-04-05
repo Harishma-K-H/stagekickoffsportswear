@@ -6,6 +6,7 @@ import { notify } from '@components/Common/Toastify';
 import PaymentHistory from '@components/Staff/PaymentHistory';
 import Paths from '@routes/paths';
 import { useApiJSON } from '@services/ApiService/Api.service';
+import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { handleDownloadPDF } from '@utils/staff/downloadPdf';
 import { paidAmount } from '@utils/staff/paidAmount';
 import { Modal, Pagination, Table } from 'antd';
@@ -119,7 +120,6 @@ const Orders: React.FC = () => {
 
     try {
       const { data } = await orderById(get, orderId);
-      console.log(data);
       setOrderDetails(data);
     } catch (error: any) {
       notify('Failed to fetch order details', 'error');
@@ -156,7 +156,7 @@ const Orders: React.FC = () => {
     key: i,
     slNo: i + 1,
     OrderId: order?.orderID,
-    customerName: order?.customer?.name,
+    customerName: capitalizeFirstLetterOfEachWord(order?.customer?.name),
     orderDate: dayjs(order?.order_date).format('DD-MM-YYYY'),
     deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
     payment_details: order?.payment_details, // Pass payment_details to the record

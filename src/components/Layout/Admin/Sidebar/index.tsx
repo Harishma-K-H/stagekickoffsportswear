@@ -1,19 +1,11 @@
-import Button from '@components/Common/Button';
 import { SidebarProps } from '@models/Sidebar';
-import { resetUser } from '@redux/reducers/auth/reducer';
-import { selectUserName, selectUserRole } from '@redux/reducers/auth/selector';
 import Paths from '@routes/paths';
 import React, { useState } from 'react';
-import { CgLogOut } from 'react-icons/cg';
-import { FaUserAlt } from 'react-icons/fa';
 import { MdDashboardCustomize } from 'react-icons/md';
-import { useDispatch, useSelector } from 'react-redux';
-import { NavLink, useLocation, useNavigate } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
 
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
-  const dispatch = useDispatch<any>();
-  const navigate = useNavigate();
   const { pathname } = location;
 
   const isRoute = (route: string) => pathname.includes(route);
@@ -26,14 +18,6 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
       Icon: <MdDashboardCustomize className="w-[22px] h-auto" />,
     },
   ]);
-
-  const logout = () => {
-    dispatch(resetUser());
-    navigate(Paths.signIn);
-  };
-
-  const uerName = useSelector(selectUserName);
-  const userRole = useSelector(selectUserRole);
 
   return (
     <div className="border-r-2">
@@ -76,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
             </div>
           </div>
         </div>
-        <div className="flex flex-col justify-between gap-3 px-4 py-5.5 lg:py-6.5 lg:justify-center xl:mb-[100px]">
+        {/* <div className="flex flex-col justify-between gap-3 px-4 py-5.5 lg:py-6.5 lg:justify-center xl:mb-[100px]">
           <h3 className="text-[#64748B] text-sm">Profile</h3>
           <div className="flex items-center gap-2 ">
             <div className="items-center justify-center flex-1 w-10 h-10 p-1.5 rounded-full bg-slate-500">
@@ -99,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
             className="text-[#191D23] flex items-center gap-2 py-[10px] text-[16px] rounded-[5px] bg-[#F7F8F9] font-semibold justify-center"
             tooltip="Log out"
           />
-        </div>
+        </div> */}
       </aside>
     </div>
   );

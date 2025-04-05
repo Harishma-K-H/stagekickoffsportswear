@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
 
-import DropdownLanguage from './DropdownLanguage';
-import DropdownNotification from './DropdownNotification';
+// import DropdownLanguage from './DropdownLanguage';
+// import DropdownNotification from './DropdownNotification';
 import DropdownUser from './DropdownUser';
 
 const Header: React.FC<{
@@ -10,8 +10,8 @@ const Header: React.FC<{
   setSidebarOpen: (arg0: boolean) => void;
 }> = (props) => {
   return (
-    <header className="sticky top-0 z-50 flex w-full bg-white dark:drop-shadow-none shadow-1 lg:hidden">
-      <div className="flex items-center justify-between flex-grow px-4 py-4 xl:justify-end md:px-6 2xl:px-11">
+    <header className="sticky top-0 z-50 flex w-full bg-white drop-shadow-sm dark:drop-shadow-none shadow-1">
+      <div className="flex items-center justify-between flex-grow px-4 py-3 xl:justify-end md:px-6 2xl:px-11">
         <div className="flex items-center gap-2 sm:gap-4 xl:hidden">
           {/* <!-- Hamburger Toggle BTN --> */}
           <button
@@ -55,9 +55,9 @@ const Header: React.FC<{
         </div>
 
         <div className="flex items-center gap-5 2xsm:gap-7">
-          <DropdownLanguage />
+          {/* <DropdownLanguage /> */}
           <div className="flex items-center gap-3">
-            <DropdownNotification />
+            {/* <DropdownNotification /> */}
             <DropdownUser />
           </div>
         </div>

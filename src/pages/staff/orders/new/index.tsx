@@ -19,6 +19,7 @@ import {
 import dayjs from 'dayjs'; // Ensure dayjs is imported
 import React, { useCallback, useEffect, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
+import { MdDeleteForever } from 'react-icons/md';
 import { useNavigate } from 'react-router';
 
 import {
@@ -27,6 +28,7 @@ import {
   fetchModels,
   fetchPrintTypes,
   generateOrderId,
+  getCustomers,
   GstVerification,
   newCustomer,
   newOrder,
@@ -168,7 +170,7 @@ const NewOrders: React.FC = () => {
       setCount(count + 1);
     } catch (error) {
       // Validation failed, do not add a new row
-      console.log('Validation failed:', error);
+      console.error('Validation failed:', error);
     }
   };
 
@@ -306,7 +308,6 @@ const NewOrders: React.FC = () => {
         };
 
         customerId = await creteNewCustomer(newCustomerPayload);
-        console.log(customerId, 'creteNewCustomer(newCustomerPayload)');
       } else {
         customerId = customerValues.existingUser;
       }
@@ -629,12 +630,20 @@ const NewOrders: React.FC = () => {
       align: 'center',
       render: (_, record) =>
         dataSource.length >= 1 ? (
-          <Popconfirm
-            title="Sure to delete?"
-            onConfirm={() => handleDelete(record.key)}
-          >
-            <span className="text-red-600 cursor-pointer">Delete</span>
-          </Popconfirm>
+          <div className="flex items-center justify-center gap-3">
+            <Popconfirm
+              title="Sure to delete?"
+              onConfirm={() => handleDelete(record.key)}
+            >
+              <MdDeleteForever className="mx-auto cursor-pointer text-primary w-7 h-7" />
+            </Popconfirm>
+            {record.key === dataSource[dataSource.length - 1].key && (
+              <FaPlus
+                className="w-6 h-6 cursor-pointer text-secondary"
+                onClick={handleAdd}
+              />
+            )}
+          </div>
         ) : null,
     },
   ];
@@ -684,7 +693,7 @@ const NewOrders: React.FC = () => {
             columns={defaultColumns as ColumnTypes}
             scroll={{ x: 900 }}
           />
-          <div className="fixed z-50 shadow-lg bottom-5 right-5 w-fit">
+          {/* <div className="fixed z-50 shadow-lg bottom-5 right-5 w-fit">
             <Button
               title=""
               icon={<FaPlus className="w-5 h-5" />}
@@ -692,7 +701,7 @@ const NewOrders: React.FC = () => {
               type="button"
               className="bg-secondary rounded-md w-full !px-6 text-white font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
             />
-          </div>
+          </div> */}
         </Form>
         {/* Totals Section */}
         <Form
@@ -780,16 +789,27 @@ const CustomerDetails: React.FC<any> = ({
   const fetchCustomers = useCallback(
     async (searchTerm: string = '') => {
       try {
-        const { data }: { data: [] } = await get(
-          `/customers/?data=customer_list&search=${searchTerm}`,
-        );
-        setCustomers(data || []); // Assuming data is an array of customer objects
-      } catch (error) {
-        notify('Failed to fetch existing customers.', 'error');
+        const { data } = await getCustomers(get, searchTerm);
+        setCustomers(data);
+      } catch (error: any) {
+        notify('Failed to fetch existing customers', 'error');
       }
     },
     [get],
   );
+  // const fetchCustomers = useCallback(
+  //   async (searchTerm: string = '') => {
+  //     try {
+  //       const { data }: { data: [] } = await get(
+  //         `/customers/?data=customer_list&search=${searchTerm}`,
+  //       );
+  //       setCustomers(data || []); // Assuming data is an array of customer objects
+  //     } catch (error) {
+  //       notify('Failed to fetch existing customers.', 'error');
+  //     }
+  //   },
+  //   [get],
+  // );
 
   // Handle GST verification
   const handleGSTVerification = async (gstn: string) => {
