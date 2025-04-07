@@ -10,7 +10,7 @@ export const GstVerification = async (gstn: string): Promise<any> => {
 export const fetchModels = async (
   get: (url: string) => Promise<any>,
 ): Promise<any> => {
-  const response = await get(`/api/models/?data=model_list`);
+  const response = await get(`/models/?data=model_list`);
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
@@ -29,7 +29,7 @@ export const fetchMaterial = async (
 export const fetchPrintTypes = async (
   get: (url: string) => Promise<any>,
 ): Promise<any> => {
-  const response = await get(`/api/print-types/`);
+  const response = await get(`/print-types/`);
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
