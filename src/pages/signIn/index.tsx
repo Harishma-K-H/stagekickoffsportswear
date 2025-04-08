@@ -2,7 +2,7 @@ import './style.css';
 
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
-import { setToken, setUserRole } from '@redux/reducers/auth/reducer';
+import { setToken, setUserName, setUserRole } from '@redux/reducers/auth/reducer';
 import Paths from '@routes/paths';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { Checkbox, Form, Input } from 'antd';
@@ -28,7 +28,8 @@ const SignIn: React.FC = () => {
     try {
       const { data } = await login(post, values);
       const { access, name, role, refresh } = data;
-      dispatch(setToken({ access, name, refresh }));
+      dispatch(setToken({ access, refresh }));
+      dispatch(setUserName({ name }));
       dispatch(setUserRole(role.toUpperCase()));
 
       if (role.toUpperCase() === import.meta.env.VITE_STAFF_ROLE) {
