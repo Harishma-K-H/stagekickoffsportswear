@@ -1,12 +1,14 @@
 import { resetUser, setToken } from '@redux/reducers/auth/reducer';
-import { selectAccessToken, selectRefreshToken } from '@redux/reducers/auth/selector';
+import {
+  selectAccessToken,
+  selectRefreshToken,
+} from '@redux/reducers/auth/selector';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { API_CONFIG } from './Api.config';
 import { handleApiResponse } from './handleApiResponseError';
-
 
 // Define a type for Axios config with a custom flag
 interface CustomAxiosRequestConfig extends AxiosRequestConfig {
@@ -64,7 +66,12 @@ const useApi = (
       const newRefreshToken = response.data.refresh || refreshToken; // Use existing refresh if not provided
 
       // Update tokens in Redux
-      dispatch(setToken({ accessToken: newAccessToken, refreshToken: newRefreshToken }));
+      dispatch(
+        setToken({
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        }),
+      );
       return newAccessToken;
     } catch (error) {
       console.error('Failed to refresh token:', error);

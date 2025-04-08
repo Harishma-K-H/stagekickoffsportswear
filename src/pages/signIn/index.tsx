@@ -2,7 +2,11 @@ import './style.css';
 
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
-import { setToken, setUserName, setUserRole } from '@redux/reducers/auth/reducer';
+import {
+  setToken,
+  setUserName,
+  setUserRole,
+} from '@redux/reducers/auth/reducer';
 import Paths from '@routes/paths';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { Checkbox, Form, Input } from 'antd';
