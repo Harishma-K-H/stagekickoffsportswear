@@ -75,9 +75,7 @@ const Invoices: React.FC = () => {
         return (
           <div className="flex gap-2">
             <Button
-              handleClick={() =>
-                showModal(invoicesList[record?.key]?.invoice_id)
-              }
+              handleClick={() => showModal(invoicesList[record?.key]?.id)}
               title="View"
               type="button"
               className="text-white bg-gray-500 rounded-md !py-2 w-full"
