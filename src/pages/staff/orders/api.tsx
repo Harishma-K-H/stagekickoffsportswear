@@ -26,7 +26,7 @@ export const payment = async (
   post: (url: string, payload: any, config?: any) => Promise<any>,
   payload: any,
 ): Promise<any> => {
-  const response = await post('/api/payment/', payload);
+  const response = await post('/payment/', payload);
 
   return { data: response.data, status: response.status, ok: response.ok };
 };

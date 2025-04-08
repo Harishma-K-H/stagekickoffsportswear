@@ -30,14 +30,13 @@ import {
   generateOrderId,
   getCustomers,
   GstVerification,
-  newCustomer,
   newOrder,
 } from './api';
 
 type ColumnTypes = Exclude<TableProps['columns'], undefined>;
 
 const NewOrders: React.FC = () => {
-  const { get, post } = useApiJSON();
+  const { get } = useApiJSON();
   const { post: FormDataPost } = useApiFormData(); // Use FormData-specific post
   const navigate = useNavigate();
 
@@ -176,6 +175,11 @@ const NewOrders: React.FC = () => {
 
   // Handle deleting a row
   const handleDelete = (key: React.Key) => {
+    console.log({ dataSource });
+    if (dataSource.length <= 1) {
+      notify('Required minimum 1 order', 'warning');
+      return;
+    }
     const newData = dataSource.filter((item) => item.key !== key);
     setDataSource(newData);
     setBaseCosts((prev) => {
@@ -258,29 +262,6 @@ const NewOrders: React.FC = () => {
     setTotalCosts((prev) => ({ ...prev, [rowKey]: totalCost || 0 }));
   };
 
-  // crete new customer
-  const creteNewCustomer = useCallback(async (payload: any) => {
-    try {
-      const { data } = await newCustomer(post, payload); // Still uses JSON
-      notify('Customer created successfully!', 'success');
-      return data.id;
-    } catch (error: any) {
-      const errorData = error.response?.data; // API error object
-      if (errorData && typeof errorData === 'object') {
-        const fieldErrors = Object.keys(errorData)?.map((field) => ({
-          name: field, // Use API field names directly (mobile_number1, email)
-          errors: errorData[field], // Array of error messages
-        }));
-        customerForm.setFields(fieldErrors);
-      } else {
-        notify(
-          'Failed to submit form: ' + (error.message || 'Unknown error'),
-          'error',
-        );
-      }
-    }
-  }, []);
-
   // Handle full submission
   const handleSubmit = async () => {
     const customerValues = await customerForm.validateFields();
@@ -293,25 +274,6 @@ const NewOrders: React.FC = () => {
 
     setLoading(true);
     try {
-      let customerId: number;
-
-      if (userType === 1) {
-        const newCustomerPayload = {
-          name: customerValues.customerName,
-          address1: customerValues.address1,
-          address2: customerValues.address2 || '',
-          mobile_number1: customerValues.mobile_number1,
-          mobile_number2: customerValues.mobile_number2 || '',
-          email: customerValues.email || '',
-          gst_no: customerValues.gstn || '',
-          business_name: customerValues.businessName,
-        };
-
-        customerId = await creteNewCustomer(newCustomerPayload);
-      } else {
-        customerId = customerValues.existingUser;
-      }
-
       const items = Object.keys(itemValues.data || {})?.map((key) => {
         const row = itemValues.data[key];
         const item: any = {
@@ -336,7 +298,22 @@ const NewOrders: React.FC = () => {
       const { data } = await generateOrderId(get); // generate orderId
 
       const formData = new FormData();
-      formData.append('customer', customerId.toString());
+
+      if (userType === 1) {
+        formData.append('is_exist', 'false');
+        formData.append('name', customerValues.customerName);
+        formData.append('address1', customerValues.address1);
+        formData.append('address2', customerValues.address2 || '');
+        formData.append('mobile_number1', customerValues.mobile_number1);
+        formData.append('mobile_number2', customerValues.mobile_number2 || '');
+        formData.append('email', customerValues.email || '');
+        formData.append('gst_no', customerValues.gstn || '');
+        formData.append('business_name', customerValues.businessName);
+      } else {
+        formData.append('is_exist', 'true');
+        formData.append('customer', customerValues.existingUser);
+      }
+
       formData.append(
         'delivery_date',
         dayjs(remarksValues?.selectedDate).format('DD-MM-YYYY'),

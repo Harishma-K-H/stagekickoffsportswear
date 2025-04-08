@@ -109,7 +109,7 @@ const Invoices: React.FC = () => {
     if (invoiceId === null) return; // Skip if invoice id is null
 
     try {
-      const { data } = await invoiceById(get, invoiceId);
+      const { data } = await invoiceById(get, encodeURIComponent(invoiceId));
       setInvoiceDetails(data);
     } catch (error: any) {
       notify('Failed to fetch invoice details', 'error');
