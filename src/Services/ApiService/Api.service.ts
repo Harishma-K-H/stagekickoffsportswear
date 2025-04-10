@@ -88,7 +88,6 @@ const useApi = (
     },
     async (error: AxiosError) => {
       const originalRequest: any = error.config as CustomAxiosRequestConfig;
-      console.log({ originalRequest });
 
       if (
         error.response?.status === 401 &&

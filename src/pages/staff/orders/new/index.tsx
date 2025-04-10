@@ -88,7 +88,8 @@ const NewOrders: React.FC = () => {
         const { data } = await fetchMaterial(get, modelId);
         setMaterialOptions((prev) => ({ ...prev, [rowKey]: data }));
       } catch (error: any) {
-        notify('Failed to fetch materials', 'error');
+        setMaterialOptions((prev) => ({ ...prev, [rowKey]: [] }));
+        notify(error?.response?.data?.error, 'error');
       }
     },
     [get, materialOptions],
@@ -325,7 +326,10 @@ const NewOrders: React.FC = () => {
       items.forEach((item, index) => {
         formData.append(`items[${index}][name]`, item.name);
         formData.append(`items[${index}][model]`, item.model.toString());
-        formData.append(`items[${index}][material]`, item.material.toString());
+        formData.append(
+          `items[${index}][material]`,
+          item?.material?.toString(),
+        );
         formData.append(
           `items[${index}][print_type]`,
           item.print_type_id.toString(),
@@ -441,7 +445,7 @@ const NewOrders: React.FC = () => {
       render: (_, record) => (
         <Form.Item
           name={['data', record.key, 'material']}
-          rules={[{ required: true, message: 'Please select a material' }]}
+          rules={[{ required: false, message: 'Please select a material' }]}
           className="!mb-0 w-[120px]"
         >
           <Select
