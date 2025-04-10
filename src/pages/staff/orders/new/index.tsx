@@ -96,14 +96,17 @@ const NewOrders: React.FC = () => {
   );
 
   // Fetch print types
-  const getPrintTypes = useCallback(async () => {
-    try {
-      const { data } = await fetchPrintTypes(get);
-      setPrintType(data);
-    } catch (error: any) {
-      notify('Failed to fetch print types', 'error');
-    }
-  }, [get]);
+  const getPrintTypes = useCallback(
+    async (modelId: string | number) => {
+      try {
+        const { data } = await fetchPrintTypes(get, modelId);
+        setPrintType(data);
+      } catch (error: any) {
+        notify('Failed to fetch print types', 'error');
+      }
+    },
+    [get],
+  );
 
   // Fetch base item cost
   const getItemCost = useCallback(
@@ -430,6 +433,7 @@ const NewOrders: React.FC = () => {
                 },
               });
               getMaterials(value, record.key, selectedLabel);
+              getPrintTypes(value);
             }}
             options={models?.map((model: any) => ({
               value: model.id,
@@ -638,8 +642,7 @@ const NewOrders: React.FC = () => {
   // Initial data fetching on component mount
   useEffect(() => {
     getModels();
-    getPrintTypes();
-  }, [getModels, getPrintTypes]);
+  }, [getModels]);
 
   const { subTotal, cgst, sgst, grandTotal } = calculateTotals();
 

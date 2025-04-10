@@ -28,8 +28,9 @@ export const fetchMaterial = async (
 // Define the get Print Types function
 export const fetchPrintTypes = async (
   get: (url: string) => Promise<any>,
+  payload: number | string,
 ): Promise<any> => {
-  const response = await get(`/print-types/`);
+  const response = await get(`/print-types/?model_id=${payload}/`);
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
