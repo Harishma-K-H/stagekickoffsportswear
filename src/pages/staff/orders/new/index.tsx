@@ -230,7 +230,7 @@ const NewOrders: React.FC = () => {
           changedField,
         ) && // Only refetch for these fields
         row?.model &&
-        row?.material &&
+        // row?.material &&
         row?.print_type &&
         // row?.sleevecase &&
         row?.size
