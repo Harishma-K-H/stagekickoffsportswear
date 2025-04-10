@@ -449,10 +449,16 @@ const NewOrders: React.FC = () => {
       render: (_, record) => (
         <Form.Item
           name={['data', record.key, 'material']}
-          rules={[{ required: false, message: 'Please select a material' }]}
+          rules={[
+            {
+              required: materialOptions[record.key]?.length == 0 ? false : true,
+              message: 'Please select a material',
+            },
+          ]}
           className="!mb-0 w-[120px]"
         >
           <Select
+            disabled={materialOptions[record.key]?.length == 0 ? true : false}
             size="middle"
             placeholder="Select Material"
             options={
