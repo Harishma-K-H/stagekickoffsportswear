@@ -1,4 +1,5 @@
 import { notify } from '@components/Common/Toastify';
+
 export const apiErrorHandler = (
   error: any,
   form: any,

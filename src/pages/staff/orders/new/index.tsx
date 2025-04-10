@@ -295,7 +295,7 @@ const NewOrders: React.FC = () => {
         return item;
       });
 
-      const { grandTotal } = calculateTotals();
+      const { subTotal } = calculateTotals();
       const { data } = await generateOrderId(get); // generate orderId
 
       const formData = new FormData();
@@ -320,7 +320,7 @@ const NewOrders: React.FC = () => {
         dayjs(remarksValues?.selectedDate).format('DD-MM-YYYY'),
       );
       formData.append('orderID', data?.order_number);
-      formData.append('net_cost', grandTotal.toString());
+      formData.append('net_cost', subTotal.toString());
       formData.append('remarks', remarksValues?.remarks);
 
       items.forEach((item, index) => {
@@ -398,236 +398,236 @@ const NewOrders: React.FC = () => {
     editable?: boolean;
     dataIndex: string;
   })[] = [
-    {
-      title: 'MODEL',
-      dataIndex: 'model',
-      render: (_, record) => (
-        <Form.Item
-          name={['data', record.key, 'model']}
-          rules={[{ required: true, message: 'Please select a model' }]}
-          className="!mb-0 w-[150px]"
-        >
-          <Select
-            size="middle"
-            placeholder="Select Model"
-            onChange={(value: number, option: any) => {
-              const selectedLabel = option.label;
-              setTotalCosts((prev) => ({ ...prev, [record.key]: 0 }));
-              // Clear material and sleeve fields when model changes
-              itemForm.setFieldsValue({
-                data: {
-                  [record.key]: {
-                    material: undefined,
-                    sleevecase:
-                      selectedLabel === 'SHORTS' || selectedLabel === 'LOWER'
-                        ? undefined
-                        : itemForm.getFieldValue([
+      {
+        title: 'MODEL',
+        dataIndex: 'model',
+        render: (_, record) => (
+          <Form.Item
+            name={['data', record.key, 'model']}
+            rules={[{ required: true, message: 'Please select a model' }]}
+            className="!mb-0 w-[150px]"
+          >
+            <Select
+              size="middle"
+              placeholder="Select Model"
+              onChange={(value: number, option: any) => {
+                const selectedLabel = option.label;
+                setTotalCosts((prev) => ({ ...prev, [record.key]: 0 }));
+                // Clear material and sleeve fields when model changes
+                itemForm.setFieldsValue({
+                  data: {
+                    [record.key]: {
+                      material: undefined,
+                      sleevecase:
+                        selectedLabel === 'SHORTS' || selectedLabel === 'LOWER'
+                          ? undefined
+                          : itemForm.getFieldValue([
                             'data',
                             record.key,
                             'sleevecase',
                           ]), // Reset sleeve only for SHORTS or LOWER
+                    },
                   },
-                },
-              });
-              getMaterials(value, record.key, selectedLabel);
-            }}
-            options={models?.map((model: any) => ({
-              value: model.id,
-              label: model.name,
-            }))}
-          />
-        </Form.Item>
-      ),
-    },
-    {
-      title: 'MATERIAL',
-      dataIndex: 'material',
-      render: (_, record) => (
-        <Form.Item
-          name={['data', record.key, 'material']}
-          rules={[{ required: false, message: 'Please select a material' }]}
-          className="!mb-0 w-[120px]"
-        >
-          <Select
-            size="middle"
-            placeholder="Select Material"
-            options={
-              materialOptions[record.key]?.map((material: any) => ({
-                value: material.id,
-                label: material.name,
-              })) || []
-            } // Use material options specific to this row
-          />
-        </Form.Item>
-      ),
-    },
-    {
-      title: 'PRINT TYPE',
-      dataIndex: 'printType',
-      render: (_, record) => (
-        <Form.Item
-          name={['data', record.key, 'print_type']}
-          rules={[{ required: true, message: 'Please select a print type' }]}
-          className="!mb-0 "
-        >
-          <Select
-            size="middle"
-            placeholder="Select Print Type"
-            options={
-              printType?.map((type: any) => ({
-                value: type.id,
-                label: type.name,
-              })) || []
-            }
-          />
-        </Form.Item>
-      ),
-    },
-    // Other columns (Sleeve, Size, Quantity, Discount, Cost, Action) remain unchanged
-    {
-      title: 'SLEEVE',
-      dataIndex: 'sleeve',
-      render: (_, record) => {
-        const selectedModelId = itemForm.getFieldValue([
-          'data',
-          record.key,
-          'model',
-        ]);
-        const selectedModel = models.find(
-          (model) => model.id === selectedModelId,
-        );
-        const isSleeveDisabled =
-          selectedModel?.name === 'SHORTS' || selectedModel?.name === 'LOWER';
-
-        return (
+                });
+                getMaterials(value, record.key, selectedLabel);
+              }}
+              options={models?.map((model: any) => ({
+                value: model.id,
+                label: model.name,
+              }))}
+            />
+          </Form.Item>
+        ),
+      },
+      {
+        title: 'MATERIAL',
+        dataIndex: 'material',
+        render: (_, record) => (
           <Form.Item
-            name={['data', record.key, 'sleevecase']}
-            rules={[
-              {
-                required: !isSleeveDisabled,
-                message: 'Please select a sleeve',
-              },
-            ]}
-            className="!mb-0"
+            name={['data', record.key, 'material']}
+            rules={[{ required: false, message: 'Please select a material' }]}
+            className="!mb-0 w-[120px]"
           >
             <Select
               size="middle"
-              placeholder="Select Sleeve"
-              options={sleeve}
-              disabled={isSleeveDisabled} // Disable if model is SHORTS or LOWER
+              placeholder="Select Material"
+              options={
+                materialOptions[record.key]?.map((material: any) => ({
+                  value: material.id,
+                  label: material.name,
+                })) || []
+              } // Use material options specific to this row
             />
           </Form.Item>
-        );
+        ),
       },
-    },
-    {
-      title: 'Size',
-      dataIndex: 'size',
-      render: (_, record) => (
-        <Form.Item
-          name={['data', record.key, 'size']}
-          rules={[{ required: true, message: 'Please select a size' }]}
-          className="!mb-0 "
-        >
-          <Select size="middle" placeholder="Select size" options={size} />
-        </Form.Item>
-      ),
-    },
-    {
-      title: 'Price',
-      dataIndex: 'price',
-      align: 'center',
-      width: '6%',
-      render: (_, record) => {
-        const sizeSelected = itemForm.getFieldValue([
-          'data',
-          record.key,
-          'size',
-        ]);
+      {
+        title: 'PRINT TYPE',
+        dataIndex: 'printType',
+        render: (_, record) => (
+          <Form.Item
+            name={['data', record.key, 'print_type']}
+            rules={[{ required: true, message: 'Please select a print type' }]}
+            className="!mb-0 "
+          >
+            <Select
+              size="middle"
+              placeholder="Select Print Type"
+              options={
+                printType?.map((type: any) => ({
+                  value: type.id,
+                  label: type.name,
+                })) || []
+              }
+            />
+          </Form.Item>
+        ),
+      },
+      // Other columns (Sleeve, Size, Quantity, Discount, Cost, Action) remain unchanged
+      {
+        title: 'SLEEVE',
+        dataIndex: 'sleeve',
+        render: (_, record) => {
+          const selectedModelId = itemForm.getFieldValue([
+            'data',
+            record.key,
+            'model',
+          ]);
+          const selectedModel = models.find(
+            (model) => model.id === selectedModelId,
+          );
+          const isSleeveDisabled =
+            selectedModel?.name === 'SHORTS' || selectedModel?.name === 'LOWER';
 
-        return sizeSelected && baseCosts[record.key]
-          ? baseCosts[record.key].toFixed(2)
-          : '-';
-      },
-    },
-    {
-      title: 'Quantity',
-      dataIndex: 'quantity',
-      render: (_, record) => (
-        <Form.Item
-          name={['data', record.key, 'quantity']}
-          rules={[{ required: true, message: 'Please enter Quantity' }]}
-          className="!mb-0 "
-        >
-          <Input
-            placeholder="Enter Quantity"
-            className="w-full h-9"
-            onInput={(e) => {
-              e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
-            }}
-          />
-        </Form.Item>
-      ),
-    },
-    {
-      title: 'Discount',
-      dataIndex: 'discount',
-      render: (_, record) => (
-        <Form.Item
-          name={['data', record.key, 'discount']}
-          rules={[{ required: false, message: 'Please enter Discount' }]} // Optional field
-          className="!mb-0 "
-        >
-          <Input
-            placeholder="Enter Discount"
-            className="w-full h-9"
-            onInput={(e) => {
-              e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
-            }}
-          />
-        </Form.Item>
-      ),
-    },
-    {
-      title: 'Total',
-      dataIndex: 'total',
-      align: 'center',
-      width: '6%',
-      render: (_, record) => {
-        return (
-          <>
-            {/* <h5 className="text-xs">{quantity * baseCosts[record.key]}<span className="w-full text-right text-green-500">-{(quantity * discount)}</span></h5> */}
-            <span className="text-base font-semibold">
-              {totalCosts[record.key] ? totalCosts[record.key].toFixed(2) : '-'}
-            </span>
-          </>
-        );
-      },
-    },
-    {
-      title: 'Action',
-      dataIndex: 'Action',
-      width: '6%',
-      align: 'center',
-      render: (_, record) =>
-        dataSource.length >= 1 ? (
-          <div className="flex items-center justify-center gap-3">
-            <Popconfirm
-              title="Sure to delete?"
-              onConfirm={() => handleDelete(record.key)}
+          return (
+            <Form.Item
+              name={['data', record.key, 'sleevecase']}
+              rules={[
+                {
+                  required: !isSleeveDisabled,
+                  message: 'Please select a sleeve',
+                },
+              ]}
+              className="!mb-0"
             >
-              <MdDeleteForever className="mx-auto cursor-pointer text-primary w-7 h-7" />
-            </Popconfirm>
-            {record.key === dataSource[dataSource.length - 1].key && (
-              <FaPlus
-                className="w-6 h-6 cursor-pointer text-secondary"
-                onClick={handleAdd}
+              <Select
+                size="middle"
+                placeholder="Select Sleeve"
+                options={sleeve}
+                disabled={isSleeveDisabled} // Disable if model is SHORTS or LOWER
               />
-            )}
-          </div>
-        ) : null,
-    },
-  ];
+            </Form.Item>
+          );
+        },
+      },
+      {
+        title: 'Size',
+        dataIndex: 'size',
+        render: (_, record) => (
+          <Form.Item
+            name={['data', record.key, 'size']}
+            rules={[{ required: true, message: 'Please select a size' }]}
+            className="!mb-0 "
+          >
+            <Select size="middle" placeholder="Select size" options={size} />
+          </Form.Item>
+        ),
+      },
+      {
+        title: 'Price',
+        dataIndex: 'price',
+        align: 'center',
+        width: '6%',
+        render: (_, record) => {
+          const sizeSelected = itemForm.getFieldValue([
+            'data',
+            record.key,
+            'size',
+          ]);
+
+          return sizeSelected && baseCosts[record.key]
+            ? baseCosts[record.key].toFixed(2)
+            : '-';
+        },
+      },
+      {
+        title: 'Quantity',
+        dataIndex: 'quantity',
+        render: (_, record) => (
+          <Form.Item
+            name={['data', record.key, 'quantity']}
+            rules={[{ required: true, message: 'Please enter Quantity' }]}
+            className="!mb-0 "
+          >
+            <Input
+              placeholder="Enter Quantity"
+              className="w-full h-9"
+              onInput={(e) => {
+                e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
+              }}
+            />
+          </Form.Item>
+        ),
+      },
+      {
+        title: 'Discount',
+        dataIndex: 'discount',
+        render: (_, record) => (
+          <Form.Item
+            name={['data', record.key, 'discount']}
+            rules={[{ required: false, message: 'Please enter Discount' }]} // Optional field
+            className="!mb-0 "
+          >
+            <Input
+              placeholder="Enter Discount"
+              className="w-full h-9"
+              onInput={(e) => {
+                e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
+              }}
+            />
+          </Form.Item>
+        ),
+      },
+      {
+        title: 'Total',
+        dataIndex: 'total',
+        align: 'center',
+        width: '6%',
+        render: (_, record) => {
+          return (
+            <>
+              {/* <h5 className="text-xs">{quantity * baseCosts[record.key]}<span className="w-full text-right text-green-500">-{(quantity * discount)}</span></h5> */}
+              <span className="text-base font-semibold">
+                {totalCosts[record.key] ? totalCosts[record.key].toFixed(2) : '-'}
+              </span>
+            </>
+          );
+        },
+      },
+      {
+        title: 'Action',
+        dataIndex: 'Action',
+        width: '6%',
+        align: 'center',
+        render: (_, record) =>
+          dataSource.length >= 1 ? (
+            <div className="flex items-center justify-center gap-3">
+              <Popconfirm
+                title="Sure to delete?"
+                onConfirm={() => handleDelete(record.key)}
+              >
+                <MdDeleteForever className="mx-auto cursor-pointer text-primary w-7 h-7" />
+              </Popconfirm>
+              {record.key === dataSource[dataSource.length - 1].key && (
+                <FaPlus
+                  className="w-6 h-6 cursor-pointer text-secondary"
+                  onClick={handleAdd}
+                />
+              )}
+            </div>
+          ) : null,
+      },
+    ];
 
   // Function to disable dates before today
   const disabledDate = (current: any) => {
@@ -971,8 +971,8 @@ const CustomerDetails: React.FC<any> = ({
                   !value || /^\d{10}$/.test(value)
                     ? Promise.resolve()
                     : Promise.reject(
-                        new Error('Mobile must be exactly 10 digits'),
-                      ),
+                      new Error('Mobile must be exactly 10 digits'),
+                    ),
               },
             ]}
           >
