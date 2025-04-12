@@ -26,6 +26,7 @@ const Invoice: React.FC<{
     customer,
     items,
     payment_details,
+    created_by,
   } = data;
 
   const totalPaid = paidAmount(payment_details);
@@ -45,12 +46,12 @@ const Invoice: React.FC<{
         <div className="text-right">
           <h5 className="text-lg font-extrabold leading-5 ">
             KICKOFF SPORTS WEAR. <br />
-            <span className="text-sm font-semibold">
-              SMART TRADE CITY, KOTTAKKAL
+            <span className="text-sm font-semibold uppercase">
+              {created_by?.branch}, {created_by?.city}
             </span>
           </h5>
           <p className="text-xs">
-            MALAPPURAM Kerala 676503, India <br />
+            {created_by?.district}, Kerala, {created_by?.pincode}, India <br />
             GSTIN: 32BKYPS7094H1ZA
           </p>
         </div>

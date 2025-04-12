@@ -16,7 +16,7 @@ import {
   Table,
   TableProps,
 } from 'antd';
-import dayjs from 'dayjs'; // Ensure dayjs is imported
+import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import { MdDeleteForever } from 'react-icons/md';
@@ -37,7 +37,7 @@ type ColumnTypes = Exclude<TableProps['columns'], undefined>;
 
 const NewOrders: React.FC = () => {
   const { get } = useApiJSON();
-  const { post: FormDataPost } = useApiFormData(); // Use FormData-specific post
+  const { post: FormDataPost } = useApiFormData();
   const navigate = useNavigate();
 
   const [itemForm] = Form.useForm();
@@ -56,7 +56,7 @@ const NewOrders: React.FC = () => {
   const [sleeve] = useState<any[]>([
     { value: 'full', label: 'Full Sleeve' },
     { value: 'sleeveless', label: 'Sleeveless' },
-    { value: 'half', label: 'Half Sleeve' },
+    { value: 'half', label: 'Half Sleeve' },
   ]);
   const [size] = useState<any[]>([
     { value: '24', label: '24' },
@@ -68,6 +68,7 @@ const NewOrders: React.FC = () => {
   const [totalCosts, setTotalCosts] = useState<Record<string, number>>({});
   const [modelName, setModelName] = useState<any>({});
   const [dataSource, setDataSource] = useState<any[]>([{ key: '0' }]);
+  const [subtotalDiscount, setSubtotalDiscount] = useState<number>(0);
 
   // Fetch models
   const getModels = useCallback(async () => {
@@ -92,7 +93,7 @@ const NewOrders: React.FC = () => {
         notify(error?.response?.data?.error, 'error');
       }
     },
-    [get, materialOptions],
+    [get],
   );
 
   // Fetch print types
@@ -122,24 +123,48 @@ const NewOrders: React.FC = () => {
     ) => {
       try {
         const { data } = await fetchItemCost(get, payload);
-        setBaseCosts((prev) => ({ ...prev, [rowKey]: data.cost || 0 }));
-        if (areAllFieldsFilled()) {
-          const quantity = itemForm.getFieldValue(['data', rowKey, 'quantity']);
-          const discount = itemForm.getFieldValue(['data', rowKey, 'discount']);
-
-          setTotalCosts((prev) => ({
-            ...prev,
-            [rowKey]:
-              calculateTotalCost(rowKey, quantity, discount, data.cost) || 0,
-          }));
+        const cost = data.cost || 0;
+        if (cost === 0) {
+          notify(`Item is not valid`, 'warning');
         }
+
+        // Update base cost first
+        setBaseCosts((prev) => {
+          const newCosts = { ...prev, [rowKey]: cost };
+          return newCosts;
+        });
+
+        // Then update row total cost with the new base cost
+        setTimeout(() => {
+          const quantity = itemForm.getFieldValue(['data', rowKey, 'quantity']);
+          if (quantity) {
+            const newTotalCost = calculateRowTotalCost(rowKey, quantity, cost);
+            setTotalCosts((prev) => ({
+              ...prev,
+              [rowKey]: newTotalCost,
+            }));
+          }
+        }, 0);
       } catch (error: any) {
         notify(error?.response?.data?.error, 'error');
         setBaseCosts((prev) => ({ ...prev, [rowKey]: 0 }));
+        setTotalCosts((prev) => ({ ...prev, [rowKey]: 0 }));
       }
     },
-    [get],
+    [get, itemForm],
   );
+
+  // Calculate row total cost based on base cost and quantity
+  const calculateRowTotalCost = (
+    rowKey: string,
+    quantity: string,
+    baseCostValue?: number,
+  ): number => {
+    const baseCost =
+      baseCostValue !== undefined ? baseCostValue : baseCosts[rowKey] || 0;
+    const qty = parseFloat(quantity) || 0;
+    return baseCost * qty;
+  };
 
   // Handle adding a new row
   const handleAdd = async () => {
@@ -159,23 +184,6 @@ const NewOrders: React.FC = () => {
         }
       }
 
-      // Update existing rows: set discount to 0 if undefined
-      Object.keys(currentData).forEach((rowKey) => {
-        if (!currentData[rowKey].discount) {
-          // If discount is undefined or empty, set it to '0'
-          itemForm.setFieldsValue({
-            data: {
-              [rowKey]: {
-                ...currentData[rowKey],
-                discount: '0', // Set as string to match Input component
-              },
-            },
-          });
-          // Recalculate total cost for this row
-          handleRowTotalCost(rowKey);
-        }
-      });
-
       // Add the new row
       const newData = { key: String(count) };
       setDataSource([...dataSource, newData]);
@@ -188,7 +196,6 @@ const NewOrders: React.FC = () => {
 
   // Handle deleting a row
   const handleDelete = (key: React.Key) => {
-    console.log({ dataSource });
     if (dataSource.length <= 1) {
       notify('Required minimum 1 order', 'warning');
       return;
@@ -212,47 +219,12 @@ const NewOrders: React.FC = () => {
     });
   };
 
-  // Calculate total cost based on base cost, quantity, and discount (per product)
-  const calculateTotalCost = (
-    rowKey: string,
-    quantity: string,
-    discount: string,
-    baseCostValue?: number,
-  ): number => {
-    const baseCost = baseCostValue ? baseCostValue : baseCosts[rowKey] || 0; // Fallback to 0 if undefined
-    const qty = parseFloat(quantity) || 0;
-    const discPerProduct = parseFloat(discount) || 0;
-    const totalCostBeforeDiscount = baseCost * qty;
-    const totalDiscount = discPerProduct * qty;
-    const totalCost = totalCostBeforeDiscount - totalDiscount;
-    return totalCost > 0 ? totalCost : 0;
-  };
-
-  // Handle form field changes to fetch cost and update total
+  // Handle form field changes
   const handleFieldChange = (changedFields: any, allFields: any) => {
     const rowData = allFields.data || {};
     Object.keys(rowData).forEach(async (rowKey) => {
       const row = rowData[rowKey];
       const changedField = Object.keys(changedFields.data?.[rowKey] || {})[0]; // Get the changed field name
-
-      // if (
-      //   ['model', 'material', 'print_type', 'sleevecase', 'size'].includes(
-      //     changedField,
-      //   ) && // Only refetch for these fields
-      //   row?.model &&
-      //   (materialOptions[rowKey]?.length != 0 && row?.material) &&
-      //   (printType[rowKey]?.length != 0 && row?.print_type) &&
-      //   // row?.sleevecase &&
-      //   row?.size
-      // ) {
-      //   const payload = {
-      //     modelId: row.model,
-      //     materialId: row.material,
-      //     printId: row.print_type,
-      //     sleeveCase: row.sleevecase,
-      //   };
-      //   await getItemCost(rowKey, payload);
-      // }
 
       // Check if cost-related fields changed
       if (
@@ -277,7 +249,7 @@ const NewOrders: React.FC = () => {
           modelName[rowKey],
         )
           ? true
-          : !!row?.sleevecase; // Bypass sleevecase for SHORTS or LOWER
+          : !!row?.sleevecase;
 
         if (
           isModelValid &&
@@ -288,33 +260,47 @@ const NewOrders: React.FC = () => {
         ) {
           const payload = {
             modelId: row.model,
-            materialId: row.material || null, // Send null if no materials
-            printId: row.print_type || null, // Send null if no print types
+            materialId: row.material || null,
+            printId: row.print_type || null,
             sleeveCase: row.sleevecase,
           };
           getItemCost(rowKey, payload);
         }
-      } else if (
-        ['quantity', 'discount'].includes(changedField) || // Recalculate totals for these fields
-        areAllFieldsFilled()
-      ) {
-        handleRowTotalCost(rowKey);
+      } else if (changedField === 'quantity') {
+        const quantity = row.quantity;
+        const currentBaseCost = baseCosts[rowKey] || 0;
+        const newTotalCost = calculateRowTotalCost(
+          rowKey,
+          quantity,
+          currentBaseCost,
+        );
+
+        setTotalCosts((prev) => ({
+          ...prev,
+          [rowKey]: newTotalCost,
+        }));
       }
 
       // Clear baseCosts for this row when model changes to avoid outdated cost
       if (changedField === 'model') {
         setBaseCosts((prev) => {
           const newCosts = { ...prev };
-          delete newCosts[rowKey]; // Remove old cost
+          delete newCosts[rowKey];
+          return newCosts;
+        });
+        setTotalCosts((prev) => {
+          const newCosts = { ...prev };
+          delete newCosts[rowKey];
           return newCosts;
         });
         itemForm.setFieldsValue({
           data: {
             [rowKey]: {
-              material: undefined, // Reset material
-              print_type: undefined, // Reset print_type
+              material: undefined,
+              print_type: undefined,
               size: undefined,
               sleevecase: undefined,
+              quantity: undefined,
             },
           },
         });
@@ -322,11 +308,41 @@ const NewOrders: React.FC = () => {
     });
   };
 
-  const handleRowTotalCost = async (rowKey: string) => {
-    const quantity = itemForm.getFieldValue(['data', rowKey, 'quantity']);
-    const discount = itemForm.getFieldValue(['data', rowKey, 'discount']);
-    const totalCost = calculateTotalCost(rowKey, quantity, discount);
-    setTotalCosts((prev) => ({ ...prev, [rowKey]: totalCost || 0 }));
+  // Handle subtotal discount change
+  const handleDiscountChange = (value: string) => {
+    console.log(value);
+
+    const discount = parseFloat(value) || 0;
+    setSubtotalDiscount(discount);
+  };
+
+  // Calculate totals for display with subtotal discount
+  const calculateTotals = () => {
+    const rowData = itemForm.getFieldsValue().data || {};
+    let subTotal = 0;
+
+    Object.keys(rowData).forEach((rowKey) => {
+      const row = rowData[rowKey];
+      if (row?.quantity) {
+        subTotal += totalCosts[rowKey] || 0;
+      }
+    });
+
+    // Apply subtotal discount
+    const discountedSubtotal = Math.max(0, subTotal - subtotalDiscount);
+
+    const cgst = discountedSubtotal * 0.025; // 2.5%
+    const sgst = discountedSubtotal * 0.025; // 2.5%
+    const grandTotal = discountedSubtotal + cgst + sgst;
+
+    return {
+      rawSubTotal: subTotal,
+      subTotal: discountedSubtotal,
+      discount: subtotalDiscount,
+      cgst,
+      sgst,
+      grandTotal,
+    };
   };
 
   // Handle full submission
@@ -339,28 +355,19 @@ const NewOrders: React.FC = () => {
       return;
     }
 
-    setLoading(true);
+    // Get current form values for items
+    const currentData = itemValues.data || {};
+
+    // Check for invalid rows (totalCosts[rowKey] === 0)
+    for (const rowKey of Object.keys(currentData)) {
+      if (totalCosts[rowKey] === 0) {
+        notify(`Item is not valid`, 'warning');
+        return; // Stop submission
+      }
+    }
+
     try {
-      const items = Object.keys(itemValues.data || {})?.map((key) => {
-        const row = itemValues.data[key];
-        const item: any = {
-          name: modelName[key],
-          model: row.model,
-          material: row.material,
-          print_type_id: row.print_type,
-          size: parseInt(row.size, 10),
-          qty: parseInt(row.quantity, 10),
-          discount: parseFloat(row.discount) || 0,
-          total_item_cost: totalCosts[key],
-        };
-
-        if (modelName[key] !== 'SHORTS' && modelName[key] !== 'LOWER') {
-          item.sleeve_case = row.sleevecase;
-        }
-
-        return item;
-      });
-
+      setLoading(true);
       const { subTotal } = calculateTotals();
       const { data } = await generateOrderId(get); // generate orderId
 
@@ -387,7 +394,28 @@ const NewOrders: React.FC = () => {
       );
       formData.append('orderID', data?.order_number);
       formData.append('net_cost', subTotal.toString());
-      formData.append('remarks', remarksValues?.remarks);
+      formData.append('remarks', remarksValues?.remarks || '');
+      formData.append('discount', subtotalDiscount.toString());
+
+      const items = Object.keys(itemValues.data || {}).map((key) => {
+        const row = itemValues.data[key];
+        const item: any = {
+          name: modelName[key],
+          model: row.model,
+          material: row.material,
+          print_type_id: row.print_type,
+          size: parseInt(row.size, 10),
+          qty: parseInt(row.quantity, 10),
+          discount: 0, // No per-product discount anymore
+          total_item_cost: totalCosts[key],
+        };
+
+        if (modelName[key] !== 'SHORTS' && modelName[key] !== 'LOWER') {
+          item.sleeve_case = row.sleevecase;
+        }
+
+        return item;
+      });
 
       items.forEach((item, index) => {
         formData.append(`items[${index}][name]`, item.name);
@@ -424,40 +452,18 @@ const NewOrders: React.FC = () => {
     }
   };
 
-  // Check if all required fields are filled
-  const areAllFieldsFilled = () => {
-    const rowData = itemForm.getFieldsValue().data || {};
-    return (
-      Object.keys(rowData).length > 0 &&
-      Object.keys(rowData).every((rowKey) => {
-        const row = rowData[rowKey];
-        return (
-          row?.model &&
-          row?.material &&
-          row?.print_type &&
-          row?.sleevecase &&
-          row?.size &&
-          row?.quantity
-        );
-      })
-    );
+  // Function to disable dates before today
+  const disabledDate = (current: any) => {
+    // Disable dates before the start of today
+    return current && current < dayjs().startOf('day');
   };
 
-  // Calculate totals for display
-  const calculateTotals = () => {
-    const rowData = itemForm.getFieldsValue().data || {};
-    let subTotal = 0;
-    Object.keys(rowData).forEach((rowKey) => {
-      const row = rowData[rowKey];
-      if (row?.quantity) {
-        subTotal += calculateTotalCost(rowKey, row.quantity, row.discount);
-      }
-    });
-    const cgst = subTotal * 0.025; // 2.5%
-    const sgst = subTotal * 0.025; // 2.5%
-    const grandTotal = subTotal + cgst + sgst;
-    return { subTotal, cgst, sgst, grandTotal };
-  };
+  // Initial data fetching on component mount
+  useEffect(() => {
+    getModels();
+  }, [getModels]);
+
+  const { rawSubTotal, subTotal, cgst, sgst, grandTotal } = calculateTotals();
 
   // Columns definition
   const defaultColumns: (ColumnTypes[number] & {
@@ -492,7 +498,7 @@ const NewOrders: React.FC = () => {
                             'data',
                             record.key,
                             'sleevecase',
-                          ]), // Reset sleeve only for SHORTS or LOWER
+                          ]),
                   },
                 },
               });
@@ -530,7 +536,7 @@ const NewOrders: React.FC = () => {
                 value: material.id,
                 label: material.name,
               })) || []
-            } // Use material options specific to this row
+            }
           />
         </Form.Item>
       ),
@@ -547,7 +553,7 @@ const NewOrders: React.FC = () => {
               message: 'Please select a print type',
             },
           ]}
-          className="!mb-0 "
+          className="!mb-0"
         >
           <Select
             disabled={printType[record.key]?.length == 0 ? true : false}
@@ -563,7 +569,6 @@ const NewOrders: React.FC = () => {
         </Form.Item>
       ),
     },
-    // Other columns (Sleeve, Size, Quantity, Discount, Cost, Action) remain unchanged
     {
       title: 'SLEEVE',
       dataIndex: 'sleeve',
@@ -594,7 +599,7 @@ const NewOrders: React.FC = () => {
               size="middle"
               placeholder="Select Sleeve"
               options={sleeve}
-              disabled={isSleeveDisabled} // Disable if model is SHORTS or LOWER
+              disabled={isSleeveDisabled}
             />
           </Form.Item>
         );
@@ -607,7 +612,7 @@ const NewOrders: React.FC = () => {
         <Form.Item
           name={['data', record.key, 'size']}
           rules={[{ required: true, message: 'Please select a size' }]}
-          className="!mb-0 "
+          className="!mb-0"
         >
           <Select size="middle" placeholder="Select size" options={size} />
         </Form.Item>
@@ -637,29 +642,10 @@ const NewOrders: React.FC = () => {
         <Form.Item
           name={['data', record.key, 'quantity']}
           rules={[{ required: true, message: 'Please enter Quantity' }]}
-          className="!mb-0 "
+          className="!mb-0"
         >
           <Input
             placeholder="Enter Quantity"
-            className="w-full h-9"
-            onInput={(e) => {
-              e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
-            }}
-          />
-        </Form.Item>
-      ),
-    },
-    {
-      title: 'Discount',
-      dataIndex: 'discount',
-      render: (_, record) => (
-        <Form.Item
-          name={['data', record.key, 'discount']}
-          rules={[{ required: false, message: 'Please enter Discount' }]} // Optional field
-          className="!mb-0 "
-        >
-          <Input
-            placeholder="Enter Discount"
             className="w-full h-9"
             onInput={(e) => {
               e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
@@ -675,12 +661,9 @@ const NewOrders: React.FC = () => {
       width: '6%',
       render: (_, record) => {
         return (
-          <>
-            {/* <h5 className="text-xs">{quantity * baseCosts[record.key]}<span className="w-full text-right text-green-500">-{(quantity * discount)}</span></h5> */}
-            <span className="text-base font-semibold">
-              {totalCosts[record.key] ? totalCosts[record.key].toFixed(2) : '-'}
-            </span>
-          </>
+          <span className="text-base font-semibold">
+            {totalCosts[record.key] ? totalCosts[record.key].toFixed(2) : '-'}
+          </span>
         );
       },
     },
@@ -708,19 +691,6 @@ const NewOrders: React.FC = () => {
         ) : null,
     },
   ];
-
-  // Function to disable dates before today
-  const disabledDate = (current: any) => {
-    // Disable dates before the start of today
-    return current && current < dayjs().startOf('day');
-  };
-
-  // Initial data fetching on component mount
-  useEffect(() => {
-    getModels();
-  }, [getModels]);
-
-  const { subTotal, cgst, sgst, grandTotal } = calculateTotals();
 
   return (
     <div className="flex flex-col gap-4 custom-form">
@@ -753,41 +723,78 @@ const NewOrders: React.FC = () => {
             columns={defaultColumns as ColumnTypes}
             scroll={{ x: 900 }}
           />
-          {/* <div className="fixed z-50 shadow-lg bottom-5 right-5 w-fit">
-            <Button
-              title=""
-              icon={<FaPlus className="w-5 h-5" />}
-              handleClick={handleAdd}
-              type="button"
-              className="bg-secondary rounded-md w-full !px-6 text-white font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
-            />
-          </div> */}
         </Form>
-        {/* Totals Section */}
-        <Form
-          form={remarksForm}
-          onValuesChange={handleFieldChange}
-          layout="vertical"
-          className=""
-        >
+
+        {/* Totals Section with subtotal discount */}
+        <Form form={remarksForm} layout="vertical" className="">
           <div className="flex flex-col items-end mt-4">
             <div className="flex justify-between w-64">
-              <span className="font-medium">Sub Total:</span>
+              <span className="font-medium">Raw Subtotal:</span>
+              <span>{rawSubTotal.toFixed(2)}</span>
+            </div>
+
+            <div className="flex items-center justify-between w-64">
+              <span className="font-medium">Discount:</span>
+              <Form.Item
+                name="discount"
+                className="!mb-0"
+                rules={[
+                  {
+                    validator: (_, value) =>
+                      value && parseFloat(value) < 0
+                        ? Promise.reject(new Error('Cannot be negative'))
+                        : Promise.resolve(),
+                  },
+                  {
+                    validator: (_, value) =>
+                      value && isNaN(parseFloat(value))
+                        ? Promise.reject(new Error('Must be a valid number'))
+                        : Promise.resolve(),
+                  },
+                  {
+                    validator: (_, value) =>
+                      value && parseFloat(value) > rawSubTotal
+                        ? Promise.reject(new Error('Cannot exceed total'))
+                        : Promise.resolve(),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder="0.00"
+                  className="w-32 text-right h-9"
+                  value={subtotalDiscount || ''}
+                  onChange={(e) => handleDiscountChange(e.target.value)}
+                  onInput={(e) => {
+                    e.currentTarget.value = e.currentTarget.value.replace(
+                      /[^0-9.]/g,
+                      '',
+                    );
+                  }}
+                />
+              </Form.Item>
+            </div>
+
+            <div className="flex justify-between w-64">
+              <span className="font-medium">Subtotal:</span>
               <span>{subTotal.toFixed(2)}</span>
             </div>
+
             <div className="flex justify-between w-64">
               <span className="font-medium">CGST (2.5%):</span>
               <span>{cgst.toFixed(2)}</span>
             </div>
+
             <div className="flex justify-between w-64">
               <span className="font-medium">SGST (2.5%):</span>
               <span>{sgst.toFixed(2)}</span>
             </div>
+
             <div className="flex justify-between w-64 pt-2 mt-2 border-t">
               <span className="font-bold">Grand Total:</span>
               <span className="font-bold">{grandTotal.toFixed(2)}</span>
             </div>
           </div>
+
           <div className="grid justify-between grid-cols-1 gap-5 mt-3 md:grid-cols-3">
             <Form.Item
               name="selectedDate"
@@ -798,8 +805,7 @@ const NewOrders: React.FC = () => {
               <DatePicker
                 disabledDate={disabledDate}
                 placeholder="Delivery Date"
-                // onChange={handleDateChange} // Update state on change
-                format="DD-MM-YYYY" // Display format
+                format="DD-MM-YYYY"
                 style={{ width: '100%' }}
               />
             </Form.Item>
@@ -813,12 +819,13 @@ const NewOrders: React.FC = () => {
           </div>
         </Form>
       </div>
+
       <div className="w-full">
         <Button
           title="Submit"
           type="submit"
           loading={loading}
-          handleClick={handleSubmit} // Trigger full submission
+          handleClick={handleSubmit}
           className="bg-primary rounded-md w-full text-white h-12 font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
         />
       </div>
@@ -832,15 +839,16 @@ const CustomerDetails: React.FC<any> = ({
   userType,
   setUserType,
 }) => {
-  const { get } = useApiJSON(); // Assuming useApiJSON provides get and post methods
+  const { get } = useApiJSON();
 
   // GST pattern regex
   const GST_PATTERN =
     /^[0-3][0-9][A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
-  const [customers, setCustomers] = useState<any[]>([]); // Store existing customers
-  const [customerDetails, setCustomerDetails] = useState<any>(null); // Store existing customers
-  const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false); // Track if businessName is disabled
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [customerDetails, setCustomerDetails] = useState<any>(null);
+  const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
+
   const onChange = (e: any) => {
     setUserType(e.target.value);
   };
@@ -857,19 +865,6 @@ const CustomerDetails: React.FC<any> = ({
     },
     [get],
   );
-  // const fetchCustomers = useCallback(
-  //   async (searchTerm: string = '') => {
-  //     try {
-  //       const { data }: { data: [] } = await get(
-  //         `/customers/?data=customer_list&search=${searchTerm}`,
-  //       );
-  //       setCustomers(data || []); // Assuming data is an array of customer objects
-  //     } catch (error) {
-  //       notify('Failed to fetch existing customers.', 'error');
-  //     }
-  //   },
-  //   [get],
-  // );
 
   // Handle GST verification
   const handleGSTVerification = async (gstn: string) => {
@@ -907,9 +902,9 @@ const CustomerDetails: React.FC<any> = ({
   // Handle GST input change
   const handleGSTChange = (value: string) => {
     if (value && GST_PATTERN.test(value)) {
-      debouncedGSTVerification(value); // Only call if pattern matches
+      debouncedGSTVerification(value);
     } else {
-      setIsBusinessNameDisabled(false); // Re-enable businessName if GST is invalid or empty
+      setIsBusinessNameDisabled(false);
     }
   };
 
@@ -920,13 +915,13 @@ const CustomerDetails: React.FC<any> = ({
 
   // Handle clear event to refetch full customer list
   const handleClear = () => {
-    fetchCustomers(); // Refetch full list when cleared
+    fetchCustomers();
   };
 
   // Fetch initial customer list on mount
   useEffect(() => {
     if (userType === 2) {
-      fetchCustomers(); // Load initial customer list when "Existing User" is selected
+      fetchCustomers();
     }
   }, [userType, fetchCustomers]);
 
@@ -977,7 +972,7 @@ const CustomerDetails: React.FC<any> = ({
             <Input
               placeholder="Enter business name"
               className="w-full h-9"
-              disabled={isBusinessNameDisabled} // Controlled by GST verification
+              disabled={isBusinessNameDisabled}
             />
           </Form.Item>
 
@@ -1034,7 +1029,7 @@ const CustomerDetails: React.FC<any> = ({
                 e.currentTarget.value = e.currentTarget.value.replace(
                   /\D/g,
                   '',
-                ); // Remove non-numeric characters
+                );
               }}
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
@@ -1062,7 +1057,7 @@ const CustomerDetails: React.FC<any> = ({
                 e.currentTarget.value = e.currentTarget.value.replace(
                   /\D/g,
                   '',
-                ); // Remove non-numeric characters
+                );
               }}
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
@@ -1078,7 +1073,7 @@ const CustomerDetails: React.FC<any> = ({
                 pattern: GST_PATTERN,
                 message: 'Please enter a valid GSTIN (e.g., 22ABCDE1234F1Z5)',
               },
-            ]} // GST is now optional
+            ]}
           >
             <Input
               placeholder="Enter GST Number"
@@ -1105,12 +1100,12 @@ const CustomerDetails: React.FC<any> = ({
               onChange={(_value: number, option: any) => {
                 setCustomerDetails(option?.data);
               }}
-              onClear={handleClear} // Refetch list on clear
-              onSearch={handleSearch} // Trigger search on typing
-              filterOption={false} // Disable local filtering, rely on API
+              onClear={handleClear}
+              onSearch={handleSearch}
+              filterOption={false}
               options={customers?.map((customer) => ({
-                value: customer.id, // Assuming customer has an id field
-                label: customer.name, // Display customer name
+                value: customer.id,
+                label: customer.name,
                 data: customer,
               }))}
             />
@@ -1128,7 +1123,7 @@ const CustomerDetails: React.FC<any> = ({
                   <span className="font-semibold text-gray-950">
                     Business Name:
                   </span>{' '}
-                  {customerDetails?.business_name}
+                  {customerDetails?.business_name.toUpperCase()}
                 </div>
                 <div>
                   <span className="font-semibold text-gray-950">Address:</span>{' '}

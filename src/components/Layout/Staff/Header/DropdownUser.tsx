@@ -74,7 +74,11 @@ const DropdownUser: React.FC = () => {
       </Link>
       {dropdownOpen && (
         <div
-          className={`absolute right-0 top-10 mt-4 flex w-48 flex-col rounded-md border border-stroke bg-white shadow-default ${dropdownOpen ? 'block' : 'hidden'}`}
+          className={`absolute right-0 top-10 mt-4 flex w-48 flex-col rounded-md border border-stroke bg-white shadow-default transform origin-top-right transition-all duration-300 ease-in-out ${
+            dropdownOpen
+              ? 'opacity-100 translate-y-0 scale-100 visible'
+              : 'opacity-0 -translate-y-2 scale-95 invisible'
+          }`}
         >
           <button className="px-6 py-2 text-sm font-semibold text-left text-black capitalize duration-300 ease-in-out lg:text-base">
             {userName}

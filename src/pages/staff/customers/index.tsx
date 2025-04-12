@@ -12,9 +12,9 @@ const Customers: React.FC = () => {
   const { get } = useApiJSON();
 
   const [customers, setCustomers] = useState<any>([]);
-  const [pageNumber] = useState<number>(1);
+  const [pageNumber, setPageNumber] = useState<number>(1);
   const [pageSize] = useState<number>(10);
-  const [paginationData] = useState({
+  const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
     hasNextPage: false,
@@ -76,15 +76,20 @@ const Customers: React.FC = () => {
   const fetchCustomers = useCallback(
     async (searchText: string = '') => {
       try {
-        const { data } = await getCustomers(get, searchText);
-        setCustomers(data);
-        // setPaginationData({
-        //   count: data?.count,
-        //   hasPreviousPage: data?.hasPreviousPage,
-        //   hasNextPage: data?.hasNextPage,
-        //   pageNumber: data?.pageNumber,
-        //   pageSize: data?.pageSize,
-        // });
+        const { data } = await getCustomers(
+          get,
+          searchText,
+          pageNumber,
+          pageSize,
+        );
+        setCustomers(data.results);
+        setPaginationData({
+          count: data?.count,
+          hasPreviousPage: data?.hasPreviousPage,
+          hasNextPage: data?.hasNextPage,
+          pageNumber: data?.pageNumber,
+          pageSize: data?.pageSize,
+        });
       } catch (error: any) {
         notify('Failed to fetch data', 'error');
       }
@@ -96,12 +101,16 @@ const Customers: React.FC = () => {
     key: customer.id,
     slNo: i + 1,
     name: capitalizeFirstLetterOfEachWord(customer.name),
-    businessName: customer.businessName,
+    businessName: customer.business_name.toUpperCase(),
     mobile: `${customer.mobile_number1}, ${customer?.mobile_number2 ? customer?.mobile_number2 : ''}`,
     address: `${customer.address1} ${customer?.address2}`,
     email: customer.email ? customer.email : '-',
     gstn: customer.gstn ? customer.gstn : '-',
   }));
+
+  const handlePageChange = useCallback((page: number) => {
+    setPageNumber(page);
+  }, []);
 
   // Initial data fetching on component mount
   useEffect(() => {
@@ -150,7 +159,7 @@ const Customers: React.FC = () => {
           current={paginationData.pageNumber}
           total={paginationData.count}
           pageSize={paginationData.pageSize}
-          // onChange={handlePageChange}
+          onChange={handlePageChange}
           rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
         />
       </div>
