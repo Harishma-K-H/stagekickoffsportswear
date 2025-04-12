@@ -3,6 +3,7 @@ import './style.css';
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
 import {
+  setBranchDetails,
   setToken,
   setUserName,
   setUserRole,
@@ -31,10 +32,11 @@ const SignIn: React.FC = () => {
     setApiLoader(true);
     try {
       const { data } = await login(post, values);
-      const { access, name, role, refresh } = data;
+      const { access, name, role, refresh, branch_id } = data;
       dispatch(setToken({ access, refresh }));
       dispatch(setUserName({ name }));
       dispatch(setUserRole(role.toUpperCase()));
+      dispatch(setBranchDetails(branch_id));
 
       if (role.toUpperCase() === import.meta.env.VITE_STAFF_ROLE) {
         navigate(Paths.Staff.dashboard);

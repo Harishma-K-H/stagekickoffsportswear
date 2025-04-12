@@ -6,6 +6,7 @@ const initialState: AuthState = {
   accessToken: null,
   userName: null,
   userRole: null,
+  branchDetails: null,
 };
 
 const authSlice = createSlice({
@@ -22,6 +23,11 @@ const authSlice = createSlice({
     setUserRole: (state, action) => {
       state.userRole = action.payload;
     },
+    setBranchDetails: (state, action) => {
+      state.branchDetails = {
+        ...action.payload,
+      };
+    },
     resetUser: (state) => {
       localStorage.clear();
       state.refreshToken = null;
@@ -32,6 +38,11 @@ const authSlice = createSlice({
   },
 });
 
-export const { setToken, setUserName, setUserRole, resetUser } =
-  authSlice.actions;
+export const {
+  setToken,
+  setUserName,
+  setUserRole,
+  resetUser,
+  setBranchDetails,
+} = authSlice.actions;
 export default authSlice.reducer;

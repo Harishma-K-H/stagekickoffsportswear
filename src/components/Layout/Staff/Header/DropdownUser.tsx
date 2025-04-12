@@ -1,8 +1,12 @@
 import { resetUser } from '@redux/reducers/auth/reducer';
+import {
+  selectBranchDetails,
+  selectUserName,
+} from '@redux/reducers/auth/selector';
 import Paths from '@routes/paths';
 import React, { useEffect, useRef, useState } from 'react';
 import { BiLogOut } from 'react-icons/bi';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router';
 
 const DropdownUser: React.FC = () => {
@@ -10,6 +14,9 @@ const DropdownUser: React.FC = () => {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null); // Create a ref for the dropdown container
+
+  const userName = useSelector(selectUserName);
+  const branchDetails: any = useSelector(selectBranchDetails);
 
   // Function to handle logout
   const logout = () => {
@@ -69,6 +76,13 @@ const DropdownUser: React.FC = () => {
         <div
           className={`absolute right-0 top-10 mt-4 flex w-48 flex-col rounded-md border border-stroke bg-white shadow-default ${dropdownOpen ? 'block' : 'hidden'}`}
         >
+          <button className="px-6 py-2 text-sm font-semibold text-left text-black capitalize duration-300 ease-in-out lg:text-base">
+            {userName}
+            <span className="block text-[12px] font-normal text-gray-500">
+              {branchDetails?.name} - {branchDetails?.code}
+            </span>
+          </button>
+          <hr />
           <button
             onClick={logout}
             className="flex items-center gap-3 px-6 py-4 text-sm font-medium text-red-500 duration-300 ease-in-out hover:text-white hover:bg-red-500 lg:text-base"

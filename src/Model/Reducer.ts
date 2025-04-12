@@ -3,4 +3,5 @@ export interface AuthState {
   accessToken: string | null;
   userName: string | null;
   userRole: string | null;
+  branchDetails: null | {};
 }

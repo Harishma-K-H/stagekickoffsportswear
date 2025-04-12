@@ -104,8 +104,7 @@ const Invoices: React.FC = () => {
 
   // Memoized function to fetch invoice by ID
   const getInvoiceById = useCallback(async () => {
-    if (invoiceId === null) return; // Skip if invoice id is null
-
+    if (invoiceId === null || invoiceId === undefined) return; // Skip if invoice id is null
     try {
       const { data } = await invoiceById(get, encodeURIComponent(invoiceId));
       setInvoiceDetails(data);

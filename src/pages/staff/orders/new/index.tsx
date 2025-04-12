@@ -52,7 +52,7 @@ const NewOrders: React.FC = () => {
   const [materialOptions, setMaterialOptions] = useState<Record<string, any[]>>(
     {},
   );
-  const [printType, setPrintType] = useState<any[]>([]);
+  const [printType, setPrintType] = useState<Record<string, any[]>>({});
   const [sleeve] = useState<any[]>([
     { value: 'full', label: 'Full Sleeve' },
     { value: 'sleeveless', label: 'Sleeveless' },
@@ -97,12 +97,13 @@ const NewOrders: React.FC = () => {
 
   // Fetch print types
   const getPrintTypes = useCallback(
-    async (modelId: string | number) => {
+    async (modelId: string | number, rowKey: string) => {
       try {
         const { data } = await fetchPrintTypes(get, modelId);
-        setPrintType(data);
+        setPrintType((prev) => ({ ...prev, [rowKey]: data }));
       } catch (error: any) {
-        notify('Failed to fetch print types', 'error');
+        setPrintType((prev) => ({ ...prev, [rowKey]: [] }));
+        notify(error?.response?.data?.error, 'error');
       }
     },
     [get],
@@ -133,7 +134,7 @@ const NewOrders: React.FC = () => {
           }));
         }
       } catch (error: any) {
-        notify('Failed to fetch item cost', 'error');
+        notify(error?.response?.data?.error, 'error');
         setBaseCosts((prev) => ({ ...prev, [rowKey]: 0 }));
       }
     },
@@ -149,6 +150,14 @@ const NewOrders: React.FC = () => {
       // Get the current form values
       const itemValues = itemForm.getFieldsValue();
       const currentData = itemValues.data || {};
+
+      // Check for invalid rows (totalCosts[rowKey] === 0)
+      for (const rowKey of Object.keys(currentData)) {
+        if (totalCosts[rowKey] === 0) {
+          notify('Item is not valid', 'warning');
+          return; // Stop execution, don't add new row
+        }
+      }
 
       // Update existing rows: set discount to 0 if undefined
       Object.keys(currentData).forEach((rowKey) => {
@@ -225,35 +234,89 @@ const NewOrders: React.FC = () => {
     Object.keys(rowData).forEach(async (rowKey) => {
       const row = rowData[rowKey];
       const changedField = Object.keys(changedFields.data?.[rowKey] || {})[0]; // Get the changed field name
+
+      // if (
+      //   ['model', 'material', 'print_type', 'sleevecase', 'size'].includes(
+      //     changedField,
+      //   ) && // Only refetch for these fields
+      //   row?.model &&
+      //   (materialOptions[rowKey]?.length != 0 && row?.material) &&
+      //   (printType[rowKey]?.length != 0 && row?.print_type) &&
+      //   // row?.sleevecase &&
+      //   row?.size
+      // ) {
+      //   const payload = {
+      //     modelId: row.model,
+      //     materialId: row.material,
+      //     printId: row.print_type,
+      //     sleeveCase: row.sleevecase,
+      //   };
+      //   await getItemCost(rowKey, payload);
+      // }
+
+      // Check if cost-related fields changed
       if (
-        ['model', 'material', 'print_type', 'sleevecase', 'size'].includes(
-          changedField,
-        ) && // Only refetch for these fields
-        row?.model &&
-        // row?.material &&
-        row?.print_type &&
-        // row?.sleevecase &&
-        row?.size
+        ['material', 'print_type', 'sleevecase', 'size'].includes(changedField)
       ) {
-        const payload = {
-          modelId: row.model,
-          materialId: row.material,
-          printId: row.print_type,
-          sleeveCase: row.sleevecase,
-        };
-        await getItemCost(rowKey, payload);
+        // Determine requirements based on model
+        const hasMaterials = materialOptions[rowKey]?.length > 0;
+        const hasPrintTypes = printType[rowKey]?.length > 0;
+
+        // Build condition for getItemCost
+        const isSizeValid = !!row?.size;
+        const isModelValid = !!row?.model;
+        const isMaterialValid =
+          !hasMaterials ||
+          (row?.material &&
+            materialOptions[rowKey]?.some((m: any) => m.id === row.material));
+        const isPrintTypeValid =
+          !hasPrintTypes ||
+          (row?.print_type &&
+            printType[rowKey]?.some((p: any) => p.id === row.print_type));
+        const isSleeveCaseValid = ['SHORTS', 'LOWER'].includes(
+          modelName[rowKey],
+        )
+          ? true
+          : !!row?.sleevecase; // Bypass sleevecase for SHORTS or LOWER
+
+        if (
+          isModelValid &&
+          isMaterialValid &&
+          isPrintTypeValid &&
+          isSleeveCaseValid &&
+          isSizeValid
+        ) {
+          const payload = {
+            modelId: row.model,
+            materialId: row.material || null, // Send null if no materials
+            printId: row.print_type || null, // Send null if no print types
+            sleeveCase: row.sleevecase,
+          };
+          getItemCost(rowKey, payload);
+        }
       } else if (
         ['quantity', 'discount'].includes(changedField) || // Recalculate totals for these fields
         areAllFieldsFilled()
       ) {
         handleRowTotalCost(rowKey);
       }
+
       // Clear baseCosts for this row when model changes to avoid outdated cost
       if (changedField === 'model') {
         setBaseCosts((prev) => {
           const newCosts = { ...prev };
           delete newCosts[rowKey]; // Remove old cost
           return newCosts;
+        });
+        itemForm.setFieldsValue({
+          data: {
+            [rowKey]: {
+              material: undefined, // Reset material
+              print_type: undefined, // Reset print_type
+              size: undefined,
+              sleevecase: undefined,
+            },
+          },
         });
       }
     });
@@ -421,6 +484,7 @@ const NewOrders: React.FC = () => {
                 data: {
                   [record.key]: {
                     material: undefined,
+                    print_type: undefined,
                     sleevecase:
                       selectedLabel === 'SHORTS' || selectedLabel === 'LOWER'
                         ? undefined
@@ -433,7 +497,7 @@ const NewOrders: React.FC = () => {
                 },
               });
               getMaterials(value, record.key, selectedLabel);
-              getPrintTypes(value);
+              getPrintTypes(value, record.key);
             }}
             options={models?.map((model: any) => ({
               value: model.id,
@@ -477,14 +541,20 @@ const NewOrders: React.FC = () => {
       render: (_, record) => (
         <Form.Item
           name={['data', record.key, 'print_type']}
-          rules={[{ required: true, message: 'Please select a print type' }]}
+          rules={[
+            {
+              required: printType[record.key]?.length == 0 ? false : true,
+              message: 'Please select a print type',
+            },
+          ]}
           className="!mb-0 "
         >
           <Select
+            disabled={printType[record.key]?.length == 0 ? true : false}
             size="middle"
             placeholder="Select Print Type"
             options={
-              printType?.map((type: any) => ({
+              printType[record.key]?.map((type: any) => ({
                 value: type.id,
                 label: type.name,
               })) || []

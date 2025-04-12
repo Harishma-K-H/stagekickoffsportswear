@@ -88,9 +88,8 @@ const useApi = (
     },
     async (error: AxiosError) => {
       const originalRequest: any = error.config as CustomAxiosRequestConfig;
-
       if (
-        error.response?.status === 401 &&
+        (error.response?.status === 401 || error.response?.status === 403) &&
         !originalRequest._retry // Prevent infinite loop
       ) {
         originalRequest._retry = true;
