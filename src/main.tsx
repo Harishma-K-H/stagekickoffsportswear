@@ -15,14 +15,14 @@ const themeSetup = { token: { colorPrimary: '#ec1f24' } };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.Fragment>
-      <BrowserRouter>
-        <Provider store={store}>
-          <PersistGate loading={null} persistor={persistedStore}>
-            <ConfigProvider theme={themeSetup}>
-              <App />
-            </ConfigProvider>
-          </PersistGate>
-        </Provider>
-      </BrowserRouter>
+    <BrowserRouter>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistedStore}>
+          <ConfigProvider theme={themeSetup}>
+            <App />
+          </ConfigProvider>
+        </PersistGate>
+      </Provider>
+    </BrowserRouter>
   </React.Fragment>,
 );

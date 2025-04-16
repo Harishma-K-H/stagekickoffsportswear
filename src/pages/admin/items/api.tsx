@@ -1,0 +1,51 @@
+// Define the orders list function
+export const items = async (
+  get: (url: string) => Promise<any>,
+  pageNumber: number,
+  pageSize: number,
+  branchId: number | string = '',
+): Promise<any> => {
+  const response = await get(
+    `/api_item/?pageNumber=${pageNumber}&pageSize=${pageSize}&branch_search=${branchId}`,
+  );
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
+
+// Define the get branches function
+export const fetchBranches = async (
+  get: (url: string) => Promise<any>,
+): Promise<any> => {
+  const response = await get(`/api_branch/?data=branch_list`);
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
+
+// Define the get models function
+export const fetchModels = async (
+  get: (url: string) => Promise<any>,
+): Promise<any> => {
+  const response = await get(`/models/?data=model_list`);
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
+
+// Define the get Materials function
+export const fetchMaterial = async (
+  get: (url: string) => Promise<any>,
+  payload: number | string,
+): Promise<any> => {
+  const response = await get(`/material_list/${payload}/`);
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
+
+// Define the get Print Types function
+export const fetchPrintTypes = async (
+  get: (url: string) => Promise<any>,
+  payload: number | string,
+): Promise<any> => {
+  const response = await get(`/print-types/?model_id=${payload}`);
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};

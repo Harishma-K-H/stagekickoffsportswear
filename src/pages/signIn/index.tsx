@@ -2,16 +2,20 @@ import './style.css';
 
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
-import { setToken, setUserIdAndRole } from '@redux/reducers/auth/reducer';
+import {
+  setBranchDetails,
+  setToken,
+  setUserName,
+  setUserRole,
+} from '@redux/reducers/auth/reducer';
+import Paths from '@routes/paths';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { Checkbox, Form, Input } from 'antd';
-import React from 'react';
+import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router';
 
 import { login } from './api';
-import path from 'path';
-import Paths from '@routes/paths';
 
 const SignIn: React.FC = () => {
   const { post } = useApiJSON();
@@ -19,20 +23,31 @@ const SignIn: React.FC = () => {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
 
-  const handleSubmit = async (values: { email: string; password: string }) => {
-    navigate(Paths.Staff.dashboard)
-    // try {
-    //   const { data } = await login(post, values);
-    //   const { accessToken, id, role } = data;
-    //   dispatch(setToken(accessToken));
-    //   dispatch(setUserIdAndRole({ id, role }));
-    //   navigate('/home');
-    // } catch (error: any) {
-    //   notify(
-    //     `${error?.response?.data?.message ? error?.response?.data?.message : error?.response?.data?.errors[0]?.message}`,
-    //     'error',
-    //   );
-    // }
+  const [apiLoader, setApiLoader] = useState(false);
+
+  const handleSubmit = async (values: {
+    login_identifier: string;
+    password: string;
+  }) => {
+    setApiLoader(true);
+    try {
+      const { data } = await login(post, values);
+      const { access, name, role, refresh, branch_id } = data;
+      dispatch(setToken({ access, refresh }));
+      dispatch(setUserName({ name }));
+      dispatch(setUserRole(role.toUpperCase()));
+      dispatch(setBranchDetails(branch_id));
+
+      if (role.toUpperCase() === import.meta.env.VITE_STAFF_ROLE) {
+        navigate(Paths.Staff.dashboard);
+      } else if (role.toUpperCase() === import.meta.env.VITE_ADMIN_ROLE) {
+        navigate(Paths.Admin.dashboard);
+      }
+      setApiLoader(false);
+    } catch (error: any) {
+      setApiLoader(false);
+      notify(`Email or Password is incorrect`, 'error');
+    }
   };
 
   return (
@@ -54,7 +69,7 @@ const SignIn: React.FC = () => {
           className="flex flex-col gap-4 bg-white px-4 py-6 drop-shadow-md md:w-11/12 mx-auto mt-4 md:min-w-[500px]"
         >
           <Form.Item
-            name="email"
+            name="login_identifier"
             rules={[
               {
                 required: true,
@@ -65,7 +80,7 @@ const SignIn: React.FC = () => {
             className="mb-0"
           >
             <Input
-              type="email"
+              type="login_identifier"
               placeholder="Enter your email"
               className="w-full py-3 placeholder:text-gray-800"
             />
@@ -84,11 +99,15 @@ const SignIn: React.FC = () => {
             <Checkbox className="text-sm font-normal text-center custom-checkbox text-sub-heading">
               Remember me
             </Checkbox>
-            <Link to="#" className="text-sm font-normal text-center text-sub-heading">
+            <Link
+              to="#"
+              className="text-sm font-normal text-center text-sub-heading"
+            >
               Forgot password
             </Link>
           </div>
           <Button
+            loading={apiLoader}
             title="Sign In"
             tooltip="Sign In"
             className="h-12 font-semibold text-white border-2 rounded-md bg-primary border-primary hover:text-primary hover:bg-white"

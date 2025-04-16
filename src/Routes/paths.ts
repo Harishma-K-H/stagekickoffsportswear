@@ -2,6 +2,7 @@ interface PathsType {
   signIn: string;
   Admin: {
     dashboard: string;
+    items: string;
   };
   Staff: {
     dashboard: string;
@@ -23,13 +24,14 @@ const Paths: PathsType = {
 
   Admin: {
     dashboard: '/admin/dashboard',
+    items: '/admin/items',
   },
   Staff: {
     dashboard: '/staff/dashboard',
     customers: '/staff/customers',
     orders: {
       index: '/staff/orders',
-      new: '/staff/orders/new'
+      new: '/staff/orders/new',
     },
     invoices: '/staff/invoices',
     settings: '/staff/settings',

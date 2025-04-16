@@ -1,12 +1,12 @@
 import { AuthState } from '@models/Reducer';
 import { createSlice } from '@reduxjs/toolkit';
-import { jwtDecode } from 'jwt-decode';
 
 const initialState: AuthState = {
+  refreshToken: null,
   accessToken: null,
-  userId: null,
-  userData: null,
+  userName: null,
   userRole: null,
+  branchDetails: null,
 };
 
 const authSlice = createSlice({
@@ -14,22 +14,35 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setToken: (state, action) => {
-      state.accessToken = action.payload;
-      state.userData = jwtDecode(action.payload);
+      state.refreshToken = action.payload.refresh;
+      state.accessToken = action.payload.access;
     },
-    setUserIdAndRole: (state, action) => {
-      state.userId = action.payload?.id;
-      state.userRole = action.payload?.role;
+    setUserName: (state, action) => {
+      state.userName = action.payload.name;
+    },
+    setUserRole: (state, action) => {
+      state.userRole = action.payload;
+    },
+    setBranchDetails: (state, action) => {
+      state.branchDetails = {
+        ...action.payload,
+      };
     },
     resetUser: (state) => {
       localStorage.clear();
+      state.refreshToken = null;
       state.accessToken = null;
-      state.userId = null;
-      state.userData = null;
+      state.userName = null;
       state.userRole = null;
     },
   },
 });
 
-export const { setToken, setUserIdAndRole, resetUser } = authSlice.actions;
+export const {
+  setToken,
+  setUserName,
+  setUserRole,
+  resetUser,
+  setBranchDetails,
+} = authSlice.actions;
 export default authSlice.reducer;

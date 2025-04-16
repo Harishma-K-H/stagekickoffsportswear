@@ -1,13 +1,7 @@
-import 'react-toastify/dist/ReactToastify.css';
-
-import { toast, ToastOptions } from 'react-toastify';
+import { message } from 'antd';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 export const notify = (msg: any, type: ToastType): void => {
-  const options: ToastOptions = {
-    position: toast.POSITION.TOP_RIGHT,
-  };
-
-  toast[type](msg, options);
+  message[type](msg);
 };
