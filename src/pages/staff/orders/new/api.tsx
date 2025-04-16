@@ -58,9 +58,7 @@ export const getCustomers = async (
   get: (url: string) => Promise<any>,
   searchTerm: string,
 ): Promise<any> => {
-  const response = await get(
-    `/customers/?data=customer_list&search=${searchTerm}`,
-  );
+  const response = await get(`/customers/?search=${searchTerm}`);
 
   return { data: response.data, status: response.status, ok: response.ok };
 };

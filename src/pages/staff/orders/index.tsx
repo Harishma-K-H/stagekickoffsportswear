@@ -226,6 +226,8 @@ const ModalDetails: React.FC<any> = ({
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [printForOffice, setPrintForOffice] = useState<boolean>(false);
+  const [printForOfficeInvoice, setPrintForOfficeInvoice] =
+    useState<boolean>(false);
   const [downloadForOffice, setDownloadForOffice] = useState<boolean>(false);
 
   // Configure react-to-print with a custom document title
@@ -261,6 +263,26 @@ const ModalDetails: React.FC<any> = ({
     }, 100);
   }, []);
 
+  const handleOfficeInvoicePrint = useCallback(() => {
+    setPrintForOfficeInvoice(true);
+    setTimeout(() => {
+      reactToPrintFn();
+      setPrintForOfficeInvoice(false);
+    }, 100);
+  }, []);
+
+  const handleOfficeInvoiceDownload = useCallback(() => {
+    setPrintForOfficeInvoice(true);
+    setTimeout(() => {
+      handleDownloadPDF({
+        type: 'INVOICE',
+        contentRef,
+        invoiceId: orderDetails.invoice_id,
+      });
+      setPrintForOfficeInvoice(false);
+    }, 100);
+  }, []);
+
   return (
     <Modal
       open={isModalOpen}
@@ -274,10 +296,11 @@ const ModalDetails: React.FC<any> = ({
           <div ref={contentRef}>
             {' '}
             <Invoice
-              type={'ORDER'}
+              type={printForOfficeInvoice ? 'INVOICE' : 'ORDER'}
               data={orderDetails}
               printForOffice={printForOffice}
               downloadForOffice={downloadForOffice}
+              printForOfficeInvoice={printForOfficeInvoice}
             />
           </div>
           <div className="flex justify-end gap-2">
@@ -310,6 +333,21 @@ const ModalDetails: React.FC<any> = ({
             />
             <Button
               handleClick={handleOfficeDownload}
+              title=""
+              type="button"
+              icon={<FaDownload />}
+              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+
+            <Button
+              handleClick={handleOfficeInvoicePrint}
+              title="Invoice Print"
+              type="button"
+              icon={<FaPrint />}
+              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+            <Button
+              handleClick={handleOfficeInvoiceDownload}
               title=""
               type="button"
               icon={<FaDownload />}
