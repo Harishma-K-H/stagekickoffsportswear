@@ -3,7 +3,7 @@ import './style.css';
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
-import { Form, Input, Pagination, Select, Table } from 'antd';
+import { Form, Input, Pagination, Popconfirm, Select, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FaRegEdit } from 'react-icons/fa';
 
@@ -14,6 +14,7 @@ import {
   fetchPrintTypes,
   items,
   newItem,
+  updateItem,
 } from './api';
 
 interface Item {
@@ -31,6 +32,7 @@ interface Item {
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   editing: boolean;
   dataIndex: string;
+  dataName: string;
   title: string;
   record: Item;
   index: number;
@@ -38,8 +40,9 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 const Items: React.FC = () => {
-  const { get } = useApiJSON();
+  const { get, put } = useApiJSON();
 
+  const [editItemForm] = Form.useForm();
   const [itemForm] = Form.useForm();
   const [branches, setBranches] = useState<any[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<{
@@ -65,26 +68,53 @@ const Items: React.FC = () => {
 
   const isEditing = (record: any) => record.id === editingKey;
 
+  const getMaterialsForModel = useCallback(
+    async (modelId: string | number) => {
+      if (!modelId) return;
+      try {
+        const { data } = await fetchMaterial(get, modelId);
+        setMaterialOptions(
+          data.map((item: any) => ({
+            value: item.id,
+            label: item.name,
+          })),
+        );
+      } catch (error: any) {
+        setMaterialOptions([]);
+        notify(error?.response?.data?.error, 'error');
+      }
+    },
+    [get],
+  );
+
+  const getPrintTypesForModel = useCallback(
+    async (modelId: string | number) => {
+      try {
+        const { data } = await fetchPrintTypes(get, modelId);
+        setPrintTypeOptions(
+          data.map((item: any) => ({
+            value: item.id,
+            label: item.name,
+          })),
+        );
+      } catch (error: any) {
+        setPrintTypeOptions([]);
+        notify(error?.response?.data?.error, 'error');
+      }
+    },
+    [get],
+  );
+
   const edit = async (record: any) => {
     try {
       // Get the modelId from the record first
-      const [modelResponse] = await Promise.all([fetchModels(get)]);
-
-      // Find the model option that matches the record's model name
-      const modelOption = modelResponse.data.find(
-        (model: any) => model.name === record.model,
-      );
-
-      if (!modelOption) {
-        throw new Error('Model not found');
-      }
-
-      const modelId = modelOption.id;
+      const modelResponse = await fetchModels(get);
+      const modelId = record.model; // Use the ID directly since we have it
 
       // Now fetch materials and print types with the modelId
-      const [materialResponse, printTypeResponse] = await Promise.all([
-        fetchMaterial(get, modelId),
-        fetchPrintTypes(get, modelId),
+      await Promise.all([
+        getMaterialsForModel(modelId),
+        getPrintTypesForModel(modelId),
       ]);
 
       // Set options in state
@@ -95,27 +125,14 @@ const Items: React.FC = () => {
         })),
       );
 
-      setMaterialOptions(
-        materialResponse.data.map((item: any) => ({
-          value: item.id,
-          label: item.name,
-        })),
-      );
-
-      setPrintTypeOptions(
-        printTypeResponse.data.map((item: any) => ({
-          value: item.id,
-          label: item.name,
-        })),
-      );
-
-      // Set form values
-      itemForm.setFieldsValue({
-        model: modelId, // Use the modelId instead of model name
-        material: record.material,
-        printType: record.printType,
-        sleeve: record.sleeve,
+      // Set form values using IDs
+      editItemForm.setFieldsValue({
+        model: record.model, // ID
+        material: record.material, // ID
+        printType: record.printType, // ID
+        sleevecase: record.sleevecase,
         price: record.price,
+        branch: record.branch, // ID
       });
 
       setEditingKey(record.id);
@@ -128,28 +145,33 @@ const Items: React.FC = () => {
     setEditingKey('');
   };
 
-  const save = async (key: string) => {
-    try {
-      const row = await itemForm.validateFields();
-      const newData = [...itemsList];
-      const index = newData.findIndex((item) => key === item.id);
-      if (index > -1) {
-        const item = newData[index];
-        newData.splice(index, 1, {
-          ...item,
+  const save = useCallback(
+    async (key: any) => {
+      try {
+        const row = await editItemForm.validateFields();
+        const modelName = modelOptions.find((m) => m.value == row.model)?.label;
+
+        // Perform your submit logic here
+        const payload = {
+          name: modelName,
           ...row,
-        });
-        setItemsList(newData);
+        };
+
+        await updateItem(put, payload, key);
+        await getItems();
+        notify('item updated successfully', 'success');
         setEditingKey('');
+      } catch (error: any) {
+        notify(error?.response?.data?.error, 'error');
       }
-    } catch (errInfo) {
-      console.log('Validate Failed:', errInfo);
-    }
-  };
+    },
+    [put, modelOptions, editItemForm],
+  );
 
   const EditableCell = ({
     editing,
     dataIndex,
+    dataName,
     title,
     record,
     index,
@@ -157,36 +179,70 @@ const Items: React.FC = () => {
     ...restProps
   }: EditableCellProps) => {
     let inputNode;
+    let rules = [{ required: true, message: `Please Input ${title}!` }];
 
-    switch (dataIndex) {
+    switch (dataName) {
       case 'model':
         inputNode = (
           <Select
             options={modelOptions}
             style={{ width: '100%' }}
             placeholder={`Select ${title}`}
+            onChange={async (value: number) => {
+              // Clear existing material and print type selections
+              editItemForm.setFieldsValue({
+                material: undefined,
+                printType: undefined,
+              });
+
+              // Fetch new options based on selected model
+              await Promise.all([
+                getMaterialsForModel(value),
+                getPrintTypesForModel(value),
+              ]);
+            }}
           />
         );
         break;
       case 'material':
+        rules = [
+          {
+            required: materialOptions?.length > 0,
+            message: `Please Input ${title}!`,
+          },
+        ];
         inputNode = (
           <Select
             options={materialOptions}
             style={{ width: '100%' }}
             placeholder={`Select ${title}`}
+            disabled={materialOptions?.length == 0 ? true : false}
           />
         );
         break;
       case 'printType':
+        rules = [
+          {
+            required: printTypeOptions?.length > 0,
+            message: `Please Input ${title}!`,
+          },
+        ];
         inputNode = (
           <Select
             options={printTypeOptions}
             style={{ width: '100%' }}
             placeholder={`Select ${title}`}
+            disabled={printTypeOptions?.length == 0 ? true : false}
           />
         );
         break;
-      case 'sleeve':
+      case 'sleevecase':
+        rules = [
+          {
+            required: false,
+            message: `Please Input ${title}!`,
+          },
+        ];
         inputNode = (
           <Select
             options={[
@@ -196,6 +252,19 @@ const Items: React.FC = () => {
             ]}
             style={{ width: '100%' }}
             placeholder={`Select ${title}`}
+          />
+        );
+        break;
+      case 'branch':
+        inputNode = (
+          <Select
+            options={branches.map((item: any) => ({
+              value: item.id,
+              label: item.name,
+            }))}
+            style={{ width: '100%' }}
+            placeholder={`Select ${title}`}
+            disabled={!editItemForm.getFieldValue('model')}
           />
         );
         break;
@@ -216,16 +285,7 @@ const Items: React.FC = () => {
     return (
       <td {...restProps}>
         {editing ? (
-          <Form.Item
-            name={dataIndex}
-            style={{ margin: 0 }}
-            rules={[
-              {
-                required: true,
-                message: `Please Input ${title}!`,
-              },
-            ]}
-          >
+          <Form.Item name={dataName} rules={rules}>
             {inputNode}
           </Form.Item>
         ) : (
@@ -235,64 +295,90 @@ const Items: React.FC = () => {
     );
   };
 
-  const columns = [
+  const columns: any = [
     {
       title: 'Sl No.',
       dataIndex: 'slNo',
+      dataName: 'slNo',
       key: 'slNo',
       editable: false,
+      width: '5%',
+      align: 'center',
     },
     {
       title: 'Model',
-      dataIndex: 'model',
+      dataIndex: 'model_name',
+      dataName: 'model',
       key: 'model',
       editable: true,
+      width: '14%',
     },
     {
       title: 'Material',
-      dataIndex: 'material',
+      dataIndex: 'material_name',
+      dataName: 'material',
       key: 'material',
       editable: true,
+      width: '14%',
     },
     {
       title: 'Print Type',
-      dataIndex: 'printType',
+      dataIndex: 'printType_name',
+      dataName: 'printType',
       key: 'printType',
       editable: true,
+      width: '14%',
     },
     {
       title: 'Sleeve',
-      dataIndex: 'sleeve',
-      key: 'sleeve',
+      dataIndex: 'sleevecase',
+      dataName: 'sleevecase',
+      key: 'sleevecase',
       editable: true,
+      width: '14%',
+    },
+    {
+      title: 'Branch',
+      dataIndex: 'branch_name',
+      dataName: 'branch',
+      key: 'branch',
+      editable: true,
+      width: '14%',
     },
     {
       title: 'Price',
       dataIndex: 'price',
+      dataName: 'price',
       key: 'price',
+      width: '14%',
       editable: true,
     },
     {
       title: 'Action',
       dataIndex: 'action',
+      dataName: 'action',
       key: 'action',
       width: 170,
       render: (_: any, record: any) => {
         const editable = isEditing(record);
         return editable ? (
           <span className="flex gap-2">
-            <Button
-              handleClick={() => save(record.id)}
-              type="submit"
-              className="text-white bg-primary"
-              title="Save"
-            />
-            <Button
-              handleClick={cancel}
-              type="button"
-              className="text-white bg-red-500"
-              title="Cancel"
-            />
+            <Popconfirm title="Sure to Save?" onConfirm={() => save(record.id)}>
+              <h2
+                className="w-full font-semibold text-white rounded-md bg-primary px-4 py-3 flex items-center"
+                title="Save"
+              >
+                Save
+              </h2>
+            </Popconfirm>
+            <Popconfirm title="Sure to Cancel?" onConfirm={cancel}>
+              <h2
+                className="w-full font-semibold text-white rounded-md bg-primary px-4 py-3 flex items-center"
+                title="Save"
+              >
+                Cancel
+              </h2>
+            </Popconfirm>
           </span>
         ) : (
           <FaRegEdit
@@ -311,6 +397,7 @@ const Items: React.FC = () => {
       onCell: (record: any) => ({
         record,
         dataIndex: col.dataIndex,
+        dataName: col.dataName,
         title: col.title,
         editing: isEditing(record),
       }),
@@ -347,7 +434,7 @@ const Items: React.FC = () => {
     } catch (error: any) {
       notify('Failed to fetch data', 'error');
     }
-  }, [get, pageNumber, pageSize, selectedBranch]);
+  }, [get, pageNumber, pageSize, selectedBranch, save]);
 
   const handlePageChange = useCallback((page: number) => {
     setPageNumber(page);
@@ -361,13 +448,18 @@ const Items: React.FC = () => {
   const tableDataSource = itemsList?.map((item: any, i: number) => ({
     key: i,
     slNo: i + 1,
+    model_name: item?.model_name,
     model: item?.model,
+    material_name: item?.material_name,
     material: item?.material,
+    printType_name: item?.print_type_name,
     printType: item?.print_type,
-    sleeve: item?.is_sleeve,
+    sleevecase: item?.sleevecase,
     price: item?.item_cost,
     itemCode: item?.item_code,
     id: item?.id,
+    branch_name: item?.branch?.name,
+    branch: item?.branch?.id,
   }));
 
   // Initial data fetching on component mount
@@ -400,9 +492,9 @@ const Items: React.FC = () => {
                 if (option && !Array.isArray(option)) {
                   setSelectedBranch(option as { value: string; label: string });
                   if (option.value === '') {
-                    itemForm.setFieldValue('branch', null);
+                    editItemForm.setFieldValue('branch', null);
                   } else {
-                    itemForm.setFieldValue('branch', option.value);
+                    editItemForm.setFieldValue('branch', option.value);
                   }
                 }
               }}
@@ -421,7 +513,7 @@ const Items: React.FC = () => {
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
           <ItemForm branches={branches} form={itemForm} />
-          <Form form={itemForm}>
+          <Form form={editItemForm}>
             <Table
               className="mt-6"
               bordered
@@ -520,10 +612,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
           name: modelName,
           ...values,
         };
-        console.log({ modelName });
-
         await newItem(post, payload);
-        console.log('Form submitted with values:', values);
         notify('Form submitted successfully', 'success');
       } catch (error: any) {
         notify(error?.response?.data?.error, 'error');
@@ -614,7 +703,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
       <Form.Item
         name={'sleevecase'}
         className="!mb-0  w-full"
-        rules={[{ required: true, message: 'Please select a model' }]}
+        // rules={[{ required: true, message: 'Please select a model' }]}
       >
         <Select size="middle" placeholder="Select Sleeve" options={sleeve} />
       </Form.Item>
@@ -622,11 +711,9 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
         name="branch"
         className="!mb-0 w-full"
         rules={[{ required: true, message: 'Please select a branch' }]}
-        // initialValue={selectedBranch.value}
       >
         <Select
           placeholder="Select a branch"
-          // value={selectedBranch.value}
           options={branches?.map((model: any) => ({
             value: model.id,
             label: model.name,

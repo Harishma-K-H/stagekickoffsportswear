@@ -9,11 +9,13 @@ const Invoice: React.FC<{
   data: any;
   printForOffice?: boolean;
   downloadForOffice?: boolean;
+  printForOfficeInvoice?: boolean;
 }> = ({
   type = 'ORDER',
   data,
   printForOffice = false,
   downloadForOffice = false,
+  printForOfficeInvoice = false,
 }) => {
   const {
     invoice_id,
@@ -41,7 +43,11 @@ const Invoice: React.FC<{
       <div className="grid items-center grid-cols-1 gap-4 pb-3 mb-4 border-b-2 md:grid-cols-3 print:grid-cols-3">
         <img src="/logo.png" alt="Company Logo" className="max-w-[200px]" />
         <h5 className="mb-2 text-xl font-extrabold text-center">
-          {type == 'INVOICE' ? `TAX INVOICE` : `ORDER`}
+          {printForOfficeInvoice
+            ? 'INVOICE'
+            : type == 'INVOICE'
+              ? `TAX INVOICE`
+              : `ORDER`}
         </h5>
         <div className="text-right">
           <h5 className="text-lg font-extrabold leading-5 ">

@@ -858,7 +858,7 @@ const CustomerDetails: React.FC<any> = ({
     async (searchTerm: string = '') => {
       try {
         const { data } = await getCustomers(get, searchTerm);
-        setCustomers(data);
+        setCustomers(data?.results);
       } catch (error: any) {
         notify('Failed to fetch existing customers', 'error');
       }
@@ -1123,7 +1123,7 @@ const CustomerDetails: React.FC<any> = ({
                   <span className="font-semibold text-gray-950">
                     Business Name:
                   </span>{' '}
-                  {customerDetails?.business_name.toUpperCase()}
+                  {customerDetails?.business_name?.toUpperCase()}
                 </div>
                 <div>
                   <span className="font-semibold text-gray-950">Address:</span>{' '}
