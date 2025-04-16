@@ -1,3 +1,16 @@
 .custom-table .ant-table-cell {
   padding: 8px 8px !important;
 }
+
+.editable-row td {
+  padding: 8px !important;
+  background: #f5f5f5;
+}
+
+.editable-row .ant-form-item {
+  margin: 0 !important;
+}
+
+.editable-row td.ant-table-cell {
+  background: #f5f5f5;
+}
