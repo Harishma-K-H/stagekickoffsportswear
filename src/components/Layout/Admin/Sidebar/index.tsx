@@ -1,7 +1,7 @@
 import { SidebarProps } from '@models/Sidebar';
 import Paths from '@routes/paths';
 import React, { useState } from 'react';
-import { MdDashboardCustomize } from 'react-icons/md';
+import { MdDashboardCustomize, MdOutlineChecklistRtl } from 'react-icons/md';
 import { NavLink, useLocation } from 'react-router';
 
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
@@ -16,6 +16,12 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
       link: Paths.Admin.dashboard,
       route: Paths.Admin.dashboard,
       Icon: <MdDashboardCustomize className="w-[22px] h-auto" />,
+    },
+    {
+      title: 'Items',
+      link: Paths.Admin.items,
+      route: Paths.Admin.items,
+      Icon: <MdOutlineChecklistRtl className="w-[22px] h-auto" />,
     },
   ]);
 
@@ -34,10 +40,9 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
         className={`shadow-md lg:shadow-none absolute left-0 top-0 z-40 flex h-screen w-[260px] flex-col justify-between bg-white duration-300 ease-linear lg:static lg:translate-x-0 pt-24 lg:pt-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="overflow-y-scroll light-scrollbar">
-          <h3 className="px-3 lg:px-3 text-[#64748B] text-sm">Menu</h3>
           <div className="overflow-y-scroll light-scrollbar">
             <div className="flex flex-col overflow-y-auto duration-300 ease-linear w- scrollbar-hide">
-              <nav className="px-3 py-4 mt-5 lg:mt-0 lg:px-3">
+              <nav className="py-4 pl-3 mt-5 lg:mt-0 lg:pl-3">
                 <ul className="mb-6 flex flex-col gap-2 text-[#191D23]">
                   {menuList?.map((menu, index) => {
                     return (
@@ -60,30 +65,6 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
             </div>
           </div>
         </div>
-        {/* <div className="flex flex-col justify-between gap-3 px-4 py-5.5 lg:py-6.5 lg:justify-center xl:mb-[100px]">
-          <h3 className="text-[#64748B] text-sm">Profile</h3>
-          <div className="flex items-center gap-2 ">
-            <div className="items-center justify-center flex-1 w-10 h-10 p-1.5 rounded-full bg-slate-500">
-              <FaUserAlt className="text-white bg-cover rounded-full w-7 h-7" />
-            </div>
-            <div>
-              <h5 className="text-[#191D23] text-base truncate w-[180px] hover:cursor-pointer">
-                {uerName}
-              </h5>
-              <h6 className="text-[#A0ABBB] text-sm truncate w-[180px]">
-                {userRole}
-              </h6>
-            </div>
-          </div>
-          <Button
-            handleClick={logout}
-            type="button"
-            title="Log out"
-            icon={<CgLogOut className="w-6 h-6" />}
-            className="text-[#191D23] flex items-center gap-2 py-[10px] text-[16px] rounded-[5px] bg-[#F7F8F9] font-semibold justify-center"
-            tooltip="Log out"
-          />
-        </div> */}
       </aside>
     </div>
   );

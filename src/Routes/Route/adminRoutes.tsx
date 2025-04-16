@@ -1,5 +1,6 @@
 import Layout from '@components/Layout/Admin';
 import Dashboard from '@pages/admin/dashboard/Loadable';
+import Items from '@pages/admin/items/Loadable';
 import Paths from '@routes/paths';
 import { Route } from 'react-router';
 
@@ -17,5 +18,6 @@ export const AdminRoutes = (
     }
   >
     <Route path={Paths.Admin.dashboard} element={<Dashboard />} />
+    <Route path={Paths.Admin.items} element={<Items />} />
   </Route>
 );
