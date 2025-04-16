@@ -14,13 +14,18 @@ import {
   fetchModels,
   fetchPrintTypes,
   items,
+  newItem,
 } from './api';
 
 const Items: React.FC = () => {
   const { get } = useApiJSON();
 
+  const [itemForm] = Form.useForm();
   const [branches, setBranches] = useState<any[]>([]);
-  const [selectedBranch, setSelectedBranch] = useState<string>('');
+  const [selectedBranch, setSelectedBranch] = useState<{
+    value: string;
+    label: string;
+  }>({ value: '', label: '' });
 
   const [itemsList, setItemsList] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -79,7 +84,7 @@ const Items: React.FC = () => {
   const getBranches = useCallback(async () => {
     try {
       const { data } = await fetchBranches(get);
-      setBranches([{ id: '', name: 'All' }, ...data]);
+      setBranches(data);
     } catch (error: any) {
       notify('Failed to fetch models', 'error');
     }
@@ -88,7 +93,12 @@ const Items: React.FC = () => {
   // Fetch item list
   const getItems = useCallback(async () => {
     try {
-      const { data } = await items(get, pageNumber, pageSize, selectedBranch);
+      const { data } = await items(
+        get,
+        pageNumber,
+        pageSize,
+        selectedBranch?.value,
+      );
       setItemsList(data.results);
       setPaginationData({
         count: data?.count,
@@ -138,27 +148,41 @@ const Items: React.FC = () => {
         <div className="flex items-center justify-between pb-2 border-b-2">
           <div>
             <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-              Items List {selectedBranch}
+              Items List {selectedBranch.label}
             </h3>
           </div>
           <Form.Item name="branch" label="Branch" className="!mb-0">
             <Select
-              onChange={(value: string) => {
-                setSelectedBranch(value);
+              onChange={(
+                _value: string,
+                option?:
+                  | { value: any; label: any }
+                  | { value: any; label: any }[],
+              ) => {
+                if (option && !Array.isArray(option)) {
+                  setSelectedBranch(option as { value: string; label: string });
+                  if (option.value === '') {
+                    itemForm.setFieldValue('branch', null);
+                  } else {
+                    itemForm.setFieldValue('branch', option.value);
+                  }
+                }
               }}
-              placeholder="Select Payment Method"
+              placeholder="Select a branch"
               size="large"
               defaultValue={''}
-              options={branches?.map((model: any) => ({
-                value: model.id,
-                label: model.name,
-              }))}
+              options={[{ id: '', name: 'All' }, ...branches]?.map(
+                (model: any) => ({
+                  value: model.id,
+                  label: model.name,
+                }),
+              )}
               className="w-full min-w-[230px]"
             />
           </Form.Item>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
-          <ItemForm />
+          <ItemForm branches={branches} form={itemForm} />
           <Table
             className="mt-6"
             bordered
@@ -182,11 +206,15 @@ const Items: React.FC = () => {
   );
 };
 
-const ItemForm = () => {
-  const { get } = useApiJSON();
+interface ItemFormProps {
+  branches: { id: string; name: string }[];
+  form: any;
+}
 
-  const [itemForm] = Form.useForm();
+const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
+  const { get, post } = useApiJSON();
 
+  const [modelName, setModelName] = useState<string>('');
   const [models, setModels] = useState<any[]>([]);
   const [materialOptions, setMaterialOptions] = useState<string[]>([]);
   const [printType, setPrintType] = useState<string[]>([]);
@@ -235,13 +263,38 @@ const ItemForm = () => {
     [get],
   );
 
+  // Handle form submission
+  const handleSubmit = useCallback(
+    async (values: any) => {
+      try {
+        // Perform your submit logic here
+        const payload = {
+          name: modelName,
+          ...values,
+        };
+        console.log({ modelName });
+
+        await newItem(post, payload);
+        console.log('Form submitted with values:', values);
+        notify('Form submitted successfully', 'success');
+      } catch (error: any) {
+        notify(error?.response?.data?.error, 'error');
+      }
+    },
+    [modelName, post, form],
+  );
+
   // Initial data fetching on component mount
   useEffect(() => {
     getModels();
   }, [getModels]);
 
   return (
-    <Form className="grid grid-cols-5 gap-4 gap-y-3" form={itemForm}>
+    <Form
+      className="grid grid-cols-3 md:grid-cols-6 gap-4 gap-y-3"
+      form={form}
+      onFinish={handleSubmit}
+    >
       <Form.Item
         name={'model'}
         rules={[{ required: true, message: 'Please select a model' }]}
@@ -250,10 +303,12 @@ const ItemForm = () => {
         <Select
           size="middle"
           placeholder="Select Model"
-          onChange={(value: number) => {
+          onChange={(value: number, option: any) => {
+            setModelName(option.label);
             getMaterials(value);
             getPrintTypes(value);
-            itemForm.setFieldsValue({
+
+            form.setFieldsValue({
               material: undefined,
               print_type: undefined,
             });
@@ -264,8 +319,18 @@ const ItemForm = () => {
           }))}
         />
       </Form.Item>
-      <Form.Item name="material" className="!mb-0 w-full">
+      <Form.Item
+        name="material"
+        className="!mb-0 w-full"
+        rules={[
+          {
+            required: materialOptions?.length == 0 ? false : true,
+            message: 'Please select a material',
+          },
+        ]}
+      >
         <Select
+          disabled={materialOptions?.length == 0 ? true : false}
           size="middle"
           placeholder="Select Material"
           options={
@@ -276,8 +341,18 @@ const ItemForm = () => {
           }
         />
       </Form.Item>
-      <Form.Item name={'print_type'} className="!mb-0  w-full">
+      <Form.Item
+        name={'print_type'}
+        className="!mb-0  w-full"
+        rules={[
+          {
+            required: printType?.length == 0 ? false : true,
+            message: 'Please select a print type',
+          },
+        ]}
+      >
         <Select
+          disabled={printType?.length == 0 ? true : false}
           size="middle"
           placeholder="Select Print Type"
           options={
@@ -288,16 +363,35 @@ const ItemForm = () => {
           }
         />
       </Form.Item>
-      <Form.Item name={'sleevecase'} className="!mb-0  w-full">
+      <Form.Item
+        name={'sleevecase'}
+        className="!mb-0  w-full"
+        rules={[{ required: true, message: 'Please select a model' }]}
+      >
         <Select size="middle" placeholder="Select Sleeve" options={sleeve} />
       </Form.Item>
       <Form.Item
-        name={'price'}
-        rules={[{ required: true, message: 'Please enter the price' }]}
+        name="branch"
+        className="!mb-0 w-full"
+        rules={[{ required: true, message: 'Please select a branch' }]}
+        // initialValue={selectedBranch.value}
+      >
+        <Select
+          placeholder="Select a branch"
+          // value={selectedBranch.value}
+          options={branches?.map((model: any) => ({
+            value: model.id,
+            label: model.name,
+          }))}
+        />
+      </Form.Item>
+      <Form.Item
+        name={'item_cost'}
+        rules={[{ required: true, message: 'Please enter the item cost' }]}
         className="!mb-0  w-full"
       >
         <Input
-          placeholder="Enter Price"
+          placeholder="Enter item cost"
           className="w-full h-9"
           onInput={(e) => {
             e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
@@ -307,7 +401,7 @@ const ItemForm = () => {
       <Button
         title="Submit"
         type="submit"
-        className="w-full col-span-5 font-semibold text-white rounded-md bg-primary"
+        className="w-full col-span-3 md:col-span-6 font-semibold text-white rounded-md bg-primary"
       ></Button>
     </Form>
   );
