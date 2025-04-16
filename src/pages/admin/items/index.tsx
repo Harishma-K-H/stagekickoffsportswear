@@ -214,6 +214,7 @@ interface ItemFormProps {
 const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
   const { get, post } = useApiJSON();
 
+  const [modelName, setModelName] = useState<string>('');
   const [models, setModels] = useState<any[]>([]);
   const [materialOptions, setMaterialOptions] = useState<string[]>([]);
   const [printType, setPrintType] = useState<string[]>([]);
@@ -263,16 +264,25 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
   );
 
   // Handle form submission
-  const handleSubmit = useCallback(async (values: any) => {
-    try {
-      // Perform your submit logic here
-      await newItem(post, values);
-      console.log('Form submitted with values:', values);
-      notify('Form submitted successfully', 'success');
-    } catch (error: any) {
-      notify(error?.response?.data?.error, 'error');
-    }
-  }, []);
+  const handleSubmit = useCallback(
+    async (values: any) => {
+      try {
+        // Perform your submit logic here
+        const payload = {
+          name: modelName,
+          ...values,
+        };
+        console.log({ modelName });
+
+        await newItem(post, payload);
+        console.log('Form submitted with values:', values);
+        notify('Form submitted successfully', 'success');
+      } catch (error: any) {
+        notify(error?.response?.data?.error, 'error');
+      }
+    },
+    [modelName, post, form],
+  );
 
   // Initial data fetching on component mount
   useEffect(() => {
@@ -293,9 +303,11 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
         <Select
           size="middle"
           placeholder="Select Model"
-          onChange={(value: number) => {
+          onChange={(value: number, option: any) => {
+            setModelName(option.label);
             getMaterials(value);
             getPrintTypes(value);
+
             form.setFieldsValue({
               material: undefined,
               print_type: undefined,
@@ -374,12 +386,12 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
         />
       </Form.Item>
       <Form.Item
-        name={'price'}
-        rules={[{ required: true, message: 'Please enter the price' }]}
+        name={'item_cost'}
+        rules={[{ required: true, message: 'Please enter the item cost' }]}
         className="!mb-0  w-full"
       >
         <Input
-          placeholder="Enter Price"
+          placeholder="Enter item cost"
           className="w-full h-9"
           onInput={(e) => {
             e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
