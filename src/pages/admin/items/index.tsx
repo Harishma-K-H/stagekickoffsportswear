@@ -40,7 +40,7 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 const Items: React.FC = () => {
-  const { get, post } = useApiJSON();
+  const { get, put } = useApiJSON();
 
   const [editItemForm] = Form.useForm();
   const [itemForm] = Form.useForm();
@@ -154,11 +154,10 @@ const Items: React.FC = () => {
         // Perform your submit logic here
         const payload = {
           name: modelName,
-          id: key,
           ...row,
         };
 
-        await updateItem(post, payload);
+        await updateItem(put, payload, key);
         await getItems();
         notify('item updated successfully', 'success');
         setEditingKey('');
@@ -166,7 +165,7 @@ const Items: React.FC = () => {
         notify(error?.response?.data?.error, 'error');
       }
     },
-    [post, modelOptions, editItemForm],
+    [put, modelOptions, editItemForm],
   );
 
   const EditableCell = ({

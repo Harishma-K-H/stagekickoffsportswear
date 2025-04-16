@@ -62,10 +62,11 @@ export const newItem = async (
 
 // Define the update item values function
 export const updateItem = async (
-  post: (url: string, payload: any) => Promise<any>,
+  put: (url: string, payload: any) => Promise<any>,
   payload: any,
+  itemId: number | string,
 ): Promise<any> => {
-  const response = await post('/api_items/', payload);
+  const response = await put(`/api_item/${itemId}`, payload);
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
