@@ -49,3 +49,13 @@ export const fetchPrintTypes = async (
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
+
+// Define the create new customer function
+export const newItem = async (
+  post: (url: string, payload: any) => Promise<any>,
+  payload: any,
+): Promise<any> => {
+  const response = await post('/api_item/', payload);
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
