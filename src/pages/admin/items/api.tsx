@@ -66,7 +66,7 @@ export const updateItem = async (
   payload: any,
   itemId: number | string,
 ): Promise<any> => {
-  const response = await put(`/api_item/${itemId}`, payload);
+  const response = await put(`/api_item/${itemId}/`, payload);
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
