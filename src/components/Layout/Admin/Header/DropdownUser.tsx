@@ -82,8 +82,8 @@ const DropdownUser: React.FC = () => {
         >
           <button className="px-6 py-2 text-sm font-semibold text-left text-black capitalize duration-300 ease-in-out lg:text-base">
             {userName}
-            <span className="block text-[12px] font-normal text-gray-500">
-              {branchDetails?.name} - {branchDetails?.code}
+            <span className="block text-[12px] font-normal text-gray-500 lowercase">
+              {branchDetails?.email}
             </span>
           </button>
           <hr />

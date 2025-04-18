@@ -8,6 +8,7 @@ import { handleDownloadPDF } from '@utils/staff/downloadPdf';
 import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
@@ -143,6 +144,9 @@ const Invoices: React.FC = () => {
 
   return (
     <>
+      <Helmet>
+        <title>KICKOFF SPORTS WEAR - Invoices </title>
+      </Helmet>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
           <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">

@@ -12,6 +12,7 @@ import { paidAmount } from '@utils/staff/paidAmount';
 import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { Link } from 'react-router';
@@ -24,13 +25,13 @@ const Orders: React.FC = () => {
 
   const [ordersList, setOrdersList] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
     hasNextPage: false,
-    pageNumber: 1,
-    pageSize: 20,
+    pageNumber: pageNumber,
+    pageSize: pageSize,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalId, setModalId] = useState<number>(1);
@@ -62,6 +63,11 @@ const Orders: React.FC = () => {
       title: 'Delivery Date',
       dataIndex: 'deliveryDate',
       key: 'deliveryDate',
+    },
+    {
+      title: 'Total Cost',
+      dataIndex: 'total_cost',
+      key: 'total_cost',
     },
     {
       title: 'Action',
@@ -163,6 +169,11 @@ const Orders: React.FC = () => {
     total_cost: order?.total_cost, // Pass total_cost to the record
   }));
 
+  const onShowSizeChange = useCallback((current: number, pageSize: number) => {
+    setPageSize(pageSize);
+    setPageNumber(current);
+  }, []);
+
   useEffect(() => {
     getOrders();
   }, [getOrders]);
@@ -173,6 +184,9 @@ const Orders: React.FC = () => {
 
   return (
     <>
+      <Helmet>
+        <title>KICKOFF SPORTS WEAR - Orders </title>
+      </Helmet>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
           <div>
@@ -199,6 +213,8 @@ const Orders: React.FC = () => {
             current={paginationData.pageNumber}
             total={paginationData.count}
             pageSize={paginationData.pageSize}
+            showSizeChanger
+            onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
           />
@@ -258,6 +274,9 @@ const ModalDetails: React.FC<any> = ({
         type: 'ORDER',
         contentRef,
         invoiceId: orderDetails.orderID,
+        documentTitle: orderDetails?.orderID
+          ? `Order_${orderDetails.orderID}_${dayjs().format('YYYYMMDD')}`
+          : 'Order',
       });
       setDownloadForOffice(false);
     }, 100);
@@ -278,10 +297,13 @@ const ModalDetails: React.FC<any> = ({
         type: 'INVOICE',
         contentRef,
         invoiceId: orderDetails.invoice_id,
+        documentTitle: orderDetails?.invoice_id
+          ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}`
+          : 'Invoice',
       });
       setPrintForOfficeInvoice(false);
     }, 100);
-  }, []);
+  }, [orderDetails]);
 
   return (
     <Modal
