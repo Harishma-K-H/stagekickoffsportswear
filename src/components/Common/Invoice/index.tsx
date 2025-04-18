@@ -4,6 +4,8 @@ import { paidAmount } from '@utils/staff/paidAmount';
 import dayjs from 'dayjs';
 import React from 'react';
 
+import { numberToWords } from '../../../utils/common/numberToWords';
+
 const Invoice: React.FC<{
   type: 'ORDER' | 'INVOICE';
   data: any;
@@ -53,12 +55,16 @@ const Invoice: React.FC<{
           <h5 className="text-lg font-extrabold leading-5 ">
             KICKOFF SPORTS WEAR. <br />
             <span className="text-sm font-semibold uppercase">
-              {created_by?.branch}, {created_by?.city}
+              {created_by?.branch}
             </span>
           </h5>
           <p className="text-xs">
-            {created_by?.district}, Kerala, {created_by?.pincode}, India <br />
-            GSTIN: 32BKYPS7094H1ZA
+            {created_by?.address} <br />
+            {created_by?.district}, {created_by?.state}, {created_by?.pincode}{' '}
+            <br />
+            GSTN: {created_by?.GSTN} <br />
+            Phone: {created_by?.phn_no} <br />
+            Email: {created_by?.email}
           </p>
         </div>
       </div>
@@ -97,7 +103,7 @@ const Invoice: React.FC<{
       {/* Order Items Table */}
       <div className="mb-8">
         <div className="">
-          <table className="w-full">
+          <table className="w-full border-[1px] border-gray-300">
             <thead>
               <tr className="bg-gray-100 dark:bg-gray-700">
                 <th className="px-4 py-2 text-sm text-left dark:text-white">
@@ -137,7 +143,7 @@ const Invoice: React.FC<{
               {items?.map((item: any, index: number) => (
                 <tr
                   key={index}
-                  className="uppercase border-b dark:border-gray-700"
+                  className="uppercase border-b dark:border-gray-700 text-[12.5px]"
                 >
                   <td className="px-4 py-2 dark:text-white">{index + 1}</td>
                   <td className="px-4 py-2 dark:text-white">{item.model}</td>
@@ -169,60 +175,68 @@ const Invoice: React.FC<{
 
       {/* Total Calculations */}
       <div
-        className={`flex justify-end ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+        className={`flex justify-between gap-5 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
       >
+        <div>
+          Total In Words <br />
+          <strong className="text-lg">
+            {numberToWords(parseFloat(total_cost))}
+          </strong>
+        </div>
         <div className="w-2/5">
           <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-300">
-                Subtotal:
-              </span>
-              <span className="font-medium dark:text-white">
-                {parseInt(net_cost)?.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-300">
-                CGST2.5 (2.5%):
-              </span>
-              <span className="font-medium dark:text-white">
-                {(parseInt(gst) / 2).toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-300">
-                SGST2.5 (2.5%):
-              </span>
-              <span className="font-medium dark:text-white">
-                {(parseInt(gst) / 2)?.toFixed(2)}
-              </span>
-            </div>
-            <div
-              className={`flex justify-between ${type === 'INVOICE' && 'hidden'}`}
-            >
-              <span className="text-gray-600 dark:text-gray-300">
-                Paid Amount:
-              </span>
-              <span className="font-medium dark:text-white">
-                {totalPaid?.toFixed(2)}
-              </span>
-            </div>
-            <div
-              className={`flex justify-between ${type === 'INVOICE' && 'hidden'}`}
-            >
-              <span className="text-gray-600 dark:text-gray-300">
-                Balance Amount:
-              </span>
-              <span className="font-medium dark:text-white">
-                {currentBalance?.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between pt-2 border-t">
-              <span className="font-semibold dark:text-white">Total:</span>
-              <span className="font-semibold dark:text-white">
-                {parseInt(total_cost).toFixed(2)}
-              </span>
-            </div>
+            <table className="w-full mb-2 border-[1px]">
+              <tbody>
+                <tr className="border-b">
+                  <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
+                    Subtotal:
+                  </td>
+                  <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
+                    {parseInt(net_cost)?.toFixed(2)}
+                  </td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
+                    CGST2.5 (2.5%):
+                  </td>
+                  <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
+                    {(parseInt(gst) / 2).toFixed(2)}
+                  </td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
+                    SGST2.5 (2.5%):
+                  </td>
+                  <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
+                    {(parseInt(gst) / 2)?.toFixed(2)}
+                  </td>
+                </tr>
+                <tr className={`border-b ${type === 'INVOICE' && 'hidden'}`}>
+                  <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
+                    Paid Amount:
+                  </td>
+                  <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
+                    {totalPaid?.toFixed(2)}
+                  </td>
+                </tr>
+                <tr className={`border-b ${type === 'INVOICE' && 'hidden'}`}>
+                  <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
+                    Balance Amount:
+                  </td>
+                  <td className="py-2 pr-2 font-medium text-right dark:text-white">
+                    {currentBalance?.toFixed(2)}
+                  </td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2 pl-2 font-semibold text-gray-600 dark:text-gray-300">
+                    Total:
+                  </td>
+                  <td className="py-2 pr-2 font-semibold text-right border-l dark:text-white">
+                    {parseInt(total_cost).toFixed(2)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

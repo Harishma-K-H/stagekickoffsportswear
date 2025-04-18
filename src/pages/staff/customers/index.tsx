@@ -4,6 +4,7 @@ import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { Form, Input, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
 
 import { getCustomers } from './api';
@@ -118,52 +119,57 @@ const Customers: React.FC = () => {
   }, [fetchCustomers]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between pb-2 border-b-2">
-        <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-          Customers List
-        </h3>
-      </div>
-      <div className="p-3 bg-white md:p-5 custom-table">
-        <Form className="flex gap-2 pb-3" onFinish={handleSubmit}>
-          <Form.Item
-            className="!mb-0 w-full"
-            name="customerName"
-            rules={[
-              { required: false, message: 'Please enter the Customer Name' },
-            ]}
-          >
-            <Input
-              placeholder={`Search customer Name`}
-              allowClear
-              onClear={handleClickClear}
-              className="w-full py-2 h-9 placeholder:text-gray-400"
-            />
-          </Form.Item>
+    <>
+      <Helmet>
+        <title>KICKOFF SPORTS WEAR - Customers </title>
+      </Helmet>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between pb-2 border-b-2">
+          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
+            Customers List
+          </h3>
+        </div>
+        <div className="p-3 bg-white md:p-5 custom-table">
+          <Form className="flex gap-2 pb-3" onFinish={handleSubmit}>
+            <Form.Item
+              className="!mb-0 w-full"
+              name="customerName"
+              rules={[
+                { required: false, message: 'Please enter the Customer Name' },
+              ]}
+            >
+              <Input
+                placeholder={`Search customer Name`}
+                allowClear
+                onClear={handleClickClear}
+                className="w-full py-2 h-9 placeholder:text-gray-400"
+              />
+            </Form.Item>
 
-          <Button
-            type="submit"
-            title=""
-            icon={<IoSearch />}
-            className="text-white bg-gray-500 rounded-md !py-2"
+            <Button
+              type="submit"
+              title=""
+              icon={<IoSearch />}
+              className="text-white bg-gray-500 rounded-md !py-2"
+            />
+          </Form>
+          <Table
+            bordered
+            dataSource={tableDataSource}
+            columns={columns}
+            pagination={false}
+            scroll={{ x: '700' }}
           />
-        </Form>
-        <Table
-          bordered
-          dataSource={tableDataSource}
-          columns={columns}
-          pagination={false}
-          scroll={{ x: '700' }}
-        />
-        <Pagination
-          current={paginationData.pageNumber}
-          total={paginationData.count}
-          pageSize={paginationData.pageSize}
-          onChange={handlePageChange}
-          rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-        />
+          <Pagination
+            current={paginationData.pageNumber}
+            total={paginationData.count}
+            pageSize={paginationData.pageSize}
+            onChange={handlePageChange}
+            rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

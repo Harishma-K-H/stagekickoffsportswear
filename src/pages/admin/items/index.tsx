@@ -3,8 +3,10 @@ import './style.css';
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
+import { getSleeveCaseConfig } from '@utils/sleeveCaseUtils'; // Adjust the import path
 import { Form, Input, Pagination, Popconfirm, Select, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet';
 import { FaRegEdit } from 'react-icons/fa';
 
 import {
@@ -39,9 +41,6 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   index: number;
   children: React.ReactNode;
 }
-
-// Add MODELS_WITHOUT_SLEEVES constant at the top level of the file
-const MODELS_WITHOUT_SLEEVES = ['SHORTS', 'LOWER', 'CAP'];
 
 const Items: React.FC = () => {
   const { get, put } = useApiJSON();
@@ -185,7 +184,7 @@ const Items: React.FC = () => {
     ...restProps
   }: EditableCellProps) => {
     let inputNode;
-    let rules = [{ required: true, message: `Please Input ${title}!` }];
+    let rules: any = [{ required: true, message: `Please Input ${title}!` }];
 
     switch (dataName) {
       case 'model':
@@ -201,14 +200,11 @@ const Items: React.FC = () => {
                 printType: undefined,
               });
 
-              // Check if selected model should disable sleeves
+              // Check sleeve config based on new model
+              const newConfig = getSleeveCaseConfig(option.label);
 
-              const shouldDisableSleeves = MODELS_WITHOUT_SLEEVES.includes(
-                option.label.toUpperCase(),
-              );
-
-              // Reset sleevecase if model doesn't need sleeves
-              if (shouldDisableSleeves) {
+              // Reset sleeve if model doesn't support it
+              if (newConfig.isDisabled) {
                 editItemForm.setFieldsValue({
                   sleevecase: undefined,
                 });
@@ -235,7 +231,26 @@ const Items: React.FC = () => {
             options={materialOptions}
             style={{ width: '100%' }}
             placeholder={`Select ${title}`}
-            disabled={materialOptions?.length == 0 ? true : false}
+            disabled={materialOptions?.length === 0}
+            onChange={(_, option: any) => {
+              // Get current model
+              const modelOpt = modelOptions.find(
+                (m) => m.value === editItemForm.getFieldValue('model'),
+              );
+
+              // Update sleeve config based on new material
+              const newConfig = getSleeveCaseConfig(
+                modelOpt?.label,
+                option?.label,
+              );
+
+              // Reset sleeve if new configuration disables it
+              if (newConfig.isDisabled) {
+                editItemForm.setFieldsValue({
+                  sleevecase: undefined,
+                });
+              }
+            }}
           />
         );
         break;
@@ -256,35 +271,59 @@ const Items: React.FC = () => {
         );
         break;
       case 'sleevecase':
-        // Get current model from either the form value or the record
         const currentModelId = editItemForm.getFieldValue('model');
-        const currentModelOption = modelOptions.find(
+        const currentMaterialId = editItemForm.getFieldValue('material');
+
+        const modelOption = modelOptions.find(
           (m) => m.value === currentModelId,
         );
-        const currentModelName =
-          currentModelOption?.label || record?.model_name;
+        const materialOption = materialOptions.find(
+          (m) => m.value === currentMaterialId,
+        );
 
-        const isDisabled =
-          currentModelName &&
-          MODELS_WITHOUT_SLEEVES.includes(currentModelName.toUpperCase());
+        // Get sleeve configuration based on current model and material
+        const sleeveCaseConfig = getSleeveCaseConfig(
+          modelOption?.label,
+          materialOption?.label,
+        );
 
         rules = [
           {
-            required: !isDisabled,
-            message: `Please Input ${title}!`,
+            required: !sleeveCaseConfig.isDisabled,
+            message: 'Please select a sleeve type',
+            validator: async (_: any, value: any) => {
+              const modelOpt = modelOptions.find(
+                (m) => m.value === editItemForm.getFieldValue('model'),
+              );
+
+              if (!modelOpt) {
+                return Promise.resolve();
+              }
+
+              const config = getSleeveCaseConfig(
+                modelOpt.label,
+                materialOption?.label,
+              );
+
+              if (config.isDisabled) {
+                return Promise.resolve();
+              }
+
+              if (!value && !config.isDisabled) {
+                return Promise.reject('Please select a sleeve type');
+              }
+
+              return Promise.resolve();
+            },
           },
         ];
 
         inputNode = (
           <Select
-            options={[
-              { value: 'FULL SLEEVE', label: 'FULL SLEEVE' },
-              { value: 'SLEEVELESS', label: 'SLEEVELESS' },
-              { value: 'HALF SLEEVE', label: 'HALF SLEEVE' },
-            ]}
+            options={sleeveCaseConfig.options}
             style={{ width: '100%' }}
             placeholder={`Select ${title}`}
-            disabled={isDisabled}
+            disabled={sleeveCaseConfig.isDisabled}
           />
         );
         break;
@@ -398,7 +437,7 @@ const Items: React.FC = () => {
           <span className="flex gap-2">
             <Popconfirm title="Sure to Save?" onConfirm={() => save(record.id)}>
               <h2
-                className="flex items-center w-full px-4 py-3 font-semibold text-white rounded-md bg-primary"
+                className="flex items-center w-full px-4 py-3 font-semibold text-white rounded-md cursor-pointer bg-primary"
                 title="Save"
               >
                 Save
@@ -406,7 +445,7 @@ const Items: React.FC = () => {
             </Popconfirm>
             <Popconfirm title="Sure to Cancel?" onConfirm={cancel}>
               <h2
-                className="flex items-center w-full px-4 py-3 font-semibold text-white rounded-md bg-primary"
+                className="flex items-center w-full px-4 py-3 font-semibold text-white rounded-md cursor-pointer bg-primary"
                 title="Save"
               >
                 Cancel
@@ -519,6 +558,9 @@ const Items: React.FC = () => {
 
   return (
     <>
+      <Helmet>
+        <title>KICKOFF SPORTS WEAR - Dashboard</title>
+      </Helmet>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
           <div>
@@ -606,17 +648,11 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form, getItems }) => {
   const [models, setModels] = useState<any[]>([]);
   const [materialOptions, setMaterialOptions] = useState<string[]>([]);
   const [printType, setPrintType] = useState<string[]>([]);
-  const [sleeve] = useState<any[]>([
-    { value: 'FULL SLEEVE', label: 'FULL SLEEVE' },
-    { value: 'SLEEVELESS', label: 'SLEEVELESS' },
-    { value: 'HALF SLEEVE', label: 'HALF SLEEVE' },
-  ]);
 
   // First, add a constant for the models that don't need sleeves
   const MODELS_WITHOUT_SLEEVES = ['SHORTS', 'LOWER', 'CAP'];
 
-  // In the ItemForm component, add a state to track if sleeves should be disabled
-  const [isSleevesDisabled, setIsSleevesDisabled] = useState(false);
+  const [sleeveConfig, setSleeveConfig] = useState(getSleeveCaseConfig());
 
   // Fetch models
   const getModels = useCallback(async () => {
@@ -666,6 +702,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form, getItems }) => {
           ...values,
         };
         const response = await newItem(post, payload);
+        setSleeveConfig(getSleeveCaseConfig());
         form.resetFields();
         notify('Form submitted successfully', 'success');
         if (response?.data?.item_id) {
@@ -702,17 +739,15 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form, getItems }) => {
             getMaterials(value);
             getPrintTypes(value);
 
-            // Check if the selected model should have sleeves disabled
-            const shouldDisableSleeves = MODELS_WITHOUT_SLEEVES.includes(
-              option.label.toUpperCase(),
-            );
-            setIsSleevesDisabled(shouldDisableSleeves);
+            // Check sleeve config based on model
+            const newConfig = getSleeveCaseConfig(option.label);
+            setSleeveConfig(newConfig);
 
             // Reset form values
             form.setFieldsValue({
               material: undefined,
               print_type: undefined,
-              sleevecase: shouldDisableSleeves
+              sleevecase: newConfig.isDisabled
                 ? undefined
                 : form.getFieldValue('sleevecase'),
             });
@@ -728,13 +763,13 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form, getItems }) => {
         className="!mb-0 w-full"
         rules={[
           {
-            required: materialOptions?.length == 0 ? false : true,
+            required: materialOptions?.length > 0,
             message: 'Please select a material',
           },
         ]}
       >
         <Select
-          disabled={materialOptions?.length == 0 ? true : false}
+          disabled={materialOptions?.length === 0}
           size="middle"
           placeholder="Select Material"
           options={
@@ -743,6 +778,26 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form, getItems }) => {
               label: material.name,
             })) || []
           }
+          onChange={(_, option: any) => {
+            // Get current model name
+            const modelOption = models.find(
+              (m: any) => m.id === form.getFieldValue('model'),
+            );
+
+            // Update sleeve config based on both model and material
+            const newConfig = getSleeveCaseConfig(
+              modelOption?.name,
+              option?.label,
+            );
+            setSleeveConfig(newConfig);
+
+            // Clear sleeve selection if the new config disables sleeves
+            form.setFieldsValue({
+              sleevecase: newConfig.isDisabled
+                ? undefined
+                : form.getFieldValue('sleevecase'),
+            });
+          }}
         />
       </Form.Item>
       <Form.Item
@@ -771,17 +826,70 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form, getItems }) => {
         name={'sleevecase'}
         className="!mb-0 w-full"
         rules={[
-          {
-            required: !isSleevesDisabled,
-            message: 'Please select a sleeve',
-          },
+          ({ getFieldValue }) => ({
+            validator: async (_, value) => {
+              const modelOption = models.find(
+                (m: any) => m.id === getFieldValue('model'),
+              );
+
+              // First check if model exists and if it's a no-sleeve model
+              if (!modelOption) {
+                return Promise.resolve();
+              }
+
+              const isNoSleeveModel = MODELS_WITHOUT_SLEEVES.includes(
+                modelOption.name.toUpperCase(),
+              );
+
+              if (isNoSleeveModel) {
+                return Promise.resolve();
+              }
+
+              // If model has materials, check material configuration
+              if (materialOptions.length > 0) {
+                const materialOption: any = materialOptions.find(
+                  (m: any) => m.id === getFieldValue('material'),
+                );
+
+                if (materialOption) {
+                  const currentConfig = getSleeveCaseConfig(
+                    modelOption.name,
+                    typeof materialOption === 'object'
+                      ? materialOption?.name
+                      : materialOption,
+                  );
+
+                  if (currentConfig.isDisabled) {
+                    return Promise.resolve();
+                  }
+
+                  if (!value) {
+                    return Promise.reject('Please select a sleeve type');
+                  }
+                }
+              } else {
+                // If model doesn't have materials, check only model configuration
+                const currentConfig = getSleeveCaseConfig(modelOption.name);
+
+                if (currentConfig.isDisabled) {
+                  return Promise.resolve();
+                }
+
+                if (!value) {
+                  return Promise.reject('Please select a sleeve type');
+                }
+              }
+
+              return Promise.resolve();
+            },
+          }),
         ]}
       >
         <Select
           size="middle"
           placeholder="Select Sleeve"
-          options={sleeve}
-          disabled={isSleevesDisabled}
+          options={sleeveConfig.options}
+          disabled={sleeveConfig.isDisabled}
         />
       </Form.Item>
       <Form.Item

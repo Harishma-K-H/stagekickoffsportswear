@@ -6,6 +6,7 @@ import { notify } from '@components/Common/Toastify';
 import Paths from '@routes/paths';
 import { useApiFormData, useApiJSON } from '@services/ApiService/Api.service';
 import { debounce } from '@utils/common/debounce';
+import { getSleeveCaseConfig } from '@utils/sleeveCaseUtils'; // Adjust the import path
 import {
   DatePicker,
   Form,
@@ -18,6 +19,7 @@ import {
 } from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet';
 import { FaPlus } from 'react-icons/fa';
 import { MdDeleteForever } from 'react-icons/md';
 import { useNavigate } from 'react-router';
@@ -53,11 +55,6 @@ const NewOrders: React.FC = () => {
     {},
   );
   const [printType, setPrintType] = useState<Record<string, any[]>>({});
-  const [sleeve] = useState<any[]>([
-    { value: 'FULL SLEEVE', label: 'FULL SLEEVE' },
-    { value: 'SLEEVELESS', label: 'SLEEVELESS' },
-    { value: 'HALF SLEEVE', label: 'HALF SLEEVE' },
-  ]);
   const [size] = useState<any[]>([
     { value: '24', label: '24' },
     { value: '26', label: '26' },
@@ -69,6 +66,7 @@ const NewOrders: React.FC = () => {
   const [modelName, setModelName] = useState<any>({});
   const [dataSource, setDataSource] = useState<any[]>([{ key: '0' }]);
   const [subtotalDiscount, setSubtotalDiscount] = useState<number>(0);
+  const [sleeveConfigs, setSleeveConfigs] = useState<Record<string, any>>({});
 
   // Fetch models
   const getModels = useCallback(async () => {
@@ -171,6 +169,7 @@ const NewOrders: React.FC = () => {
     try {
       // Validate the current form fields
       await itemForm.validateFields();
+      const newKey = String(count);
 
       // Get the current form values
       const itemValues = itemForm.getFieldsValue();
@@ -184,9 +183,13 @@ const NewOrders: React.FC = () => {
         }
       }
 
-      // Add the new row
-      const newData = { key: String(count) };
-      setDataSource([...dataSource, newData]);
+      // Add new row with initial sleeve config
+      setDataSource([...dataSource, { key: newKey }]);
+      setSleeveConfigs((prev) => ({
+        ...prev,
+        [newKey]: getSleeveCaseConfig(),
+      }));
+
       setCount(count + 1);
     } catch (error) {
       // Validation failed, do not add a new row
@@ -194,28 +197,59 @@ const NewOrders: React.FC = () => {
     }
   };
 
-  // Handle deleting a row
+  // // Handle deleting a row
+  // const handleDelete = (key: React.Key) => {
+  //   if (dataSource.length <= 1) {
+  //     notify('Required minimum 1 order', 'warning');
+  //     return;
+  //   }
+  //   const newData = dataSource.filter((item) => item.key !== key);
+  //   setDataSource(newData);
+  //   setBaseCosts((prev) => {
+  //     const newCosts = { ...prev };
+  //     delete newCosts[key as string];
+  //     return newCosts;
+  //   });
+  //   setTotalCosts((prev) => {
+  //     const newTotalCost = { ...prev };
+  //     delete newTotalCost[key as string];
+  //     return newTotalCost;
+  //   });
+  //   setModelName((prev: any) => {
+  //     const newModelName = { ...prev };
+  //     delete newModelName[key as string];
+  //     return newModelName;
+  //   });
+  // };
+
   const handleDelete = (key: React.Key) => {
     if (dataSource.length <= 1) {
       notify('Required minimum 1 order', 'warning');
       return;
     }
+
     const newData = dataSource.filter((item) => item.key !== key);
     setDataSource(newData);
+
+    // Clean up states for the deleted row
     setBaseCosts((prev) => {
-      const newCosts = { ...prev };
-      delete newCosts[key as string];
-      return newCosts;
+      const { [key as string]: _, ...rest } = prev;
+      return rest;
     });
+
     setTotalCosts((prev) => {
-      const newTotalCost = { ...prev };
-      delete newTotalCost[key as string];
-      return newTotalCost;
+      const { [key as string]: _, ...rest } = prev;
+      return rest;
     });
+
+    setSleeveConfigs((prev) => {
+      const { [key as string]: _, ...rest } = prev;
+      return rest;
+    });
+
     setModelName((prev: any) => {
-      const newModelName = { ...prev };
-      delete newModelName[key as string];
-      return newModelName;
+      const { [key as string]: _, ...rest } = prev;
+      return rest;
     });
   };
 
@@ -224,47 +258,60 @@ const NewOrders: React.FC = () => {
     const rowData = allFields.data || {};
     Object.keys(rowData).forEach(async (rowKey) => {
       const row = rowData[rowKey];
-      const changedField = Object.keys(changedFields.data?.[rowKey] || {})[0]; // Get the changed field name
+      const changedField = Object.keys(changedFields.data?.[rowKey] || {})[0];
 
       // Check if cost-related fields changed
       if (
-        ['material', 'print_type', 'sleevecase', 'size'].includes(changedField)
-      ) {
-        // Determine requirements based on model
-        const hasMaterials = materialOptions[rowKey]?.length > 0;
-        const hasPrintTypes = printType[rowKey]?.length > 0;
-
-        // Build condition for getItemCost
-        const isSizeValid = !!row?.size;
-        const isModelValid = !!row?.model;
-        const isMaterialValid =
-          !hasMaterials ||
-          (row?.material &&
-            materialOptions[rowKey]?.some((m: any) => m.id === row.material));
-        const isPrintTypeValid =
-          !hasPrintTypes ||
-          (row?.print_type &&
-            printType[rowKey]?.some((p: any) => p.id === row.print_type));
-        const isSleeveCaseValid = ['SHORTS', 'LOWER', 'CAP'].includes(
-          modelName[rowKey],
+        ['model', 'material', 'print_type', 'sleevecase', 'size'].includes(
+          changedField,
         )
-          ? true
-          : !!row?.sleevecase;
+      ) {
+        // Get current model configuration
+        const modelOption = models.find((m: any) => m.id === row?.model);
+        const currentConfig = getSleeveCaseConfig(
+          modelOption?.name,
+          materialOptions[rowKey]?.find((m: any) => m.id === row?.material)
+            ?.name,
+        );
 
+        // Build validation conditions
+        const isModelValid = !!row?.model;
+        const isSizeValid = !!row?.size;
+
+        // Material validation
+        const isMaterialValid =
+          materialOptions[rowKey]?.length === 0 ||
+          (!!row?.material &&
+            materialOptions[rowKey]?.some((m: any) => m.id === row.material));
+
+        // Print type validation
+        const isPrintTypeValid =
+          printType[rowKey]?.length === 0 ||
+          (!!row?.print_type &&
+            printType[rowKey]?.some((p: any) => p.id === row.print_type));
+
+        // Sleeve validation considering config
+        const isSleeveCaseValid = currentConfig.isDisabled || !!row?.sleevecase;
+
+        // Check if all required fields are valid
         if (
           isModelValid &&
+          isSizeValid &&
           isMaterialValid &&
           isPrintTypeValid &&
-          isSleeveCaseValid &&
-          isSizeValid
+          isSleeveCaseValid
         ) {
           const payload = {
             modelId: row.model,
             materialId: row.material || null,
             printId: row.print_type || null,
-            sleeveCase: row.sleevecase,
+            sleeveCase: currentConfig.isDisabled ? null : row.sleevecase,
           };
-          getItemCost(rowKey, payload);
+
+          // Add a small delay to ensure all state updates are processed
+          setTimeout(() => {
+            getItemCost(rowKey, payload);
+          }, 100);
         }
       } else if (changedField === 'quantity') {
         const quantity = row.quantity;
@@ -279,31 +326,6 @@ const NewOrders: React.FC = () => {
           ...prev,
           [rowKey]: newTotalCost,
         }));
-      }
-
-      // Clear baseCosts for this row when model changes to avoid outdated cost
-      if (changedField === 'model') {
-        setBaseCosts((prev) => {
-          const newCosts = { ...prev };
-          delete newCosts[rowKey];
-          return newCosts;
-        });
-        setTotalCosts((prev) => {
-          const newCosts = { ...prev };
-          delete newCosts[rowKey];
-          return newCosts;
-        });
-        itemForm.setFieldsValue({
-          data: {
-            [rowKey]: {
-              material: undefined,
-              print_type: undefined,
-              size: undefined,
-              sleevecase: undefined,
-              quantity: undefined,
-            },
-          },
-        });
       }
     });
   };
@@ -487,25 +509,33 @@ const NewOrders: React.FC = () => {
             onChange={(value: number, option: any) => {
               const selectedLabel = option.label;
               setTotalCosts((prev) => ({ ...prev, [record.key]: 0 }));
-              // Clear material and sleeve fields when model changes
+
+              // Get sleeve configuration based on model
+              const newConfig = getSleeveCaseConfig(selectedLabel);
+              setSleeveConfigs((prev) => ({
+                ...prev,
+                [record.key]: newConfig,
+              }));
+
+              // Reset form values
               itemForm.setFieldsValue({
                 data: {
                   [record.key]: {
                     material: undefined,
                     print_type: undefined,
-                    sleevecase:
-                      selectedLabel === 'SHORTS' ||
-                      selectedLabel === 'LOWER' ||
-                      selectedLabel === 'CAP'
-                        ? undefined
-                        : itemForm.getFieldValue([
-                            'data',
-                            record.key,
-                            'sleevecase',
-                          ]),
+                    sleevecase: newConfig.isDisabled
+                      ? undefined
+                      : itemForm.getFieldValue([
+                          'data',
+                          record.key,
+                          'sleevecase',
+                        ]),
+                    size: undefined,
+                    quantity: undefined,
                   },
                 },
               });
+
               getMaterials(value, record.key, selectedLabel);
               getPrintTypes(value, record.key);
             }}
@@ -532,7 +562,7 @@ const NewOrders: React.FC = () => {
           className="!mb-0 w-[120px]"
         >
           <Select
-            disabled={materialOptions[record.key]?.length == 0 ? true : false}
+            disabled={materialOptions[record.key]?.length == 0}
             size="middle"
             placeholder="Select Material"
             options={
@@ -541,6 +571,35 @@ const NewOrders: React.FC = () => {
                 label: material.name,
               })) || []
             }
+            onChange={(_, option: any) => {
+              const modelOption = models.find(
+                (m: any) =>
+                  m.id ===
+                  itemForm.getFieldValue(['data', record.key, 'model']),
+              );
+
+              // Update sleeve config based on both model and material
+              const newConfig = getSleeveCaseConfig(
+                modelOption?.name,
+                option?.label,
+              );
+              setSleeveConfigs((prev) => ({
+                ...prev,
+                [record.key]: newConfig,
+              }));
+
+              // Clear sleeve selection if the new config disables sleeves
+              if (newConfig.isDisabled) {
+                itemForm.setFieldsValue({
+                  data: {
+                    [record.key]: {
+                      ...itemForm.getFieldValue(['data', record.key]),
+                      sleevecase: undefined,
+                    },
+                  },
+                });
+              }
+            }}
           />
         </Form.Item>
       ),
@@ -577,33 +636,51 @@ const NewOrders: React.FC = () => {
       title: 'SLEEVE',
       dataIndex: 'sleeve',
       render: (_, record) => {
-        const selectedModelId = itemForm.getFieldValue([
-          'data',
-          record.key,
-          'model',
-        ]);
-        const selectedModel = models.find(
-          (model) => model.id === selectedModelId,
-        );
-        const isSleeveDisabled =
-          selectedModel?.name === 'SHORTS' || selectedModel?.name === 'LOWER';
+        const currentConfig =
+          sleeveConfigs[record.key] || getSleeveCaseConfig();
 
         return (
           <Form.Item
             name={['data', record.key, 'sleevecase']}
             rules={[
-              {
-                required: !isSleeveDisabled,
-                message: 'Please select a sleeve',
-              },
+              ({ getFieldValue }) => ({
+                validator: async (_, value) => {
+                  const modelId = getFieldValue(['data', record.key, 'model']);
+                  const materialId = getFieldValue([
+                    'data',
+                    record.key,
+                    'material',
+                  ]);
+
+                  const modelOption = models.find((m) => m.id === modelId);
+                  const materialOption = materialOptions[record.key]?.find(
+                    (m: any) => m.id === materialId,
+                  );
+
+                  const config = getSleeveCaseConfig(
+                    modelOption?.name,
+                    materialOption?.name,
+                  );
+
+                  if (config.isDisabled) {
+                    return Promise.resolve();
+                  }
+
+                  if (!value && !config.isDisabled) {
+                    return Promise.reject('Please select a sleeve type');
+                  }
+
+                  return Promise.resolve();
+                },
+              }),
             ]}
             className="!mb-0"
           >
             <Select
               size="middle"
               placeholder="Select Sleeve"
-              options={sleeve}
-              disabled={isSleeveDisabled}
+              options={currentConfig.options}
+              disabled={currentConfig.isDisabled}
             />
           </Form.Item>
         );
@@ -697,143 +774,148 @@ const NewOrders: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-4 custom-form">
-      <div className="flex items-center justify-between pb-2 border-b-2">
-        <div className="flex">
-          <Breadcrumb rootClass="rounded" />
-          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-            Create new order
-          </h3>
+    <>
+      <Helmet>
+        <title>KICKOFF SPORTS WEAR - New Orders </title>
+      </Helmet>
+      <div className="flex flex-col gap-4 custom-form">
+        <div className="flex items-center justify-between pb-2 border-b-2">
+          <div className="flex">
+            <Breadcrumb rootClass="rounded" />
+            <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
+              Create new order
+            </h3>
+          </div>
         </div>
-      </div>
-      <CustomerDetails
-        customerForm={customerForm}
-        setLoading={setLoading}
-        userType={userType}
-        setUserType={setUserType}
-      />
-      {/* Item Details Table */}
-      <div className="relative p-3 bg-white rounded-md md:p-5">
-        <Form
-          form={itemForm}
-          onValuesChange={handleFieldChange}
-          layout="vertical"
-        >
-          <h5 className="mb-4 text-xl font-medium">Item Details :</h5>
-          <Table
-            pagination={false}
-            bordered
-            dataSource={dataSource}
-            columns={defaultColumns as ColumnTypes}
-            scroll={{ x: 900 }}
-          />
-        </Form>
+        <CustomerDetails
+          customerForm={customerForm}
+          setLoading={setLoading}
+          userType={userType}
+          setUserType={setUserType}
+        />
+        {/* Item Details Table */}
+        <div className="relative p-3 bg-white rounded-md md:p-5">
+          <Form
+            form={itemForm}
+            onValuesChange={handleFieldChange}
+            layout="vertical"
+          >
+            <h5 className="mb-4 text-xl font-medium">Item Details :</h5>
+            <Table
+              pagination={false}
+              bordered
+              dataSource={dataSource}
+              columns={defaultColumns as ColumnTypes}
+              scroll={{ x: 900 }}
+            />
+          </Form>
 
-        {/* Totals Section with subtotal discount */}
-        <Form form={remarksForm} layout="vertical" className="">
-          <div className="flex flex-col items-end mt-4">
-            <div className="flex justify-between w-64">
-              <span className="font-medium">Raw Subtotal:</span>
-              <span>{rawSubTotal.toFixed(2)}</span>
+          {/* Totals Section with subtotal discount */}
+          <Form form={remarksForm} layout="vertical" className="">
+            <div className="flex flex-col items-end mt-4">
+              <div className="flex justify-between w-64">
+                <span className="font-medium">Raw Subtotal:</span>
+                <span>{rawSubTotal.toFixed(2)}</span>
+              </div>
+
+              <div className="flex items-center justify-between w-64">
+                <span className="font-medium">Discount:</span>
+                <Form.Item
+                  name="discount"
+                  className="!mb-0"
+                  rules={[
+                    {
+                      validator: (_, value) =>
+                        value && parseFloat(value) < 0
+                          ? Promise.reject(new Error('Cannot be negative'))
+                          : Promise.resolve(),
+                    },
+                    {
+                      validator: (_, value) =>
+                        value && isNaN(parseFloat(value))
+                          ? Promise.reject(new Error('Must be a valid number'))
+                          : Promise.resolve(),
+                    },
+                    {
+                      validator: (_, value) =>
+                        value && parseFloat(value) > rawSubTotal
+                          ? Promise.reject(new Error('Cannot exceed total'))
+                          : Promise.resolve(),
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder="0.00"
+                    className="w-32 text-right h-9"
+                    value={subtotalDiscount || ''}
+                    onChange={(e) => handleDiscountChange(e.target.value)}
+                    onInput={(e) => {
+                      e.currentTarget.value = e.currentTarget.value.replace(
+                        /[^0-9.]/g,
+                        '',
+                      );
+                    }}
+                  />
+                </Form.Item>
+              </div>
+
+              <div className="flex justify-between w-64">
+                <span className="font-medium">Subtotal:</span>
+                <span>{subTotal.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between w-64">
+                <span className="font-medium">CGST (2.5%):</span>
+                <span>{cgst.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between w-64">
+                <span className="font-medium">SGST (2.5%):</span>
+                <span>{sgst.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between w-64 pt-2 mt-2 border-t">
+                <span className="font-bold">Grand Total:</span>
+                <span className="font-bold">{grandTotal.toFixed(2)}</span>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between w-64">
-              <span className="font-medium">Discount:</span>
+            <div className="grid justify-between grid-cols-1 gap-5 mt-3 md:grid-cols-3">
               <Form.Item
-                name="discount"
+                name="selectedDate"
+                label="Delivery Date"
                 className="!mb-0"
-                rules={[
-                  {
-                    validator: (_, value) =>
-                      value && parseFloat(value) < 0
-                        ? Promise.reject(new Error('Cannot be negative'))
-                        : Promise.resolve(),
-                  },
-                  {
-                    validator: (_, value) =>
-                      value && isNaN(parseFloat(value))
-                        ? Promise.reject(new Error('Must be a valid number'))
-                        : Promise.resolve(),
-                  },
-                  {
-                    validator: (_, value) =>
-                      value && parseFloat(value) > rawSubTotal
-                        ? Promise.reject(new Error('Cannot exceed total'))
-                        : Promise.resolve(),
-                  },
-                ]}
+                rules={[{ required: true, message: 'Please select a date' }]}
               >
-                <Input
-                  placeholder="0.00"
-                  className="w-32 text-right h-9"
-                  value={subtotalDiscount || ''}
-                  onChange={(e) => handleDiscountChange(e.target.value)}
-                  onInput={(e) => {
-                    e.currentTarget.value = e.currentTarget.value.replace(
-                      /[^0-9.]/g,
-                      '',
-                    );
-                  }}
+                <DatePicker
+                  disabledDate={disabledDate}
+                  placeholder="Delivery Date"
+                  format="DD-MM-YYYY"
+                  style={{ width: '100%' }}
                 />
               </Form.Item>
+              <Form.Item
+                name="remarks"
+                label="Remarks"
+                className="md:col-span-2 !mb-0"
+              >
+                <Input.TextArea rows={4} placeholder="Enter Remarks here" />
+              </Form.Item>
             </div>
+          </Form>
+        </div>
 
-            <div className="flex justify-between w-64">
-              <span className="font-medium">Subtotal:</span>
-              <span>{subTotal.toFixed(2)}</span>
-            </div>
-
-            <div className="flex justify-between w-64">
-              <span className="font-medium">CGST (2.5%):</span>
-              <span>{cgst.toFixed(2)}</span>
-            </div>
-
-            <div className="flex justify-between w-64">
-              <span className="font-medium">SGST (2.5%):</span>
-              <span>{sgst.toFixed(2)}</span>
-            </div>
-
-            <div className="flex justify-between w-64 pt-2 mt-2 border-t">
-              <span className="font-bold">Grand Total:</span>
-              <span className="font-bold">{grandTotal.toFixed(2)}</span>
-            </div>
-          </div>
-
-          <div className="grid justify-between grid-cols-1 gap-5 mt-3 md:grid-cols-3">
-            <Form.Item
-              name="selectedDate"
-              label="Delivery Date"
-              className="!mb-0"
-              rules={[{ required: true, message: 'Please select a date' }]}
-            >
-              <DatePicker
-                disabledDate={disabledDate}
-                placeholder="Delivery Date"
-                format="DD-MM-YYYY"
-                style={{ width: '100%' }}
-              />
-            </Form.Item>
-            <Form.Item
-              name="remarks"
-              label="Remarks"
-              className="md:col-span-2 !mb-0"
-            >
-              <Input.TextArea rows={4} placeholder="Enter Remarks here" />
-            </Form.Item>
-          </div>
-        </Form>
+        <div className="w-full">
+          <Button
+            title="Submit"
+            type="submit"
+            loading={loading}
+            handleClick={handleSubmit}
+            className="bg-primary rounded-md w-full text-white h-12 font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
+          />
+        </div>
       </div>
-
-      <div className="w-full">
-        <Button
-          title="Submit"
-          type="submit"
-          loading={loading}
-          handleClick={handleSubmit}
-          className="bg-primary rounded-md w-full text-white h-12 font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
-        />
-      </div>
-    </div>
+    </>
   );
 };
 

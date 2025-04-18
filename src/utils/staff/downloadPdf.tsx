@@ -6,11 +6,18 @@ const handleDownloadPDF: ({
   type,
   contentRef,
   invoiceId,
+  documentTitle,
 }: {
   type: 'INVOICE' | 'ORDER';
   contentRef: any;
   invoiceId: string;
-}) => Promise<void> = async ({ type, contentRef, invoiceId }) => {
+  documentTitle?: string;
+}) => Promise<void> = async ({
+  type,
+  contentRef,
+  invoiceId,
+  documentTitle,
+}) => {
   if (!contentRef.current) return;
 
   try {
@@ -53,10 +60,9 @@ const handleDownloadPDF: ({
       heightLeft -= usableHeight;
     }
 
-    const fileName = invoiceId
-      ? `${type}_${invoiceId}_${dayjs().format('YYYYMMDD')}.pdf`
-      : `${type}_${dayjs().format('YYYYMMDD')}.pdf`;
-    pdf.save(fileName);
+    pdf.save(
+      documentTitle || `${type}_${invoiceId}_${dayjs().format('YYYYMMDD')}.pdf`,
+    );
   } catch (error) {
     console.error('Failed to generate PDF:', error);
   }
