@@ -27,6 +27,7 @@ interface Item {
   itemCode: string;
   key: number;
   slNo: number;
+  model_name: string;
 }
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
@@ -38,6 +39,9 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   index: number;
   children: React.ReactNode;
 }
+
+// Add MODELS_WITHOUT_SLEEVES constant at the top level of the file
+const MODELS_WITHOUT_SLEEVES = ['SHORTS', 'LOWER', 'CAP'];
 
 const Items: React.FC = () => {
   const { get, put } = useApiJSON();
@@ -65,6 +69,8 @@ const Items: React.FC = () => {
   const [modelOptions, setModelOptions] = useState<any[]>([]);
   const [materialOptions, setMaterialOptions] = useState<any[]>([]);
   const [printTypeOptions, setPrintTypeOptions] = useState<any[]>([]);
+
+  const [newItemId, setNewItemId] = useState<string | null>(null);
 
   const isEditing = (record: any) => record.id === editingKey;
 
@@ -158,7 +164,7 @@ const Items: React.FC = () => {
         };
 
         await updateItem(put, payload, key);
-        await getItems();
+        await getItems(key);
         notify('item updated successfully', 'success');
         setEditingKey('');
       } catch (error: any) {
@@ -188,12 +194,25 @@ const Items: React.FC = () => {
             options={modelOptions}
             style={{ width: '100%' }}
             placeholder={`Select ${title}`}
-            onChange={async (value: number) => {
+            onChange={async (value: number, option: any) => {
               // Clear existing material and print type selections
               editItemForm.setFieldsValue({
                 material: undefined,
                 printType: undefined,
               });
+
+              // Check if selected model should disable sleeves
+
+              const shouldDisableSleeves = MODELS_WITHOUT_SLEEVES.includes(
+                option.label.toUpperCase(),
+              );
+
+              // Reset sleevecase if model doesn't need sleeves
+              if (shouldDisableSleeves) {
+                editItemForm.setFieldsValue({
+                  sleevecase: undefined,
+                });
+              }
 
               // Fetch new options based on selected model
               await Promise.all([
@@ -237,21 +256,35 @@ const Items: React.FC = () => {
         );
         break;
       case 'sleevecase':
+        // Get current model from either the form value or the record
+        const currentModelId = editItemForm.getFieldValue('model');
+        const currentModelOption = modelOptions.find(
+          (m) => m.value === currentModelId,
+        );
+        const currentModelName =
+          currentModelOption?.label || record?.model_name;
+
+        const isDisabled =
+          currentModelName &&
+          MODELS_WITHOUT_SLEEVES.includes(currentModelName.toUpperCase());
+
         rules = [
           {
-            required: false,
+            required: !isDisabled,
             message: `Please Input ${title}!`,
           },
         ];
+
         inputNode = (
           <Select
             options={[
-              { value: 'full', label: 'Full Sleeve' },
-              { value: 'sleeveless', label: 'Sleeveless' },
-              { value: 'half', label: 'Half Sleeve' },
+              { value: 'FULL SLEEVE', label: 'FULL SLEEVE' },
+              { value: 'SLEEVELESS', label: 'SLEEVELESS' },
+              { value: 'HALF SLEEVE', label: 'HALF SLEEVE' },
             ]}
             style={{ width: '100%' }}
             placeholder={`Select ${title}`}
+            disabled={isDisabled}
           />
         );
         break;
@@ -365,7 +398,7 @@ const Items: React.FC = () => {
           <span className="flex gap-2">
             <Popconfirm title="Sure to Save?" onConfirm={() => save(record.id)}>
               <h2
-                className="w-full font-semibold text-white rounded-md bg-primary px-4 py-3 flex items-center"
+                className="flex items-center w-full px-4 py-3 font-semibold text-white rounded-md bg-primary"
                 title="Save"
               >
                 Save
@@ -373,7 +406,7 @@ const Items: React.FC = () => {
             </Popconfirm>
             <Popconfirm title="Sure to Cancel?" onConfirm={cancel}>
               <h2
-                className="w-full font-semibold text-white rounded-md bg-primary px-4 py-3 flex items-center"
+                className="flex items-center w-full px-4 py-3 font-semibold text-white rounded-md bg-primary"
                 title="Save"
               >
                 Cancel
@@ -415,26 +448,38 @@ const Items: React.FC = () => {
   }, [get]);
 
   // Fetch item list
-  const getItems = useCallback(async () => {
-    try {
-      const { data } = await items(
-        get,
-        pageNumber,
-        pageSize,
-        selectedBranch?.value,
-      );
-      setItemsList(data.results);
-      setPaginationData({
-        count: data?.count,
-        hasPreviousPage: data?.hasPreviousPage,
-        hasNextPage: data?.hasNextPage,
-        pageNumber: data?.pageNumber,
-        pageSize: data?.pageSize,
-      });
-    } catch (error: any) {
-      notify('Failed to fetch data', 'error');
-    }
-  }, [get, pageNumber, pageSize, selectedBranch, save]);
+  const getItems = useCallback(
+    async (newId?: string) => {
+      try {
+        const { data } = await items(
+          get,
+          pageNumber,
+          pageSize,
+          selectedBranch?.value,
+        );
+        setItemsList(data.results);
+        setPaginationData({
+          count: data?.count,
+          hasPreviousPage: data?.hasPreviousPage,
+          hasNextPage: data?.hasNextPage,
+          pageNumber: data?.pageNumber,
+          pageSize: data?.pageSize,
+        });
+
+        // Set the new item ID if provided
+        if (newId) {
+          setNewItemId(newId);
+          // Clear the highlight after 3 seconds
+          setTimeout(() => {
+            setNewItemId(null);
+          }, 5000);
+        }
+      } catch (error: any) {
+        notify('Failed to fetch data', 'error');
+      }
+    },
+    [get, pageNumber, pageSize, selectedBranch],
+  );
 
   const handlePageChange = useCallback((page: number) => {
     setPageNumber(page);
@@ -512,7 +557,7 @@ const Items: React.FC = () => {
           </Form.Item>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
-          <ItemForm branches={branches} form={itemForm} />
+          <ItemForm branches={branches} form={itemForm} getItems={getItems} />
           <Form form={editItemForm}>
             <Table
               className="mt-6"
@@ -526,9 +571,11 @@ const Items: React.FC = () => {
                   cell: EditableCell,
                 },
               }}
-              rowClassName={(record) =>
-                isEditing(record) ? 'editable-row' : ''
-              }
+              rowClassName={(record) => {
+                if (isEditing(record)) return 'editable-row';
+                if (record.id === newItemId) return 'highlight-new-row';
+                return '';
+              }}
             />
           </Form>
           <Pagination
@@ -549,9 +596,10 @@ const Items: React.FC = () => {
 interface ItemFormProps {
   branches: { id: string; name: string }[];
   form: any;
+  getItems: any;
 }
 
-const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
+const ItemForm: React.FC<ItemFormProps> = ({ branches, form, getItems }) => {
   const { get, post } = useApiJSON();
 
   const [modelName, setModelName] = useState<string>('');
@@ -559,10 +607,16 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
   const [materialOptions, setMaterialOptions] = useState<string[]>([]);
   const [printType, setPrintType] = useState<string[]>([]);
   const [sleeve] = useState<any[]>([
-    { value: 'full', label: 'Full Sleeve' },
-    { value: 'sleeveless', label: 'Sleeveless' },
-    { value: 'half', label: 'Half Sleeve' },
+    { value: 'FULL SLEEVE', label: 'FULL SLEEVE' },
+    { value: 'SLEEVELESS', label: 'SLEEVELESS' },
+    { value: 'HALF SLEEVE', label: 'HALF SLEEVE' },
   ]);
+
+  // First, add a constant for the models that don't need sleeves
+  const MODELS_WITHOUT_SLEEVES = ['SHORTS', 'LOWER', 'CAP'];
+
+  // In the ItemForm component, add a state to track if sleeves should be disabled
+  const [isSleevesDisabled, setIsSleevesDisabled] = useState(false);
 
   // Fetch models
   const getModels = useCallback(async () => {
@@ -607,18 +661,21 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
   const handleSubmit = useCallback(
     async (values: any) => {
       try {
-        // Perform your submit logic here
         const payload = {
           name: modelName,
           ...values,
         };
-        await newItem(post, payload);
+        const response = await newItem(post, payload);
+        form.resetFields();
         notify('Form submitted successfully', 'success');
+        if (response?.data?.item_id) {
+          getItems(response?.data?.item_id);
+        }
       } catch (error: any) {
         notify(error?.response?.data?.error, 'error');
       }
     },
-    [modelName, post, form],
+    [modelName, post, form, getItems],
   );
 
   // Initial data fetching on component mount
@@ -628,7 +685,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
 
   return (
     <Form
-      className="grid grid-cols-3 md:grid-cols-6 gap-4 gap-y-3"
+      className="grid grid-cols-3 gap-4 md:grid-cols-6 gap-y-3"
       form={form}
       onFinish={handleSubmit}
     >
@@ -645,9 +702,19 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
             getMaterials(value);
             getPrintTypes(value);
 
+            // Check if the selected model should have sleeves disabled
+            const shouldDisableSleeves = MODELS_WITHOUT_SLEEVES.includes(
+              option.label.toUpperCase(),
+            );
+            setIsSleevesDisabled(shouldDisableSleeves);
+
+            // Reset form values
             form.setFieldsValue({
               material: undefined,
               print_type: undefined,
+              sleevecase: shouldDisableSleeves
+                ? undefined
+                : form.getFieldValue('sleevecase'),
             });
           }}
           options={models?.map((model: any) => ({
@@ -702,10 +769,20 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
       </Form.Item>
       <Form.Item
         name={'sleevecase'}
-        className="!mb-0  w-full"
-        // rules={[{ required: true, message: 'Please select a model' }]}
+        className="!mb-0 w-full"
+        rules={[
+          {
+            required: !isSleevesDisabled,
+            message: 'Please select a sleeve',
+          },
+        ]}
       >
-        <Select size="middle" placeholder="Select Sleeve" options={sleeve} />
+        <Select
+          size="middle"
+          placeholder="Select Sleeve"
+          options={sleeve}
+          disabled={isSleevesDisabled}
+        />
       </Form.Item>
       <Form.Item
         name="branch"
@@ -736,7 +813,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ branches, form }) => {
       <Button
         title="Submit"
         type="submit"
-        className="w-full col-span-3 md:col-span-6 font-semibold text-white rounded-md bg-primary"
+        className="w-full col-span-3 font-semibold text-white rounded-md md:col-span-6 bg-primary"
       ></Button>
     </Form>
   );

@@ -54,9 +54,9 @@ const NewOrders: React.FC = () => {
   );
   const [printType, setPrintType] = useState<Record<string, any[]>>({});
   const [sleeve] = useState<any[]>([
-    { value: 'full', label: 'Full Sleeve' },
-    { value: 'sleeveless', label: 'Sleeveless' },
-    { value: 'half', label: 'Half Sleeve' },
+    { value: 'FULL SLEEVE', label: 'FULL SLEEVE' },
+    { value: 'SLEEVELESS', label: 'SLEEVELESS' },
+    { value: 'HALF SLEEVE', label: 'HALF SLEEVE' },
   ]);
   const [size] = useState<any[]>([
     { value: '24', label: '24' },
@@ -245,7 +245,7 @@ const NewOrders: React.FC = () => {
           !hasPrintTypes ||
           (row?.print_type &&
             printType[rowKey]?.some((p: any) => p.id === row.print_type));
-        const isSleeveCaseValid = ['SHORTS', 'LOWER'].includes(
+        const isSleeveCaseValid = ['SHORTS', 'LOWER', 'CAP'].includes(
           modelName[rowKey],
         )
           ? true
@@ -310,8 +310,6 @@ const NewOrders: React.FC = () => {
 
   // Handle subtotal discount change
   const handleDiscountChange = (value: string) => {
-    console.log(value);
-
     const discount = parseFloat(value) || 0;
     setSubtotalDiscount(discount);
   };
@@ -410,7 +408,11 @@ const NewOrders: React.FC = () => {
           total_item_cost: totalCosts[key],
         };
 
-        if (modelName[key] !== 'SHORTS' && modelName[key] !== 'LOWER') {
+        if (
+          modelName[key] !== 'SHORTS' &&
+          modelName[key] !== 'LOWER' &&
+          modelName[key] !== 'CAP'
+        ) {
           item.sleeve_case = row.sleevecase;
         }
 
@@ -492,7 +494,9 @@ const NewOrders: React.FC = () => {
                     material: undefined,
                     print_type: undefined,
                     sleevecase:
-                      selectedLabel === 'SHORTS' || selectedLabel === 'LOWER'
+                      selectedLabel === 'SHORTS' ||
+                      selectedLabel === 'LOWER' ||
+                      selectedLabel === 'CAP'
                         ? undefined
                         : itemForm.getFieldValue([
                             'data',
