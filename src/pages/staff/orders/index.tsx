@@ -163,7 +163,7 @@ const Orders: React.FC = () => {
     slNo: i + 1,
     OrderId: order?.orderID,
     customerName: capitalizeFirstLetterOfEachWord(order?.customer?.name),
-    orderDate: dayjs(order?.order_date).format('DD-MM-YYYY'),
+    orderDate: dayjs(order?.order_date).format('DD-MM-YYYY HH:mm:ss'),
     deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
     payment_details: order?.payment_details, // Pass payment_details to the record
     total_cost: order?.total_cost, // Pass total_cost to the record
