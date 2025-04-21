@@ -48,7 +48,12 @@ const Items: React.FC = () => {
   const [editItemForm] = Form.useForm();
   const [itemForm] = Form.useForm();
   const [branches, setBranches] = useState<any[]>([]);
+  const [models, setModels] = useState<any[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<{
+    value: string;
+    label: string;
+  }>({ value: '', label: '' });
+  const [selectedModel, setSelectedModel] = useState<{
     value: string;
     label: string;
   }>({ value: '', label: '' });
@@ -486,6 +491,16 @@ const Items: React.FC = () => {
     }
   }, [get]);
 
+  // Fetch models
+  const getModels = useCallback(async () => {
+    try {
+      const { data } = await fetchModels(get);
+      setModels(data);
+    } catch (error: any) {
+      notify('Failed to fetch models', 'error');
+    }
+  }, [get]);
+
   // Fetch item list
   const getItems = useCallback(
     async (newId?: string) => {
@@ -495,6 +510,7 @@ const Items: React.FC = () => {
           pageNumber,
           pageSize,
           selectedBranch?.value,
+          selectedModel?.value,
         );
         setItemsList(data.results);
         setPaginationData({
@@ -517,7 +533,7 @@ const Items: React.FC = () => {
         notify('Failed to fetch data', 'error');
       }
     },
-    [get, pageNumber, pageSize, selectedBranch],
+    [get, pageNumber, pageSize, selectedBranch, selectedModel],
   );
 
   const handlePageChange = useCallback((page: number) => {
@@ -555,6 +571,10 @@ const Items: React.FC = () => {
   useEffect(() => {
     getBranches();
   }, [getBranches]);
+  // Initial data fetching on component mount
+  useEffect(() => {
+    getModels();
+  }, [getModels]);
 
   return (
     <>
@@ -565,41 +585,82 @@ const Items: React.FC = () => {
         <div className="flex items-center justify-between pb-2 border-b-2">
           <div>
             <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-              Items List {selectedBranch.label}
+              Items List{' '}
+              <span className="ml-2 text-xl text-gray-600">{`${selectedBranch.label} - ${selectedModel.label}`}</span>
             </h3>
           </div>
-          <Form.Item name="branch" label="Branch" className="!mb-0">
-            <Select
-              onChange={(
-                _value: string,
-                option?:
-                  | { value: any; label: any }
-                  | { value: any; label: any }[],
-              ) => {
-                if (option && !Array.isArray(option)) {
-                  setSelectedBranch(option as { value: string; label: string });
-                  if (option.value === '') {
-                    editItemForm.setFieldValue('branch', null);
-                  } else {
-                    editItemForm.setFieldValue('branch', option.value);
+          <div className="flex items-center gap-4">
+            <Form.Item name="branch" label="Branch" className="!mb-0">
+              <Select
+                onChange={(
+                  _value: string,
+                  option?:
+                    | { value: any; label: any }
+                    | { value: any; label: any }[],
+                ) => {
+                  if (option && !Array.isArray(option)) {
+                    setSelectedBranch(
+                      option as { value: string; label: string },
+                    );
+                    if (option.value === '') {
+                      editItemForm.setFieldValue('branch', null);
+                    } else {
+                      editItemForm.setFieldValue('branch', option.value);
+                    }
                   }
-                }
-              }}
-              placeholder="Select a branch"
-              size="large"
-              defaultValue={''}
-              options={[{ id: '', name: 'All' }, ...branches]?.map(
-                (model: any) => ({
-                  value: model.id,
-                  label: model.name,
-                }),
-              )}
-              className="w-full min-w-[230px]"
-            />
-          </Form.Item>
+                }}
+                placeholder="Select a branch"
+                size="large"
+                defaultValue={''}
+                options={[{ id: '', name: 'All' }, ...branches]?.map(
+                  (model: any) => ({
+                    value: model.id,
+                    label: model.name,
+                  }),
+                )}
+                className="w-full min-w-[230px]"
+              />
+            </Form.Item>
+            <Form.Item name="models" label="Models" className="!mb-0">
+              <Select
+                onChange={(
+                  _value: string,
+                  option?:
+                    | { value: any; label: any }
+                    | { value: any; label: any }[],
+                ) => {
+                  if (option && !Array.isArray(option)) {
+                    setSelectedModel(
+                      option as { value: string; label: string },
+                    );
+                    if (option.value === '') {
+                      editItemForm.setFieldValue('models', null);
+                    } else {
+                      editItemForm.setFieldValue('models', option.value);
+                    }
+                  }
+                }}
+                placeholder="Select a model"
+                size="large"
+                defaultValue={''}
+                options={[{ id: '', name: 'All' }, ...models]?.map(
+                  (model: any) => ({
+                    value: model.id,
+                    label: model.name,
+                  }),
+                )}
+                className="w-full min-w-[230px]"
+              />
+            </Form.Item>
+          </div>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
-          <ItemForm branches={branches} form={itemForm} getItems={getItems} />
+          <ItemForm
+            branches={branches}
+            models={models}
+            form={itemForm}
+            getItems={getItems}
+          />
           <Form form={editItemForm}>
             <Table
               className="mt-6"
@@ -637,6 +698,7 @@ const Items: React.FC = () => {
 
 interface ItemFormProps {
   branches: { id: string; name: string }[];
+  models: { id: string; name: string }[];
   form: any;
   getItems: any;
 }

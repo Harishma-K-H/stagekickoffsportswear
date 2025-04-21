@@ -102,11 +102,11 @@ const Customers: React.FC = () => {
     key: customer.id,
     slNo: i + 1,
     name: capitalizeFirstLetterOfEachWord(customer.name),
-    businessName: customer.business_name.toUpperCase(),
-    mobile: `${customer.mobile_number1}, ${customer?.mobile_number2 ? customer?.mobile_number2 : ''}`,
-    address: `${customer.address1} ${customer?.address2}`,
-    email: customer.email ? customer.email : '-',
-    gstn: customer.gstn ? customer.gstn : '-',
+    businessName: customer?.business_name.toUpperCase(),
+    mobile: `${customer?.mobile_number1}${customer?.mobile_number2 ? `, ${customer?.mobile_number2}` : ''}`,
+    address: `${customer?.address1} ${customer?.address2}`,
+    email: customer?.email ? customer?.email : '-',
+    gstn: customer?.gstn ? customer?.gstn : '-',
   }));
 
   const handlePageChange = useCallback((page: number) => {

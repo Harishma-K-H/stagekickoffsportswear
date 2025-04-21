@@ -4,9 +4,10 @@ export const items = async (
   pageNumber: number,
   pageSize: number,
   branchId: number | string = '',
+  modelId: number | string = '',
 ): Promise<any> => {
   const response = await get(
-    `/api_item/?pageNumber=${pageNumber}&pageSize=${pageSize}&branch_search=${branchId}`,
+    `/api_item/?pageNumber=${pageNumber}&pageSize=${pageSize}&branch_search=${branchId}&model_search=${modelId}`,
   );
 
   return { data: response.data, status: response.status, ok: response.ok };
