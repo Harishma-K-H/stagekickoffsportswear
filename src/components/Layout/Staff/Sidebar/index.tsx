@@ -3,7 +3,7 @@ import Paths from '@routes/paths';
 import React, { useState } from 'react';
 import { FaFileInvoice, FaUsers } from 'react-icons/fa';
 import { FaPlus } from 'react-icons/fa6';
-import { IoSettings } from 'react-icons/io5';
+// import { IoSettings } from 'react-icons/io5';
 import { MdDashboardCustomize, MdOutlineChecklistRtl } from 'react-icons/md';
 import { Link, NavLink, useLocation } from 'react-router';
 
@@ -38,12 +38,12 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
       route: Paths.Staff.customers,
       Icon: <FaUsers className="w-[22px] h-auto" />,
     },
-    {
-      title: 'Settings',
-      link: Paths.Staff.settings,
-      route: Paths.Staff.settings,
-      Icon: <IoSettings className="w-[22px] h-auto" />,
-    },
+    // {
+    //   title: 'Settings',
+    //   link: Paths.Staff.settings,
+    //   route: Paths.Staff.settings,
+    //   Icon: <IoSettings className="w-[22px] h-auto" />,
+    // },
   ]);
 
   return (

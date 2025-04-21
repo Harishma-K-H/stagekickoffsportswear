@@ -4,7 +4,7 @@ import Button from '@components/Common/Button';
 import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
-import { handleDownloadPDF } from '@utils/staff/downloadPdf';
+import { generatePDF } from '@utils/staff/downloadPdf';
 import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -200,6 +200,18 @@ const ModalDetails: React.FC<any> = ({
     reactToPrintFn(); // Trigger print
   }, [reactToPrintFn]);
 
+  // Add this new function for download
+  const handleDownload = useCallback(async () => {
+    const fileName = invoiceDetails?.invoice_id
+      ? `Invoice_${invoiceDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
+      : 'Order_Invoice.pdf';
+
+    await generatePDF({
+      contentRef,
+      fileName,
+    });
+  }, [contentRef, invoiceDetails]);
+
   return (
     <Modal
       open={isModalOpen}
@@ -220,13 +232,7 @@ const ModalDetails: React.FC<any> = ({
           className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
         />
         <Button
-          handleClick={() =>
-            handleDownloadPDF({
-              type: 'INVOICE',
-              contentRef,
-              invoiceId: invoiceDetails?.invoice_id,
-            })
-          }
+          handleClick={handleDownload}
           title="Download"
           type="button"
           icon={<FaDownload />}

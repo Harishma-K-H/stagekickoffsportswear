@@ -2,12 +2,25 @@
   body {
     background: white;
     color: black;
+    margin: 0;
+    padding: 0;
   }
 
   .no-print {
     display: none;
   }
+
   .print-p-8 {
     padding: 2rem;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  #invoice-print {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 }
