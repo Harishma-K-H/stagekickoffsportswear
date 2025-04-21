@@ -490,7 +490,7 @@ const Items: React.FC = () => {
       notify('Failed to fetch models', 'error');
     }
   }, [get]);
-  
+
   // Fetch models
   const getModels = useCallback(async () => {
     try {
@@ -500,8 +500,6 @@ const Items: React.FC = () => {
       notify('Failed to fetch models', 'error');
     }
   }, [get]);
-  
-
 
   // Fetch item list
   const getItems = useCallback(
@@ -535,7 +533,7 @@ const Items: React.FC = () => {
         notify('Failed to fetch data', 'error');
       }
     },
-    [get, pageNumber, pageSize, selectedBranch,selectedModel],
+    [get, pageNumber, pageSize, selectedBranch, selectedModel],
   );
 
   const handlePageChange = useCallback((page: number) => {
@@ -573,11 +571,10 @@ const Items: React.FC = () => {
   useEffect(() => {
     getBranches();
   }, [getBranches]);
-    // Initial data fetching on component mount
+  // Initial data fetching on component mount
   useEffect(() => {
     getModels();
   }, [getModels]);
-
 
   return (
     <>
@@ -588,70 +585,82 @@ const Items: React.FC = () => {
         <div className="flex items-center justify-between pb-2 border-b-2">
           <div>
             <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-              Items List {`${selectedBranch.label} - ${selectedModel.label}`}
+              Items List{' '}
+              <span className="ml-2 text-xl text-gray-600">{`${selectedBranch.label} - ${selectedModel.label}`}</span>
             </h3>
           </div>
-          <Form.Item name="branch" label="Branch" className="!mb-0">
-            <Select
-              onChange={(
-                _value: string,
-                option?:
-                  | { value: any; label: any }
-                  | { value: any; label: any }[],
-              ) => {
-                if (option && !Array.isArray(option)) {
-                  setSelectedBranch(option as { value: string; label: string });
-                  if (option.value === '') {
-                    editItemForm.setFieldValue('branch', null);
-                  } else {
-                    editItemForm.setFieldValue('branch', option.value);
+          <div className="flex items-center gap-4">
+            <Form.Item name="branch" label="Branch" className="!mb-0">
+              <Select
+                onChange={(
+                  _value: string,
+                  option?:
+                    | { value: any; label: any }
+                    | { value: any; label: any }[],
+                ) => {
+                  if (option && !Array.isArray(option)) {
+                    setSelectedBranch(
+                      option as { value: string; label: string },
+                    );
+                    if (option.value === '') {
+                      editItemForm.setFieldValue('branch', null);
+                    } else {
+                      editItemForm.setFieldValue('branch', option.value);
+                    }
                   }
-                }
-              }}
-              placeholder="Select a branch"
-              size="large"
-              defaultValue={''}
-              options={[{ id: '', name: 'All' }, ...branches]?.map(
-                (model: any) => ({
-                  value: model.id,
-                  label: model.name,
-                }),
-              )}
-              className="w-full min-w-[230px]"
-            />
-          </Form.Item>
-          <Form.Item name="models" label="Models" className="!mb-0">
-            <Select
-              onChange={(
-                _value: string,
-                option?:
-                  | { value: any; label: any }
-                  | { value: any; label: any }[],
-              ) => {
-                if (option && !Array.isArray(option)) {
-                  setSelectedModel(option as { value: string; label: string });
-                  if (option.value === '') {
-                    editItemForm.setFieldValue('models', null);
-                  } else {
-                    editItemForm.setFieldValue('models', option.value);
+                }}
+                placeholder="Select a branch"
+                size="large"
+                defaultValue={''}
+                options={[{ id: '', name: 'All' }, ...branches]?.map(
+                  (model: any) => ({
+                    value: model.id,
+                    label: model.name,
+                  }),
+                )}
+                className="w-full min-w-[230px]"
+              />
+            </Form.Item>
+            <Form.Item name="models" label="Models" className="!mb-0">
+              <Select
+                onChange={(
+                  _value: string,
+                  option?:
+                    | { value: any; label: any }
+                    | { value: any; label: any }[],
+                ) => {
+                  if (option && !Array.isArray(option)) {
+                    setSelectedModel(
+                      option as { value: string; label: string },
+                    );
+                    if (option.value === '') {
+                      editItemForm.setFieldValue('models', null);
+                    } else {
+                      editItemForm.setFieldValue('models', option.value);
+                    }
                   }
-                }
-              }}
-              placeholder="Select a model"
-              size="large"
-              defaultValue={''}
-              options={[{ id: '', name: 'All' }, ...models]?.map(
-                (model: any) => ({
-                  value: model.id,
-                  label: model.name,
-                }),
-              )}
-              className="w-full min-w-[230px]"
-            />
-          </Form.Item>
+                }}
+                placeholder="Select a model"
+                size="large"
+                defaultValue={''}
+                options={[{ id: '', name: 'All' }, ...models]?.map(
+                  (model: any) => ({
+                    value: model.id,
+                    label: model.name,
+                  }),
+                )}
+                className="w-full min-w-[230px]"
+              />
+            </Form.Item>
+          </div>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
-          <ItemForm branches={branches} models={models} form={itemForm} getItems={getItems} />
+          <ItemForm
+            branches={branches}
+            models={models}
+            form={itemForm}
+            getItems={getItems}
+          />
           <Form form={editItemForm}>
             <Table
               className="mt-6"
@@ -694,7 +703,7 @@ interface ItemFormProps {
   getItems: any;
 }
 
-const ItemForm: React.FC<ItemFormProps> = ({branches, form, getItems }) => {
+const ItemForm: React.FC<ItemFormProps> = ({ branches, form, getItems }) => {
   const { get, post } = useApiJSON();
 
   const [modelName, setModelName] = useState<string>('');
