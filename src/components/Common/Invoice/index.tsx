@@ -1,10 +1,9 @@
 import './style.css';
 
+import { numberToWords } from '@utils/common/numberToWords';
 import { paidAmount } from '@utils/staff/paidAmount';
 import dayjs from 'dayjs';
 import React from 'react';
-
-import { numberToWords } from '../../../utils/common/numberToWords';
 
 const Invoice: React.FC<{
   type: 'ORDER' | 'INVOICE';
@@ -39,7 +38,14 @@ const Invoice: React.FC<{
   return (
     <div
       id="invoice-print"
-      className="p-1 bg-white rounded-lg dark:bg-gray-800 print:p-8"
+      className="p-1 bg-white rounded-lg dark:bg-gray-800 
+          print:p-0 
+          print:m-0 
+          print:w-[210mm] 
+          print:min-h-[297mm] 
+          print:[&:not(:first-child)]:mt-[297mm]
+          print:relative
+          [@page{margin:15mm_15mm_15mm_15mm}]"
     >
       {/* Header */}
       <div className="grid items-center grid-cols-1 gap-4 pb-3 mb-4 border-b-2 md:grid-cols-3 print:grid-cols-3">
@@ -53,7 +59,8 @@ const Invoice: React.FC<{
         </h5>
         <div className="text-right">
           <h5 className="text-lg font-extrabold leading-5 ">
-            KICKOFF SPORTS WEAR. <br />
+            KICKOFF SPORTS WEAR
+            <br />
             <span className="text-sm font-semibold uppercase">
               {created_by?.branch}
             </span>
@@ -70,8 +77,8 @@ const Invoice: React.FC<{
       </div>
 
       {/* Order Details */}
-      <div className="grid grid-cols-2 gap-8 mb-8">
-        <div className="space-y-1">
+      <div className="grid grid-cols-5 gap-8 mb-6">
+        <div className="col-span-3 space-y-1">
           <h2 className="text-lg font-semibold dark:text-white">Bill To:</h2>
           <p className="text-gray-600 dark:text-gray-300">
             {customer?.business_name} <br />
@@ -82,21 +89,60 @@ const Invoice: React.FC<{
             {customer?.gst_no && `GSTNO: ${customer?.gst_no}`}
           </p>
         </div>
-        <div className="space-y-1 text-right">
-          <p className="font-bold text-gray-900 dark:text-gray-300">
-            {type} ID:{' '}
-            <span className="font-normal text-gray-600">
-              {type == 'INVOICE' ? `#${invoice_id}` : orderID}
-            </span>{' '}
-            <br />
-            {type} Date:{' '}
-            <span className="font-normal text-gray-600">
-              {dayjs(order_date).format('DD-MM-YYYY')}
-            </span>
-            <br />
-            Delivery Date:{' '}
-            <span className="font-normal text-gray-600">{delivery_date}</span>
-          </p>
+        <div className="col-span-2 space-y-1 text-right">
+          <TableView
+            rowData={[
+              {
+                heading: `${type} ID`,
+                value: `${type == 'INVOICE' ? `#${invoice_id}` : orderID}`,
+                visibility: true,
+                rowClassName: 'px-3',
+                valueColumnClassName: '!text-left',
+              },
+              {
+                heading: `${type} Date`,
+                value: `${dayjs(order_date).format('DD-MM-YYYY')}`,
+                visibility: true,
+                rowClassName: 'px-3',
+                valueColumnClassName: '!text-left',
+              },
+              {
+                heading: 'Delivery Date',
+                value: `${delivery_date}`,
+                visibility: true,
+                rowClassName: 'px-3',
+                valueColumnClassName: '!text-left',
+              },
+            ]}
+          />
+          {/* <table className="w-full mb-2 border-[1px]">
+              <tbody>
+                <tr className="border-b">
+                  <td className="px-3 py-2 text-gray-600 dark:text-gray-300">
+                    {type} ID:
+                  </td>
+                  <td className="px-3 py-2 font-medium text-left border-l dark:text-white">
+                    {type == 'INVOICE' ? `#${invoice_id}` : orderID}
+                  </td>
+                </tr>
+                <tr className="border-b">
+                  <td className="px-3 py-2 text-gray-600 dark:text-gray-300">
+                    {type} Date:
+                  </td>
+                  <td className="px-3 py-2 font-medium text-left border-l dark:text-white">
+                    {dayjs(order_date).format('DD-MM-YYYY')}
+                  </td>
+                </tr>
+                <tr className="border-b">
+                  <td className="px-3 py-2 text-gray-600 dark:text-gray-300">
+                    Delivery Date:
+                  </td>
+                  <td className="px-3 py-2 font-medium text-left border-l dark:text-white">
+                    {delivery_date}
+                  </td>
+                </tr>
+              </tbody>
+            </table> */}
         </div>
       </div>
 
@@ -106,34 +152,34 @@ const Invoice: React.FC<{
           <table className="w-full border-[1px] border-gray-300">
             <thead>
               <tr className="bg-gray-100 dark:bg-gray-700">
-                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
                   #
                 </th>
-                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
                   Model
                 </th>
-                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
                   Material
                 </th>
-                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
                   Print Type
                 </th>
-                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
                   Sleeve Case
                 </th>
-                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
                   Size
                 </th>
                 <th
-                  className={`px-4 py-2 text-sm text-left dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+                  className={`px-4 py-2 text-[13px] text-left dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
                 >
                   Unit Cost
                 </th>
-                <th className="px-4 py-2 text-sm text-left dark:text-white">
+                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
                   Qty
                 </th>
                 <th
-                  className={`px-4 py-2 text-sm text-left dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+                  className={`px-4 py-2 text-[13px] text-left dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
                 >
                   Item Cost
                 </th>
@@ -175,68 +221,108 @@ const Invoice: React.FC<{
 
       {/* Total Calculations */}
       <div
-        className={`flex justify-between gap-5 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+        className={`grid grid-cols-5 justify-between gap-5 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
       >
-        <div>
+        <div className="col-span-3">
           Total In Words <br />
           <strong className="text-lg">
-            {numberToWords(parseFloat(total_cost))}
+            {numberToWords(parseInt(total_cost))}
           </strong>
+          <h3 className="mt-4 text-sm font-semibold text-gray-600 whitespace-pre-wrap dark:text-gray-300">
+            {created_by?.account_details}
+          </h3>
         </div>
-        <div className="w-2/5">
+        <div className="w-full col-span-2">
           <div className="space-y-2">
-            <table className="w-full mb-2 border-[1px]">
-              <tbody>
-                <tr className="border-b">
-                  <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
-                    Subtotal:
-                  </td>
-                  <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
-                    {parseInt(net_cost)?.toFixed(2)}
-                  </td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
-                    CGST2.5 (2.5%):
-                  </td>
-                  <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
-                    {(parseInt(gst) / 2).toFixed(2)}
-                  </td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
-                    SGST2.5 (2.5%):
-                  </td>
-                  <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
-                    {(parseInt(gst) / 2)?.toFixed(2)}
-                  </td>
-                </tr>
-                <tr className={`border-b ${type === 'INVOICE' && 'hidden'}`}>
-                  <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
-                    Paid Amount:
-                  </td>
-                  <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
-                    {totalPaid?.toFixed(2)}
-                  </td>
-                </tr>
-                <tr className={`border-b ${type === 'INVOICE' && 'hidden'}`}>
-                  <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
-                    Balance Amount:
-                  </td>
-                  <td className="py-2 pr-2 font-medium text-right dark:text-white">
-                    {currentBalance?.toFixed(2)}
-                  </td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2 pl-2 font-semibold text-gray-600 dark:text-gray-300">
-                    Total:
-                  </td>
-                  <td className="py-2 pr-2 font-semibold text-right border-l dark:text-white">
-                    {parseInt(total_cost).toFixed(2)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <TableView
+              rowData={[
+                { heading: 'Subtotal', value: net_cost, visibility: true },
+                {
+                  heading: 'CGST2.5 (2.5%)',
+                  value: (parseInt(gst) / 2).toFixed(2),
+                  visibility: true,
+                },
+                {
+                  heading: 'SGST2.5 (2.5%)',
+                  value: (parseInt(gst) / 2).toFixed(2),
+                  visibility: true,
+                },
+                {
+                  heading: 'Paid Amount',
+                  value: totalPaid?.toFixed(2),
+                  visibility: type === 'ORDER',
+                },
+                {
+                  heading: 'Balance Amount',
+                  value: currentBalance?.toFixed(2),
+                  visibility: type === 'ORDER',
+                },
+                {
+                  heading: 'Total',
+                  value: parseInt(total_cost).toFixed(2),
+                  visibility: true,
+                  rowClassName: '!text-black !text-[15px] !font-semibold',
+                },
+                printForOfficeInvoice && {
+                  heading: 'Balance Due',
+                  value: currentBalance?.toFixed(2),
+                  visibility: true,
+                  rowClassName: '!text-red-500 !text-[15px] !font-semibold',
+                },
+              ]}
+            />
+            {/* <table className="w-full mb-2 border-[1px]">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
+                      Subtotal:
+                    </td>
+                    <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
+                      {parseInt(net_cost)?.toFixed(2)}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
+                      CGST2.5 (2.5%):
+                    </td>
+                    <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
+                      {(parseInt(gst) / 2).toFixed(2)}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
+                      SGST2.5 (2.5%):
+                    </td>
+                    <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
+                      {(parseInt(gst) / 2)?.toFixed(2)}
+                    </td>
+                  </tr>
+                  <tr className={`border-b ${type === 'INVOICE' && 'hidden'}`}>
+                    <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
+                      Paid Amount:
+                    </td>
+                    <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
+                      {totalPaid?.toFixed(2)}
+                    </td>
+                  </tr>
+                  <tr className={`border-b ${type === 'INVOICE' && 'hidden'}`}>
+                    <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
+                      Balance Amount:
+                    </td>
+                    <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
+                      {currentBalance?.toFixed(2)}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 pl-2 font-semibold text-gray-600 dark:text-gray-300">
+                      Total:
+                    </td>
+                    <td className="py-2 pr-2 font-semibold text-right border-l dark:text-white">
+                      {parseInt(total_cost).toFixed(2)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table> */}
           </div>
         </div>
       </div>
@@ -244,4 +330,29 @@ const Invoice: React.FC<{
   );
 };
 
+const TableView: React.FC<any> = ({ rowData }) => {
+  return (
+    <table className="w-full mb-2 border-[1px]">
+      <tbody>
+        {rowData?.map((item: any, index: number) => (
+          <tr
+            className={`border-b ${!item?.visibility ? 'hidden' : ''}`}
+            key={index}
+          >
+            <td
+              className={`py-2 pl-2 dark:text-gray-300 text-gray-600 text-[14px] ${item?.rowClassName} `}
+            >
+              {item.heading}:
+            </td>
+            <td
+              className={`py-2 pr-2 font-medium text-right border-l dark:text-white text-gray-600 text-[14px] ${item?.rowClassName} ${item?.valueColumnClassName}`}
+            >
+              {item.value}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};
 export default Invoice;

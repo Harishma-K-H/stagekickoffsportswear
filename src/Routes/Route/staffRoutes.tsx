@@ -4,7 +4,6 @@ import Dashboard from '@pages/staff/dashboard/Loadable';
 import Invoices from '@pages/staff/invoices/Loadable';
 import Orders from '@pages/staff/orders/Loadable';
 import NewOrders from '@pages/staff/orders/new/Loadable';
-import Settings from '@pages/staff/settings/Loadable';
 import Paths from '@routes/paths';
 import { Route } from 'react-router';
 
@@ -28,6 +27,5 @@ export const StaffRoutes = (
       <Route path={Paths.Staff.orders.new} element={<NewOrders />} />
     </>
     <Route path={Paths.Staff.invoices} element={<Invoices />} />
-    <Route path={Paths.Staff.settings} element={<Settings />} />
   </Route>
 );

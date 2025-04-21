@@ -7,7 +7,7 @@ import PaymentHistory from '@components/Staff/PaymentHistory';
 import Paths from '@routes/paths';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
-import { handleDownloadPDF } from '@utils/staff/downloadPdf';
+import { generatePDF } from '@utils/staff/downloadPdf';
 import { paidAmount } from '@utils/staff/paidAmount';
 import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
@@ -246,11 +246,27 @@ const ModalDetails: React.FC<any> = ({
     useState<boolean>(false);
   const [downloadForOffice, setDownloadForOffice] = useState<boolean>(false);
 
+  const handleDownload = useCallback(
+    async (filesName?: string) => {
+      const fileName = filesName
+        ? filesName
+        : orderDetails?.invoice_id
+          ? `Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}.pdf`
+          : 'Order.pdf';
+
+      await generatePDF({
+        contentRef,
+        fileName,
+      });
+    },
+    [contentRef, orderDetails],
+  );
+
   // Configure react-to-print with a custom document title
   const reactToPrintFn = useReactToPrint({
     contentRef,
     documentTitle: orderDetails?.orderID
-      ? `Order_${orderDetails.orderID}_${dayjs().format('YYYYMMDD')}`
+      ? `Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}`
       : 'Order_Invoice', // Fallback if orderDetails is not yet set
   });
 
@@ -270,14 +286,9 @@ const ModalDetails: React.FC<any> = ({
   const handleOfficeDownload = useCallback(() => {
     setDownloadForOffice(true);
     setTimeout(() => {
-      handleDownloadPDF({
-        type: 'ORDER',
-        contentRef,
-        invoiceId: orderDetails.orderID,
-        documentTitle: orderDetails?.orderID
-          ? `Order_${orderDetails.orderID}_${dayjs().format('YYYYMMDD')}`
-          : 'Order',
-      });
+      handleDownload(
+        `Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}.pdf`,
+      );
       setDownloadForOffice(false);
     }, 100);
   }, []);
@@ -293,14 +304,9 @@ const ModalDetails: React.FC<any> = ({
   const handleOfficeInvoiceDownload = useCallback(() => {
     setPrintForOfficeInvoice(true);
     setTimeout(() => {
-      handleDownloadPDF({
-        type: 'INVOICE',
-        contentRef,
-        invoiceId: orderDetails.invoice_id,
-        documentTitle: orderDetails?.invoice_id
-          ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}`
-          : 'Invoice',
-      });
+      handleDownload(
+        `Invoice_${orderDetails?.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`,
+      );
       setPrintForOfficeInvoice(false);
     }, 100);
   }, [orderDetails]);
@@ -335,11 +341,9 @@ const ModalDetails: React.FC<any> = ({
             />
             <Button
               handleClick={() =>
-                handleDownloadPDF({
-                  type: 'ORDER',
-                  contentRef,
-                  invoiceId: orderDetails.orderID,
-                })
+                handleDownload(
+                  `Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}.pdf`,
+                )
               }
               title=""
               type="button"
@@ -388,22 +392,22 @@ const ModalDetails: React.FC<any> = ({
                 <span className="font-semibold text-gray-950">
                   Customer Name:
                 </span>{' '}
-                {orderDetails.customer?.name}
+                {orderDetails?.customer?.name}
               </div>
               <div>
                 <span className="font-semibold text-gray-950">
                   Business Name:
                 </span>{' '}
-                {orderDetails.customer?.business_name}
+                {orderDetails?.customer?.business_name}
               </div>
               <div>
                 <span className="font-semibold text-gray-950">Address:</span>{' '}
-                {orderDetails.customer?.address1}{' '}
-                {orderDetails.customer?.address2}
+                {orderDetails?.customer?.address1}{' '}
+                {orderDetails?.customer?.address2}
               </div>
               <div>
                 <span className="font-semibold text-gray-950">Mobile:</span>{' '}
-                {orderDetails.customer?.mobile_number1}
+                {orderDetails?.customer?.mobile_number1}
               </div>
             </div>
           </div>

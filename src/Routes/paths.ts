@@ -12,7 +12,6 @@ interface PathsType {
       new: string;
     };
     invoices: string;
-    settings: string;
   };
 
   error: string;
@@ -27,14 +26,13 @@ const Paths: PathsType = {
     items: '/admin/items',
   },
   Staff: {
-    dashboard: '/staff/dashboard',
-    customers: '/staff/customers',
+    dashboard: '/branch/dashboard',
+    customers: '/branch/customers',
     orders: {
-      index: '/staff/orders',
-      new: '/staff/orders/new',
+      index: '/branch/orders',
+      new: '/branch/orders/new',
     },
-    invoices: '/staff/invoices',
-    settings: '/staff/settings',
+    invoices: '/branch/invoices',
   },
 
   error: '*',

@@ -497,11 +497,12 @@ const NewOrders: React.FC = () => {
     {
       title: 'MODEL',
       dataIndex: 'model',
+      width: '15%',
       render: (_, record) => (
         <Form.Item
           name={['data', record.key, 'model']}
           rules={[{ required: true, message: 'Please select a model' }]}
-          className="!mb-0 w-[150px]"
+          className="!mb-0 w-full"
         >
           <Select
             size="middle"
@@ -550,6 +551,7 @@ const NewOrders: React.FC = () => {
     {
       title: 'MATERIAL',
       dataIndex: 'material',
+      width: '15%',
       render: (_, record) => (
         <Form.Item
           name={['data', record.key, 'material']}
@@ -559,7 +561,7 @@ const NewOrders: React.FC = () => {
               message: 'Please select a material',
             },
           ]}
-          className="!mb-0 w-[120px]"
+          className="!mb-0 w-full"
         >
           <Select
             disabled={materialOptions[record.key]?.length == 0}
@@ -607,6 +609,7 @@ const NewOrders: React.FC = () => {
     {
       title: 'PRINT TYPE',
       dataIndex: 'printType',
+      width: '15%',
       render: (_, record) => (
         <Form.Item
           name={['data', record.key, 'print_type']}
@@ -616,7 +619,7 @@ const NewOrders: React.FC = () => {
               message: 'Please select a print type',
             },
           ]}
-          className="!mb-0"
+          className="!mb-0 w-full"
         >
           <Select
             disabled={printType[record.key]?.length == 0 ? true : false}
@@ -635,6 +638,7 @@ const NewOrders: React.FC = () => {
     {
       title: 'SLEEVE',
       dataIndex: 'sleeve',
+      width: '13%',
       render: (_, record) => {
         const currentConfig =
           sleeveConfigs[record.key] || getSleeveCaseConfig();
@@ -674,7 +678,7 @@ const NewOrders: React.FC = () => {
                 },
               }),
             ]}
-            className="!mb-0"
+            className="!mb-0 !w-full"
           >
             <Select
               size="middle"
@@ -689,11 +693,12 @@ const NewOrders: React.FC = () => {
     {
       title: 'Size',
       dataIndex: 'size',
+      width: '2%',
       render: (_, record) => (
         <Form.Item
           name={['data', record.key, 'size']}
           rules={[{ required: true, message: 'Please select a size' }]}
-          className="!mb-0"
+          className="!mb-0 w-[80px]"
         >
           <Select size="middle" placeholder="Select size" options={size} />
         </Form.Item>
@@ -703,7 +708,7 @@ const NewOrders: React.FC = () => {
       title: 'Price',
       dataIndex: 'price',
       align: 'center',
-      width: '6%',
+      width: '8%',
       render: (_, record) => {
         const sizeSelected = itemForm.getFieldValue([
           'data',
@@ -719,6 +724,7 @@ const NewOrders: React.FC = () => {
     {
       title: 'Quantity',
       dataIndex: 'quantity',
+      width: '8%',
       render: (_, record) => (
         <Form.Item
           name={['data', record.key, 'quantity']}
@@ -739,7 +745,6 @@ const NewOrders: React.FC = () => {
       title: 'Total',
       dataIndex: 'total',
       align: 'center',
-      width: '6%',
       render: (_, record) => {
         return (
           <span className="text-base font-semibold">

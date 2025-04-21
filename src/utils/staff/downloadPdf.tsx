@@ -1,71 +1,37 @@
-import dayjs from 'dayjs';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { notify } from '@components/Common/Toastify';
+import { type Options } from 'react-to-pdf';
+import toPDF from 'react-to-pdf';
 
-const handleDownloadPDF: ({
-  type,
+interface GeneratePDFOptions {
+  contentRef: React.RefObject<HTMLElement>;
+  fileName?: string;
+  customOptions?: Partial<Options>;
+}
+
+export const generatePDF = async ({
   contentRef,
-  invoiceId,
-  documentTitle,
-}: {
-  type: 'INVOICE' | 'ORDER';
-  contentRef: any;
-  invoiceId: string;
-  documentTitle?: string;
-}) => Promise<void> = async ({
-  type,
-  contentRef,
-  invoiceId,
-  documentTitle,
-}) => {
+  fileName = 'document.pdf',
+  customOptions = {},
+}: GeneratePDFOptions): Promise<void> => {
   if (!contentRef.current) return;
 
-  try {
-    const canvas = await html2canvas(contentRef.current, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    });
-    const imgData = canvas.toDataURL('image/png');
-
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
+  const defaultOptions: any = {
+    filename: fileName,
+    page: {
+      margin: 15,
       format: 'a4',
-    });
+    },
+    canvas: {
+      useCORS: true,
+      scale: 2,
+    },
+    ...customOptions,
+  };
 
-    const pdfWidth = 210; // A4 width in mm
-    const pdfHeight = 297; // A4 height in mm
-    const margin = 5; // ~15px in mm (adjusted for simplicity)
-
-    // Adjusted width and height with margins (10mm total: 5mm left + 5mm right, 5mm top + 5mm bottom)
-    const usableWidth = pdfWidth - 2 * margin; // 210 - 10 = 200mm
-    const usableHeight = pdfHeight - 2 * margin; // 297 - 10 = 287mm
-
-    const imgWidth = usableWidth; // Width within margins
-    const imgHeight = (canvas.height * imgWidth) / canvas.width; // Maintain aspect ratio
-
-    let heightLeft = imgHeight;
-    let position = margin; // Start 5mm from top
-
-    // Add first page with margins
-    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight); // Left margin: 5mm, Top margin: 5mm
-    heightLeft -= usableHeight;
-
-    // Handle multi-page content
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight + margin; // Adjust position for next page
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-      heightLeft -= usableHeight;
-    }
-
-    pdf.save(
-      documentTitle || `${type}_${invoiceId}_${dayjs().format('YYYYMMDD')}.pdf`,
-    );
+  try {
+    await toPDF(contentRef, defaultOptions);
   } catch (error) {
-    console.error('Failed to generate PDF:', error);
+    console.error('Failed to download PDF:', error);
+    notify('Failed to download PDF', 'error');
   }
 };
-
-export { handleDownloadPDF };
