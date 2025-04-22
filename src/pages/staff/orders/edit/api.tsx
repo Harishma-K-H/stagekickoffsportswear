@@ -1,9 +1,11 @@
-// Define the GST Verification function
-export const GstVerification = async (gstn: string): Promise<any> => {
-  const response = await fetch(
-    `https://cleartax.in/f/compliance-report/${gstn}`,
-  );
-  return { data: response, status: response.status, ok: response.ok };
+// Define the orders details function
+export const orderById = async (
+  get: (url: string) => Promise<any>,
+  orderId: number | string | null,
+): Promise<any> => {
+  const response = await get(`/order/details/${orderId}/`);
+
+  return { data: response.data, status: response.status, ok: response.ok };
 };
 
 // Define the get models function
@@ -53,33 +55,12 @@ export const fetchItemCost = async (
   return { data: response.data, status: response.status, ok: response.ok };
 };
 
-// Define the get customers list with search function
-export const getCustomers = async (
-  get: (url: string) => Promise<any>,
-  searchTerm: string,
-): Promise<any> => {
-  const response = await get(
-    `/customers/?data=customer_list&search=${searchTerm}`,
-  );
-
-  return { data: response.data, status: response.status, ok: response.ok };
-};
-
-// Define the generate new orderId function
-export const generateOrderId = async (
-  get: (url: string) => Promise<any>,
-): Promise<any> => {
-  const response = await get(`/order_no_generate/`);
-
-  return { data: response.data, status: response.status, ok: response.ok };
-};
-
-// Define the new order function
-export const newOrder = async (
-  post: (url: string, payload: any, config?: any) => Promise<any>,
+// Define the orders details function
+export const updateOrderById = async (
+  put: (url: string, payload: any, config?: any) => Promise<any>,
   payload: any,
 ): Promise<any> => {
-  const response = await post('/api_order/', payload, {
+  const response = await put(`/update-order-item/`, payload, {
     'Content-Type': 'multipart/form-data',
   });
 

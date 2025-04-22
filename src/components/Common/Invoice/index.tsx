@@ -4,6 +4,8 @@ import { numberToWords } from '@utils/common/numberToWords';
 import { paidAmount } from '@utils/staff/paidAmount';
 import dayjs from 'dayjs';
 import React from 'react';
+import { FaPhoneAlt } from 'react-icons/fa';
+import { MdEmail } from 'react-icons/md';
 
 const Invoice: React.FC<{
   type: 'ORDER' | 'INVOICE';
@@ -11,12 +13,14 @@ const Invoice: React.FC<{
   printForOffice?: boolean;
   downloadForOffice?: boolean;
   printForOfficeInvoice?: boolean;
+  paid?: boolean;
 }> = ({
   type = 'ORDER',
   data,
   printForOffice = false,
   downloadForOffice = false,
   printForOfficeInvoice = false,
+  paid = false,
 }) => {
   const {
     invoice_id,
@@ -30,6 +34,7 @@ const Invoice: React.FC<{
     items,
     payment_details,
     created_by,
+    discount,
   } = data;
 
   const totalPaid = paidAmount(payment_details);
@@ -48,15 +53,8 @@ const Invoice: React.FC<{
           [@page{margin:15mm_15mm_15mm_15mm}]"
     >
       {/* Header */}
-      <div className="grid items-center grid-cols-1 gap-4 pb-3 mb-4 border-b-2 md:grid-cols-3 print:grid-cols-3">
+      <div className="grid items-end grid-cols-1 gap-4 md:grid-cols-2 print:grid-cols-2">
         <img src="/logo.png" alt="Company Logo" className="max-w-[200px]" />
-        <h5 className="mb-2 text-xl font-extrabold text-center">
-          {printForOfficeInvoice
-            ? 'INVOICE'
-            : type == 'INVOICE'
-              ? `TAX INVOICE`
-              : `ORDER`}
-        </h5>
         <div className="text-right">
           <h5 className="text-lg font-extrabold leading-5 ">
             KICKOFF SPORTS WEAR
@@ -69,35 +67,59 @@ const Invoice: React.FC<{
             {created_by?.address} <br />
             {created_by?.district}, {created_by?.state}, {created_by?.pincode}{' '}
             <br />
-            GSTN: {created_by?.GSTN} <br />
-            Phone: {created_by?.phn_no} <br />
-            Email: {created_by?.email}
+            {created_by?.GSTN && `GSTN: ${created_by?.GSTN}`}
+            <br />
+            <div className="flex justify-end gap-3">
+              {created_by?.phn_no && (
+                <span className="flex items-center gap-1">
+                  <FaPhoneAlt className="w-3.5 h-3.w-3.5" />{' '}
+                  {created_by?.phn_no}
+                </span>
+              )}
+              {created_by?.email && (
+                <span className="flex items-center gap-1">
+                  <MdEmail className="w-4 h-4" /> {created_by?.email}
+                </span>
+              )}
+            </div>
           </p>
         </div>
       </div>
+      <h5 className="relative z-20 mb-2 text-xl font-extrabold text-center text-black bg-white">
+        <span className="px-5 text-lg bg-white">
+          {printForOfficeInvoice
+            ? 'INVOICE'
+            : type == 'INVOICE'
+              ? `TAX INVOICE`
+              : `ORDER FORM`}
+        </span>
+        <span className="absolute left-0 w-full h-[2px] bg-black/70 top-3.5 -z-10"></span>
+      </h5>
 
       {/* Order Details */}
       <div className="grid grid-cols-5 gap-8 mb-6">
         <div className="col-span-3 space-y-1">
-          <h2 className="text-lg font-semibold dark:text-white">Bill To:</h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            {customer?.business_name} <br />
+          <h2 className="text-base font-semibold dark:text-white">Bill To:</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            {customer?.business_name && customer?.business_name}
             {customer?.name} <br />
-            {customer?.address1}, {customer?.address2} <br />
-            {customer?.mobile_number1}
+            {customer?.address1}, {customer?.address2 && customer?.address2}{' '}
             <br />
-            {customer?.gst_no && `GSTNO: ${customer?.gst_no}`}
+            {customer?.mobile_number1 && customer?.mobile_number1}
+            <br />
+            {customer?.gst_no && `GSTN: ${customer?.gst_no}`}
           </p>
         </div>
         <div className="col-span-2 space-y-1 text-right">
           <TableView
             rowData={[
               {
-                heading: `${type} ID`,
-                value: `${type == 'INVOICE' ? `#${invoice_id}` : orderID}`,
+                heading: `${type}`,
+                value: `${type == 'INVOICE' ? invoice_id : orderID}`,
                 visibility: true,
                 rowClassName: 'px-3',
                 valueColumnClassName: '!text-left',
+                labelColumnClassName: '!text-left bg-black/70 text-white',
               },
               {
                 heading: `${type} Date`,
@@ -105,226 +127,208 @@ const Invoice: React.FC<{
                 visibility: true,
                 rowClassName: 'px-3',
                 valueColumnClassName: '!text-left',
+                labelColumnClassName: '!text-left bg-black/70 text-white',
               },
               {
                 heading: 'Delivery Date',
-                value: `${delivery_date}`,
+                value: `${dayjs(delivery_date).format('DD-MM-YYYY')}`,
                 visibility: true,
                 rowClassName: 'px-3',
                 valueColumnClassName: '!text-left',
+                labelColumnClassName: '!text-left bg-black/70 text-white',
               },
             ]}
           />
-          {/* <table className="w-full mb-2 border-[1px]">
-              <tbody>
-                <tr className="border-b">
-                  <td className="px-3 py-2 text-gray-600 dark:text-gray-300">
-                    {type} ID:
-                  </td>
-                  <td className="px-3 py-2 font-medium text-left border-l dark:text-white">
-                    {type == 'INVOICE' ? `#${invoice_id}` : orderID}
-                  </td>
-                </tr>
-                <tr className="border-b">
-                  <td className="px-3 py-2 text-gray-600 dark:text-gray-300">
-                    {type} Date:
-                  </td>
-                  <td className="px-3 py-2 font-medium text-left border-l dark:text-white">
-                    {dayjs(order_date).format('DD-MM-YYYY')}
-                  </td>
-                </tr>
-                <tr className="border-b">
-                  <td className="px-3 py-2 text-gray-600 dark:text-gray-300">
-                    Delivery Date:
-                  </td>
-                  <td className="px-3 py-2 font-medium text-left border-l dark:text-white">
-                    {delivery_date}
-                  </td>
-                </tr>
-              </tbody>
-            </table> */}
         </div>
       </div>
 
       {/* Order Items Table */}
       <div className="mb-8">
-        <div className="">
-          <table className="w-full border-[1px] border-gray-300">
-            <thead>
-              <tr className="bg-gray-100 dark:bg-gray-700">
-                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
-                  #
-                </th>
-                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
-                  Model
-                </th>
-                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
-                  Material
-                </th>
-                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
-                  Print Type
-                </th>
-                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
-                  Sleeve Case
-                </th>
-                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
-                  Size
-                </th>
-                <th
-                  className={`px-4 py-2 text-[13px] text-left dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+        <table className="w-full border-[1px] border-black/70">
+          <thead>
+            <tr className="text-white bg-black/70 dark:bg-gray-700">
+              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+                #
+              </th>
+              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+                Model
+              </th>
+              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+                Material
+              </th>
+              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+                Print Type
+              </th>
+              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+                Sleeve Case
+              </th>
+              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+                Size
+              </th>
+              <th
+                className={`px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+              >
+                Unit Cost
+              </th>
+              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+                Qty
+              </th>
+              <th
+                className={`px-4 py-2 text-[13px] text-right dark:text-white border-r border-black/70 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+              >
+                Item Cost
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {items?.map((item: any, index: number) => (
+              <tr
+                key={index}
+                className="uppercase dark:border-gray-700 text-[12.5px]"
+              >
+                <td className="px-4 py-2 border dark:text-white border-black/70">
+                  {index + 1}
+                </td>
+                <td className="px-4 py-2 border dark:text-white border-black/70">
+                  {item.model}
+                </td>
+                <td className="px-4 py-2 border dark:text-white border-black/70">
+                  {item.material}
+                </td>
+                <td className="px-4 py-2 border dark:text-white border-black/70">
+                  {item.print_type}
+                </td>
+                <td className="px-4 py-2 border dark:text-white border-black/70">
+                  {item.sleeve_case}
+                </td>
+                <td className="px-4 py-2 border dark:text-white border-black/70">
+                  {item.size}
+                </td>
+                <td
+                  className={`px-4 py-2 dark:text-white border border-black/70 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
                 >
-                  Unit Cost
-                </th>
-                <th className="px-4 py-2 text-[13px] text-left dark:text-white">
-                  Qty
-                </th>
-                <th
-                  className={`px-4 py-2 text-[13px] text-left dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+                  {item.unit_cost}
+                </td>
+                <td className="px-4 py-2 border dark:text-white border-black/70">
+                  {item.qty}
+                </td>
+                <td
+                  className={`px-4 py-2 dark:text-white border border-black/70 text-right ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
                 >
-                  Item Cost
-                </th>
+                  {parseInt(item.total_item_cost)?.toFixed(2)}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {items?.map((item: any, index: number) => (
-                <tr
-                  key={index}
-                  className="uppercase border-b dark:border-gray-700 text-[12.5px]"
-                >
-                  <td className="px-4 py-2 dark:text-white">{index + 1}</td>
-                  <td className="px-4 py-2 dark:text-white">{item.model}</td>
-                  <td className="px-4 py-2 dark:text-white">{item.material}</td>
-                  <td className="px-4 py-2 dark:text-white">
-                    {item.print_type}
-                  </td>
-                  <td className="px-4 py-2 dark:text-white">
-                    {item.sleeve_case}
-                  </td>
-                  <td className="px-4 py-2 dark:text-white">{item.size}</td>
-                  <td
-                    className={`px-4 py-2 dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
-                  >
-                    {item.unit_cost}
-                  </td>
-                  <td className="px-4 py-2 dark:text-white">{item.qty}</td>
-                  <td
-                    className={`px-4 py-2 dark:text-white ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
-                  >
-                    {item.total_item_cost}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Total Calculations */}
       <div
         className={`grid grid-cols-5 justify-between gap-5 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
       >
-        <div className="col-span-3">
+        <div className="relative col-span-3">
           Total In Words <br />
-          <strong className="text-lg">
+          <strong className="text-base">
             {numberToWords(parseInt(total_cost))}
           </strong>
-          <h3 className="mt-4 text-sm font-semibold text-gray-600 whitespace-pre-wrap dark:text-gray-300">
-            {created_by?.account_details}
-          </h3>
+          {paid && (
+            <img
+              src="/paid.png"
+              alt="Company Logo"
+              className="max-w-[110px] absolute right-5 top-20"
+            />
+          )}
         </div>
         <div className="w-full col-span-2">
           <div className="space-y-2">
             <TableView
               rowData={[
-                { heading: 'Subtotal', value: net_cost, visibility: true },
+                {
+                  heading: 'Sub Total',
+                  value: parseInt(net_cost).toFixed(2),
+                  visibility: true,
+                  rowClassName: '!border-b-0',
+                  labelColumnClassName: '!text-right pr-4 w-[60%]',
+                  valueColumnClassName: '!pr-4',
+                },
                 {
                   heading: 'CGST2.5 (2.5%)',
                   value: (parseInt(gst) / 2).toFixed(2),
                   visibility: true,
+                  rowClassName: '!border-b-0',
+                  labelColumnClassName: '!text-right pr-4 w-[60%]',
+                  valueColumnClassName: '!pr-4',
                 },
                 {
                   heading: 'SGST2.5 (2.5%)',
                   value: (parseInt(gst) / 2).toFixed(2),
                   visibility: true,
+                  rowClassName: '!border-b-0',
+                  labelColumnClassName: '!text-right pr-4 w-[60%]',
+                  valueColumnClassName: '!pr-4',
                 },
                 {
                   heading: 'Paid Amount',
                   value: totalPaid?.toFixed(2),
                   visibility: type === 'ORDER',
+                  rowClassName: '!border-b-0',
+                  labelColumnClassName: '!text-right pr-4 w-[60%]',
+                  valueColumnClassName: '!pr-4',
                 },
-                {
-                  heading: 'Balance Amount',
-                  value: currentBalance?.toFixed(2),
-                  visibility: type === 'ORDER',
+
+                discount > 0 && {
+                  heading: 'Discount',
+                  value: parseInt(discount)?.toFixed(2),
+                  visibility: true,
+                  rowClassName: '!border-b-0',
+                  labelColumnClassName: '!text-right pr-4 w-[60%]',
+                  valueColumnClassName: '!pr-4',
                 },
                 {
                   heading: 'Total',
                   value: parseInt(total_cost).toFixed(2),
                   visibility: true,
                   rowClassName: '!text-black !text-[15px] !font-semibold',
+                  labelColumnClassName: '!text-right pr-4 w-[60%]',
+                  valueColumnClassName: '!pr-4',
                 },
-                printForOfficeInvoice && {
+                currentBalance > 0 && {
                   heading: 'Balance Due',
                   value: currentBalance?.toFixed(2),
-                  visibility: true,
+                  visibility: type === 'ORDER',
                   rowClassName: '!text-red-500 !text-[15px] !font-semibold',
+                  labelColumnClassName: '!text-right pr-4 w-[60%]',
+                  valueColumnClassName: '!pr-4',
                 },
+                currentBalance > 0 &&
+                  printForOfficeInvoice && {
+                    heading: 'Balance Due',
+                    value: currentBalance?.toFixed(2),
+                    visibility: true,
+                    rowClassName: '!text-red-500 !text-[15px] !font-semibold',
+                    labelColumnClassName: '!text-right pr-4 w-[60%]',
+                    valueColumnClassName: '!pr-4',
+                  },
               ]}
             />
-            {/* <table className="w-full mb-2 border-[1px]">
-                <tbody>
-                  <tr className="border-b">
-                    <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
-                      Subtotal:
-                    </td>
-                    <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
-                      {parseInt(net_cost)?.toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
-                      CGST2.5 (2.5%):
-                    </td>
-                    <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
-                      {(parseInt(gst) / 2).toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
-                      SGST2.5 (2.5%):
-                    </td>
-                    <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
-                      {(parseInt(gst) / 2)?.toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr className={`border-b ${type === 'INVOICE' && 'hidden'}`}>
-                    <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
-                      Paid Amount:
-                    </td>
-                    <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
-                      {totalPaid?.toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr className={`border-b ${type === 'INVOICE' && 'hidden'}`}>
-                    <td className="py-2 pl-2 text-gray-600 dark:text-gray-300">
-                      Balance Amount:
-                    </td>
-                    <td className="py-2 pr-2 font-medium text-right border-l dark:text-white">
-                      {currentBalance?.toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 pl-2 font-semibold text-gray-600 dark:text-gray-300">
-                      Total:
-                    </td>
-                    <td className="py-2 pr-2 font-semibold text-right border-l dark:text-white">
-                      {parseInt(total_cost).toFixed(2)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table> */}
           </div>
         </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 mt-5">
+        <div>
+          <span className="text-sm">Bank Account Details,</span>
+          <h3 className="text-[15px] font-semibold text-gray-600 whitespace-pre-wrap dark:text-gray-300">
+            {created_by?.account_details}
+          </h3>
+        </div>
+        {created_by?.qr_code && (
+          <img
+            src={`https://kickoffsportswear.app${created_by?.qr_code}`}
+            alt="QR Code"
+            className="h-full ml-auto"
+          />
+        )}
       </div>
     </div>
   );
@@ -332,20 +336,20 @@ const Invoice: React.FC<{
 
 const TableView: React.FC<any> = ({ rowData }) => {
   return (
-    <table className="w-full mb-2 border-[1px]">
+    <table className="w-full mb-2 border-[1px] border-gray-400">
       <tbody>
         {rowData?.map((item: any, index: number) => (
           <tr
-            className={`border-b ${!item?.visibility ? 'hidden' : ''}`}
+            className={`border-b border-gray-400 ${!item?.visibility ? 'hidden' : ''}`}
             key={index}
           >
             <td
-              className={`py-2 pl-2 dark:text-gray-300 text-gray-600 text-[14px] ${item?.rowClassName} `}
+              className={`py-1.5 pl-2 dark:text-gray-300 text-gray-600 text-[14px] ${item?.rowClassName} ${item?.labelColumnClassName}`}
             >
-              {item.heading}:
+              {item.heading}
             </td>
             <td
-              className={`py-2 pr-2 font-medium text-right border-l dark:text-white text-gray-600 text-[14px] ${item?.rowClassName} ${item?.valueColumnClassName}`}
+              className={`py-1.5 pr-2 font-medium text-right border-l border-gray-400 dark:text-white text-gray-600 text-[14px] ${item?.rowClassName} ${item?.valueColumnClassName}`}
             >
               {item.value}
             </td>

@@ -5,14 +5,12 @@ import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
 import Paths from '@routes/paths';
 import { useApiFormData, useApiJSON } from '@services/ApiService/Api.service';
-import { debounce } from '@utils/common/debounce';
 import { getSleeveCaseConfig } from '@utils/sleeveCaseUtils'; // Adjust the import path
 import {
   DatePicker,
   Form,
   Input,
   Popconfirm,
-  Radio,
   Select,
   Table,
   TableProps,
@@ -22,33 +20,32 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaPlus } from 'react-icons/fa';
 import { MdDeleteForever } from 'react-icons/md';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import {
   fetchItemCost,
   fetchMaterial,
   fetchModels,
   fetchPrintTypes,
-  generateOrderId,
-  getCustomers,
-  GstVerification,
-  newOrder,
+  orderById,
+  updateOrderById,
 } from './api';
 
 type ColumnTypes = Exclude<TableProps['columns'], undefined>;
 
 const NewOrders: React.FC = () => {
   const { get } = useApiJSON();
-  const { post: FormDataPost } = useApiFormData();
+  const { put: FormDataPut } = useApiFormData();
   const navigate = useNavigate();
+  const { orderId } = useParams();
 
   const [itemForm] = Form.useForm();
   const [customerForm] = Form.useForm();
   const [remarksForm] = Form.useForm();
 
-  const [userType, setUserType] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [count, setCount] = useState(1);
+  const [orderDetails, setOrderDetails] = useState<any>({});
 
   const [models, setModels] = useState<any[]>([]);
   const [materialOptions, setMaterialOptions] = useState<Record<string, any[]>>(
@@ -67,6 +64,20 @@ const NewOrders: React.FC = () => {
   const [dataSource, setDataSource] = useState<any[]>([{ key: '0' }]);
   const [subtotalDiscount, setSubtotalDiscount] = useState<number>(0);
   const [sleeveConfigs, setSleeveConfigs] = useState<Record<string, any>>({});
+  const [deletedItemIds, setDeletedItemIds] = useState<number[]>([]);
+
+  // function to fetch order by ID
+  const getOrderById = useCallback(async () => {
+    if (orderId === null || orderId === undefined) return; // Skip if orderId is null
+
+    try {
+      const { data } = await orderById(get, orderId);
+
+      setOrderDetails(data);
+    } catch (error: any) {
+      notify('Failed to fetch order details', 'error');
+    }
+  }, [get, orderId]);
 
   // Fetch models
   const getModels = useCallback(async () => {
@@ -197,35 +208,20 @@ const NewOrders: React.FC = () => {
     }
   };
 
-  // // Handle deleting a row
-  // const handleDelete = (key: React.Key) => {
-  //   if (dataSource.length <= 1) {
-  //     notify('Required minimum 1 order', 'warning');
-  //     return;
-  //   }
-  //   const newData = dataSource.filter((item) => item.key !== key);
-  //   setDataSource(newData);
-  //   setBaseCosts((prev) => {
-  //     const newCosts = { ...prev };
-  //     delete newCosts[key as string];
-  //     return newCosts;
-  //   });
-  //   setTotalCosts((prev) => {
-  //     const newTotalCost = { ...prev };
-  //     delete newTotalCost[key as string];
-  //     return newTotalCost;
-  //   });
-  //   setModelName((prev: any) => {
-  //     const newModelName = { ...prev };
-  //     delete newModelName[key as string];
-  //     return newModelName;
-  //   });
-  // };
-
   const handleDelete = (key: React.Key) => {
     if (dataSource.length <= 1) {
       notify('Required minimum 1 order', 'warning');
       return;
+    }
+
+    // Check if the deleted item has an existing ID from the API
+    const deletedItem = orderDetails?.items?.find(
+      (_: any, index: number) => String(index) === String(key),
+    );
+    console.log(deletedItem, 'deletedItem');
+
+    if (deletedItem?.id) {
+      setDeletedItemIds((prev) => [...prev, deletedItem.id]);
     }
 
     const newData = dataSource.filter((item) => item.key !== key);
@@ -367,55 +363,41 @@ const NewOrders: React.FC = () => {
 
   // Handle full submission
   const handleSubmit = async () => {
-    const customerValues = await customerForm.validateFields();
-    const itemValues = await itemForm.validateFields();
-    const remarksValues = await remarksForm.validateFields();
-
-    if (!customerValues || !itemValues || !remarksValues) {
-      return;
-    }
-
-    // Get current form values for items
-    const currentData = itemValues.data || {};
-
-    // Check for invalid rows (totalCosts[rowKey] === 0)
-    for (const rowKey of Object.keys(currentData)) {
-      if (totalCosts[rowKey] === 0) {
-        notify(`Item is not valid`, 'warning');
-        return; // Stop submission
-      }
-    }
-
+    setLoading(true);
     try {
-      setLoading(true);
-      const { subTotal } = calculateTotals();
-      const { data } = await generateOrderId(get); // generate orderId
+      if (orderId === null || orderId === undefined) return; // Skip if orderId is null
+      const itemValues = await itemForm.validateFields();
+      const remarksValues = await remarksForm.validateFields();
+
+      if (!itemValues || !remarksValues) {
+        return;
+      }
 
       const formData = new FormData();
 
-      if (userType === 1) {
-        formData.append('is_exist', 'false');
-        formData.append('name', customerValues.customerName);
-        formData.append('address1', customerValues.address1);
-        formData.append('address2', customerValues.address2 || '');
-        formData.append('mobile_number1', customerValues.mobile_number1);
-        formData.append('mobile_number2', customerValues.mobile_number2 || '');
-        formData.append('email', customerValues.email || '');
-        formData.append('gst_no', customerValues.gstn || '');
-        formData.append('business_name', customerValues.businessName);
-      } else {
-        formData.append('is_exist', 'true');
-        formData.append('customer', customerValues.existingUser);
+      // Get current form values for items
+      const currentData = itemValues.data || {};
+
+      // Check for invalid rows (totalCosts[rowKey] === 0)
+      for (const rowKey of Object.keys(currentData)) {
+        if (totalCosts[rowKey] === 0) {
+          notify(`Item is not valid`, 'warning');
+          return; // Stop submission
+        }
       }
 
+      const { subTotal } = calculateTotals();
+      console.log({ orderDetails });
+      formData.append('orderID', orderDetails?.id);
+      formData.append('customer', orderDetails?.customer?.id);
       formData.append(
         'delivery_date',
-        dayjs(remarksValues?.selectedDate).format('DD-MM-YYYY'),
+        dayjs(remarksValues?.selectedDate).format('YYYY-MM-DD'),
       );
-      formData.append('orderID', data?.order_number);
       formData.append('net_cost', subTotal.toString());
       formData.append('remarks', remarksValues?.remarks || '');
       formData.append('discount', subtotalDiscount.toString());
+      formData.append('deleted_item_ids', JSON.stringify(deletedItemIds));
 
       const items = Object.keys(itemValues.data || {}).map((key) => {
         const row = itemValues.data[key];
@@ -426,7 +408,7 @@ const NewOrders: React.FC = () => {
           print_type_id: row.print_type,
           size: parseInt(row.size, 10),
           qty: parseInt(row.quantity, 10),
-          discount: 0, // No per-product discount anymore
+          // discount: 0, // No per-product discount anymore
           total_item_cost: totalCosts[key],
         };
 
@@ -466,11 +448,12 @@ const NewOrders: React.FC = () => {
         }
       });
 
-      await newOrder(FormDataPost, formData);
+      // Call update API instead of create
+      await updateOrderById(FormDataPut, formData);
       navigate(Paths.Staff.orders.index);
-      notify('Order created successfully!', 'success');
-    } catch (error) {
-      notify('Failed to create order. Please try again.', 'error');
+      notify('Order updated successfully!', 'success');
+    } catch (error: any) {
+      notify(error?.response?.data?.error, 'error');
     } finally {
       setLoading(false);
     }
@@ -482,10 +465,90 @@ const NewOrders: React.FC = () => {
     return current && current < dayjs().startOf('day');
   };
 
-  // Initial data fetching on component mount
   useEffect(() => {
-    getModels();
-  }, [getModels]);
+    const initializeOrderData = async () => {
+      if (orderDetails?.customer) {
+        // Set customer form values for existing user
+        customerForm.setFieldsValue({
+          existingUser: {
+            value: orderDetails.customer.id,
+            label: orderDetails.customer.name,
+          },
+        });
+      }
+      if (orderDetails?.items?.length > 0) {
+        // Set dataSource based on items
+        const newDataSource = orderDetails.items.map(
+          (_item: any, index: number) => ({
+            key: String(index),
+          }),
+        );
+        setDataSource(newDataSource);
+        setCount(orderDetails.items.length);
+
+        // Set itemForm values
+        const itemFormValues: any = {
+          data: {},
+        };
+
+        // Initialize form values for each item
+        orderDetails.items.forEach((item: any, index: number) => {
+          itemFormValues.data[String(index)] = {
+            model: models.find((m) => m.name === item.model)?.id,
+            material: item.material,
+            print_type: item.print_type,
+            sleevecase: item.sleeve_case,
+            size: item.size,
+            quantity: item.qty,
+          };
+
+          // Set base costs and total costs
+          setBaseCosts((prev) => ({
+            ...prev,
+            [String(index)]: item.unit_cost,
+          }));
+          setTotalCosts((prev) => ({
+            ...prev,
+            [String(index)]: parseFloat(item.total_item_cost),
+          }));
+
+          // Fetch materials and print types for each item
+          const modelId = models.find((m) => m.name === item.model)?.id;
+          if (modelId) {
+            getMaterials(modelId, String(index), item.model);
+            getPrintTypes(modelId, String(index));
+          }
+        });
+
+        itemForm.setFieldsValue(itemFormValues);
+
+        // Set remarks form values
+        remarksForm.setFieldsValue({
+          selectedDate: dayjs(orderDetails.delivery_date),
+          remarks: orderDetails.remarks,
+        });
+
+        // Set discount directly from orderDetails
+        if (orderDetails.discount) {
+          setSubtotalDiscount(parseFloat(orderDetails.discount));
+          remarksForm.setFieldsValue({
+            discount: orderDetails.discount,
+          });
+        }
+      }
+    };
+
+    if (orderDetails?.id) {
+      initializeOrderData();
+    }
+  }, [
+    orderDetails,
+    models,
+    getMaterials,
+    getPrintTypes,
+    itemForm,
+    remarksForm,
+  ]);
 
   const { rawSubTotal, subTotal, cgst, sgst, grandTotal } = calculateTotals();
 
@@ -778,6 +841,12 @@ const NewOrders: React.FC = () => {
     },
   ];
 
+  // Initial data fetching on component mount
+  useEffect(() => {
+    getModels();
+    getOrderById();
+  }, [getModels, getOrderById]);
+
   return (
     <>
       <Helmet>
@@ -792,12 +861,7 @@ const NewOrders: React.FC = () => {
             </h3>
           </div>
         </div>
-        <CustomerDetails
-          customerForm={customerForm}
-          setLoading={setLoading}
-          userType={userType}
-          setUserType={setUserType}
-        />
+        <CustomerDetails customerData={orderDetails?.customer} />
         {/* Item Details Table */}
         <div className="relative p-3 bg-white rounded-md md:p-5">
           <Form
@@ -924,312 +988,50 @@ const NewOrders: React.FC = () => {
   );
 };
 
-const CustomerDetails: React.FC<any> = ({
-  customerForm,
-  setLoading,
-  userType,
-  setUserType,
-}) => {
-  const { get } = useApiJSON();
-
-  // GST pattern regex
-  const GST_PATTERN =
-    /^[0-3][0-9][A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [customerDetails, setCustomerDetails] = useState<any>(null);
-  const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
-
-  const onChange = (e: any) => {
-    setUserType(e.target.value);
-  };
-
-  // Fetch existing customers with search
-  const fetchCustomers = useCallback(
-    async (searchTerm: string = '') => {
-      try {
-        const { data } = await getCustomers(get, searchTerm);
-        setCustomers(data);
-      } catch (error: any) {
-        notify('Failed to fetch existing customers', 'error');
-      }
-    },
-    [get],
-  );
-
-  // Handle GST verification
-  const handleGSTVerification = async (gstn: string) => {
-    setLoading(true);
-    try {
-      if (gstn) {
-        const { data } = await GstVerification(gstn);
-        if (data?.taxpayerInfo) {
-          customerForm.setFieldsValue({
-            businessName: data?.taxpayerInfo?.tradeNam,
-          });
-          setIsBusinessNameDisabled(true);
-          notify('Business name auto-filled successfully!', 'success');
-        } else {
-          setIsBusinessNameDisabled(false);
-          notify('Invalid GST Number or details not found.', 'error');
-        }
-      } else {
-        setIsBusinessNameDisabled(false);
-      }
-    } catch (error) {
-      setIsBusinessNameDisabled(false);
-      notify('Failed to verify GST Number. Please try again.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Debounced GST verification
-  const debouncedGSTVerification = useCallback(
-    debounce((value: string) => handleGSTVerification(value), 500),
-    [handleGSTVerification],
-  );
-
-  // Handle GST input change
-  const handleGSTChange = (value: string) => {
-    if (value && GST_PATTERN.test(value)) {
-      debouncedGSTVerification(value);
-    } else {
-      setIsBusinessNameDisabled(false);
-    }
-  };
-
-  // Handle search for existing customers
-  const handleSearch = (searchTerm: string) => {
-    fetchCustomers(searchTerm);
-  };
-
-  // Handle clear event to refetch full customer list
-  const handleClear = () => {
-    fetchCustomers();
-  };
-
-  // Fetch initial customer list on mount
-  useEffect(() => {
-    if (userType === 2) {
-      fetchCustomers();
-    }
-  }, [userType, fetchCustomers]);
-
+const CustomerDetails: React.FC<any> = ({ customerData }) => {
   return (
-    <Form
-      form={customerForm}
-      layout="vertical"
-      className="p-3 bg-white rounded-md md:p-5"
-    >
-      <h5 className="mb-4 text-xl font-medium">
-        Customer Details :
-        <Radio.Group
-          className="ml-5"
-          onChange={onChange}
-          value={userType}
-          options={[
-            { value: 1, label: <h6>New User</h6> },
-            { value: 2, label: <h6>Existing User</h6> },
-          ]}
-        />
-      </h5>
-
-      {/* Conditional Rendering */}
-      {userType === 1 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 custom-application-form">
-          <Form.Item
-            className="!mb-0"
-            label="Customer Name"
-            name="customerName"
-            rules={[
-              { required: true, message: 'Please enter the Customer Name' },
-            ]}
-          >
-            <Input
-              placeholder="Enter customer name"
-              className="w-full py-2 h-9 placeholder:text-gray-400"
-            />
-          </Form.Item>
-
-          <Form.Item
-            className="!mb-0"
-            label="Business Name"
-            name="businessName"
-            rules={[
-              { required: true, message: 'Please enter the Business Name' },
-            ]}
-          >
-            <Input
-              placeholder="Enter business name"
-              className="w-full h-9"
-              disabled={isBusinessNameDisabled}
-            />
-          </Form.Item>
-
-          <Form.Item
-            className="!mb-0"
-            label="Email"
-            name="email"
-            rules={[
-              { required: false, message: 'Please enter your Email' },
-              { type: 'email', message: 'Invalid email format' },
-            ]}
-          >
-            <Input
-              placeholder="Enter email"
-              className="w-full py-2 h-9 placeholder:text-gray-400"
-            />
-          </Form.Item>
-
-          <Form.Item
-            className="!mb-0"
-            label="Address 1"
-            name="address1"
-            rules={[{ required: true, message: 'Please enter Address 1' }]}
-          >
-            <Input
-              placeholder="Enter address 1"
-              className="w-full py-2 h-9 placeholder:text-gray-400"
-            />
-          </Form.Item>
-
-          <Form.Item className="!mb-0" label="Address 2" name="address2">
-            <Input
-              placeholder="Enter address 2"
-              className="w-full py-2 h-9 placeholder:text-gray-400"
-            />
-          </Form.Item>
-
-          <Form.Item
-            className="!mb-0"
-            label="Mobile 1"
-            name="mobile_number1"
-            rules={[
-              { required: true, message: 'Please enter Mobile' },
-              {
-                pattern: /^\d{10}$/,
-                message: 'Mobile must be exactly 10 digits',
-              },
-            ]}
-          >
-            <Input
-              type="tel"
-              placeholder="Enter mobile"
-              onInput={(e) => {
-                e.currentTarget.value = e.currentTarget.value.replace(
-                  /\D/g,
-                  '',
-                );
-              }}
-              className="w-full py-2 h-9 placeholder:text-gray-400"
-            />
-          </Form.Item>
-
-          <Form.Item
-            className="!mb-0"
-            label="Mobile 2"
-            name="mobile_number2"
-            rules={[
-              {
-                validator: (_, value) =>
-                  !value || /^\d{10}$/.test(value)
-                    ? Promise.resolve()
-                    : Promise.reject(
-                        new Error('Mobile must be exactly 10 digits'),
-                      ),
-              },
-            ]}
-          >
-            <Input
-              type="tel"
-              placeholder="Enter mobile 2"
-              onInput={(e) => {
-                e.currentTarget.value = e.currentTarget.value.replace(
-                  /\D/g,
-                  '',
-                );
-              }}
-              className="w-full py-2 h-9 placeholder:text-gray-400"
-            />
-          </Form.Item>
-
-          <Form.Item
-            className="!mb-0"
-            label="GSTN (Optional)"
-            name="gstn"
-            rules={[
-              { required: false },
-              {
-                pattern: GST_PATTERN,
-                message: 'Please enter a valid GSTIN (e.g., 22ABCDE1234F1Z5)',
-              },
-            ]}
-          >
-            <Input
-              placeholder="Enter GST Number"
-              className="w-full h-9"
-              onChange={(e) => handleGSTChange(e.target.value)}
-            />
-          </Form.Item>
-        </div>
-      )}
-
-      {userType === 2 && (
-        <div>
-          <Form.Item
-            className="!mb-0"
-            name="existingUser"
-            rules={[{ required: true, message: 'Please select a user' }]}
-          >
-            <Select
-              size="large"
-              showSearch
-              placeholder="Search for a user"
-              className="h-full"
-              allowClear
-              onChange={(_value: number, option: any) => {
-                setCustomerDetails(option?.data);
-              }}
-              onClear={handleClear}
-              onSearch={handleSearch}
-              filterOption={false}
-              options={customers?.map((customer) => ({
-                value: customer.id,
-                label: customer.name,
-                data: customer,
-              }))}
-            />
-          </Form.Item>
-          {customerDetails && (
-            <div className="p-4 mt-2 bg-gray-100 rounded-md">
-              <div className="grid grid-cols-1 gap-x-3 gap-y-1 md:grid-cols-2">
-                <div>
-                  <span className="font-semibold text-gray-950">
-                    Customer Name:
-                  </span>{' '}
-                  {customerDetails?.name}
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-950">
-                    Business Name:
-                  </span>{' '}
-                  {customerDetails?.business_name?.toUpperCase()}
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-950">Address:</span>{' '}
-                  {customerDetails?.address1} {customerDetails?.address2}
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-950">Mobile:</span>{' '}
-                  {customerDetails?.mobile_number1}
-                </div>
-              </div>
+    <div className="p-3 bg-gray-100 rounded-md md:p-5">
+      <h5 className="mb-4 text-xl font-medium">Customer Details</h5>
+      {customerData && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-x-3 gap-y-2">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Customer Name</span>
+              <span className="font-medium">{customerData.name}</span>
             </div>
-          )}
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Business Name</span>
+              <span className="font-medium">{customerData.business_name}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Email</span>
+              <span className="font-medium">{customerData.email || '-'}</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-x-3 gap-y-2">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Address</span>
+              <span className="font-medium">
+                {customerData.address1}
+                {customerData.address2 && `, ${customerData.address2}`}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Mobile Numbers</span>
+              <span className="font-medium">
+                {customerData.mobile_number1}
+                {customerData.mobile_number2 &&
+                  `, ${customerData.mobile_number2}`}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">GST Number</span>
+              <span className="font-medium">{customerData.gst_no || '-'}</span>
+            </div>
+          </div>
         </div>
       )}
-    </Form>
+    </div>
   );
 };
 

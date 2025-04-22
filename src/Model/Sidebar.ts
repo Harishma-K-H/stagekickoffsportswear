@@ -4,6 +4,10 @@ export interface SidebarLinkGroupProps {
 }
 
 export interface SidebarProps {
+  isExpanded: boolean;
+  setIsExpanded: (arg: boolean) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
+  menuList: any[];
+  type: 'STAFF' | 'ADMIN';
 }

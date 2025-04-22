@@ -98,6 +98,13 @@ const Orders: React.FC = () => {
               type="button"
               className={`text-white ${currentBalance <= 0 ? 'bg-gray-500' : 'bg-green-700'}  rounded-md !py-2`}
             />
+            <Link to={Paths.Staff.orders.edit(ordersList[record?.key]?.id)}>
+              <Button
+                title="Edit"
+                type="button"
+                className={`text-white bg-gray-500 rounded-md !py-2`}
+              />
+            </Link>
           </div>
         );
       },
@@ -163,7 +170,7 @@ const Orders: React.FC = () => {
     slNo: i + 1,
     OrderId: order?.orderID,
     customerName: capitalizeFirstLetterOfEachWord(order?.customer?.name),
-    orderDate: dayjs(order?.order_date).format('DD-MM-YYYY HH:mm:ss'),
+    orderDate: dayjs(order?.order_date).format('DD-MM-YYYY - h:mm A'),
     deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
     payment_details: order?.payment_details, // Pass payment_details to the record
     total_cost: order?.total_cost, // Pass total_cost to the record

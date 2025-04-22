@@ -221,7 +221,7 @@ const ModalDetails: React.FC<any> = ({
       footer={null}
     >
       <div ref={contentRef}>
-        <Invoice type={'INVOICE'} data={invoiceDetails} />
+        <Invoice type={'INVOICE'} data={invoiceDetails} paid={true} />
       </div>
       <div className="flex justify-end gap-3">
         <Button
