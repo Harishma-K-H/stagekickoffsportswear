@@ -10,6 +10,7 @@ interface PathsType {
     orders: {
       index: string;
       new: string;
+      edit: (orderId?: string) => string;
     };
     invoices: string;
   };
@@ -31,6 +32,7 @@ const Paths: PathsType = {
     orders: {
       index: '/branch/orders',
       new: '/branch/orders/new',
+      edit: (orderId = ':orderId') => `/branch/orders/${orderId}/edit`,
     },
     invoices: '/branch/invoices',
   },

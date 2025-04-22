@@ -78,7 +78,7 @@ export const numberToWords = (num: number): string => {
 
   result += convertLessThanThousand(inr);
 
-  result = 'Indian Rupee ' + result.trim() + ' Only';
+  result = result.trim() + ' Only';
 
   if (decimal > 0) {
     result += ' and ' + convertLessThanThousand(decimal) + ' Paise';

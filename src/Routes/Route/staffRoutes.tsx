@@ -1,7 +1,8 @@
-import Layout from '@components/Layout/Staff';
+import Layout from '@components/Layout/Staff/index';
 import Customers from '@pages/staff/customers/Loadable';
 import Dashboard from '@pages/staff/dashboard/Loadable';
 import Invoices from '@pages/staff/invoices/Loadable';
+import EditOrder from '@pages/staff/orders/edit/Loadable';
 import Orders from '@pages/staff/orders/Loadable';
 import NewOrders from '@pages/staff/orders/new/Loadable';
 import Paths from '@routes/paths';
@@ -25,6 +26,7 @@ export const StaffRoutes = (
     <>
       <Route path={Paths.Staff.orders.index} element={<Orders />} />
       <Route path={Paths.Staff.orders.new} element={<NewOrders />} />
+      <Route path={Paths.Staff.orders.edit()} element={<EditOrder />} />
     </>
     <Route path={Paths.Staff.invoices} element={<Invoices />} />
   </Route>

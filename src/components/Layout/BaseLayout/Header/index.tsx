@@ -1,8 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link, NavLink } from 'react-router';
 
-// import DropdownLanguage from './DropdownLanguage';
-// import DropdownNotification from './DropdownNotification';
 import DropdownUser from './DropdownUser';
 
 const Header: React.FC<{
@@ -11,7 +9,15 @@ const Header: React.FC<{
 }> = (props) => {
   return (
     <header className="sticky top-0 z-50 flex w-full bg-white drop-shadow-sm dark:drop-shadow-none shadow-1">
-      <div className="flex items-center justify-between flex-grow px-4 py-3 xl:justify-end md:px-6 2xl:px-11">
+      <div className="flex items-center justify-between flex-grow px-4 py-3 xl:justify-between md:px-6 2xl:px-9">
+        <div
+          className={`hidden lg:flex items-center justify-between gap-2 py-4.5 lg:justify-center bg-white`}
+        >
+          <NavLink to={'#'}>
+            <img src="/logo.png" alt="logo" className="w-32 mx-auto md:w-44" />
+          </NavLink>
+        </div>
+
         <div className="flex items-center gap-2 sm:gap-4 xl:hidden">
           {/* <!-- Hamburger Toggle BTN --> */}
           <button
