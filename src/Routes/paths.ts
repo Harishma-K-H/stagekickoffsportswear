@@ -3,6 +3,9 @@ interface PathsType {
   Admin: {
     dashboard: string;
     items: string;
+    customers: string;
+    invoices: string;
+    orders: string;
   };
   Staff: {
     dashboard: string;
@@ -25,6 +28,9 @@ const Paths: PathsType = {
   Admin: {
     dashboard: '/admin/dashboard',
     items: '/admin/items',
+    customers: '/admin/customers',
+    invoices: '/admin/invoices',
+    orders: '/admin/orders',
   },
   Staff: {
     dashboard: '/branch/dashboard',

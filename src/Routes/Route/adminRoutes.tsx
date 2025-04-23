@@ -1,6 +1,9 @@
 import Layout from '@components/Layout/Admin';
+import Customers from '@pages/admin/customers/Loadable';
 import Dashboard from '@pages/admin/dashboard/Loadable';
+import Invoices from '@pages/admin/invoices/Loadable';
 import Items from '@pages/admin/items/Loadable';
+import Orders from '@pages/admin/orders/Loadable';
 import Paths from '@routes/paths';
 import { Route } from 'react-router';
 
@@ -19,5 +22,8 @@ export const AdminRoutes = (
   >
     <Route path={Paths.Admin.dashboard} element={<Dashboard />} />
     <Route path={Paths.Admin.items} element={<Items />} />
+    <Route path={Paths.Admin.orders} element={<Orders />} />
+    <Route path={Paths.Admin.invoices} element={<Invoices />} />
+    <Route path={Paths.Admin.customers} element={<Customers />} />
   </Route>
 );

@@ -11,7 +11,11 @@ interface PaymentDetail {
   balance_amount: string;
 }
 
-const PaymentHistory: React.FC<any> = ({ orderDetails, CreteNewPayment }) => {
+const PaymentHistory: React.FC<any> = ({
+  orderDetails,
+  CreteNewPayment,
+  role = import.meta.env.VITE_STAFF_ROLE,
+}) => {
   const { id, total_cost, payment_details } = orderDetails;
 
   const [form] = Form.useForm();
@@ -109,7 +113,7 @@ const PaymentHistory: React.FC<any> = ({ orderDetails, CreteNewPayment }) => {
       )}
 
       {/* New Payment Form */}
-      {currentBalance > 0 && (
+      {role == import.meta.env.VITE_STAFF_ROLE && currentBalance > 0 && (
         <div className="mb-8">
           <h5 className="mb-4 text-xl font-medium dark:text-white">
             Add New Payment
