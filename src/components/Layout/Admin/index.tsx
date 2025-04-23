@@ -1,6 +1,8 @@
 // import ScrollToTopButton from '@components/Common/ScrollToTopButton';
 import Paths from '@routes/paths';
 import React, { useEffect, useRef, useState } from 'react';
+import { FaFileInvoice, FaUsers } from 'react-icons/fa';
+import { FaClipboardList } from 'react-icons/fa6';
 import { MdDashboardCustomize, MdOutlineChecklistRtl } from 'react-icons/md';
 import { Outlet, useLocation } from 'react-router';
 
@@ -25,7 +27,25 @@ const AdminLayout: React.FC<{}> = () => {
       title: 'Items',
       link: Paths.Admin.items,
       route: Paths.Admin.items,
+      Icon: <FaClipboardList className="w-[22px] h-auto" />,
+    },
+    {
+      title: 'Orders',
+      link: Paths.Admin.orders,
+      route: Paths.Admin.orders,
       Icon: <MdOutlineChecklistRtl className="w-[22px] h-auto" />,
+    },
+    {
+      title: 'Invoices',
+      link: Paths.Admin.invoices,
+      route: Paths.Admin.invoices,
+      Icon: <FaFileInvoice className="w-[22px] h-auto" />,
+    },
+    {
+      title: 'Customers',
+      link: Paths.Admin.customers,
+      route: Paths.Admin.customers,
+      Icon: <FaUsers className="w-[22px] h-auto" />,
     },
   ]);
 

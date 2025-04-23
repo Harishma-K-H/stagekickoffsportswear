@@ -97,7 +97,7 @@ const Invoice: React.FC<{
       </h5>
 
       {/* Order Details */}
-      <div className="grid grid-cols-5 gap-8 mb-6">
+      <div className="grid grid-cols-5 gap-8 mb-7">
         <div className="col-span-3 space-y-1">
           <h2 className="text-base font-semibold dark:text-white">Bill To:</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300">
@@ -147,34 +147,34 @@ const Invoice: React.FC<{
         <table className="w-full border-[1px] border-black/70">
           <thead>
             <tr className="text-white bg-black/70 dark:bg-gray-700">
-              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+              <th className="px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
                 #
               </th>
-              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+              <th className="px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
                 Model
               </th>
-              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+              <th className="px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
                 Material
               </th>
-              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+              <th className="px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
                 Print Type
               </th>
-              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+              <th className="px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
                 Sleeve Case
               </th>
-              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+              <th className="px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
                 Size
               </th>
               <th
-                className={`px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+                className={`px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
               >
                 Unit Cost
               </th>
-              <th className="px-4 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+              <th className="px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
                 Qty
               </th>
               <th
-                className={`px-4 py-2 text-[13px] text-right dark:text-white border-r border-black/70 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
+                className={`px-3 py-2 text-[13px] text-right dark:text-white border-r border-black/70 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
               >
                 Item Cost
               </th>
