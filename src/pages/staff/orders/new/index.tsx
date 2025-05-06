@@ -8,6 +8,7 @@ import { useApiFormData, useApiJSON } from '@services/ApiService/Api.service';
 import { debounce } from '@utils/common/debounce';
 import { getSleeveCaseConfig } from '@utils/sleeveCaseUtils'; // Adjust the import path
 import {
+  Checkbox,
   DatePicker,
   Form,
   Input,
@@ -16,15 +17,14 @@ import {
   Select,
   Table,
   TableProps,
-  Checkbox
 } from 'antd';
+import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaPlus } from 'react-icons/fa';
 import { MdDeleteForever } from 'react-icons/md';
 import { useNavigate } from 'react-router';
-import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 
 import {
   fetchItemCost,
@@ -37,10 +37,8 @@ import {
   GstVerification,
   newOrder,
 } from './api';
-import Customers from '@pages/admin/customers';
 
 type ColumnTypes = Exclude<TableProps['columns'], undefined>;
-
 
 const NewOrders: React.FC = () => {
   const { get } = useApiJSON();
@@ -50,15 +48,12 @@ const NewOrders: React.FC = () => {
   const [itemForm] = Form.useForm();
   const [customerForm] = Form.useForm();
   const [remarksForm] = Form.useForm();
-  // const [isNewCustomer, setIsNewCustomer] = useState(false);
+
   const [shippedForm] = Form.useForm();
-  const [isNewCustomer, setIsNewCustomer] = useState(false);
 
   const [userType, setUserType] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [count, setCount] = useState(1);
-
- 
 
   const [models, setModels] = useState<any[]>([]);
   const [materialOptions, setMaterialOptions] = useState<Record<string, any[]>>(
@@ -85,15 +80,12 @@ const NewOrders: React.FC = () => {
     { value: '56', label: '56' },
     { value: '58', label: '58' },
     { value: '60', label: '60' },
-    
-
   ]);
   const [baseCosts, setBaseCosts] = useState<Record<string, number>>({});
   const [totalCosts, setTotalCosts] = useState<Record<string, number>>({});
   const [modelName, setModelName] = useState<any>({});
   const [dataSource, setDataSource] = useState<any[]>([{ key: '0' }]);
   const [subtotalDiscount, setSubtotalDiscount] = useState<number>(0);
-  const [parcelAmount, setParcelAmount,] = useState<number>(0);
   const [sleeveConfigs, setSleeveConfigs] = useState<Record<string, any>>({});
 
   // Fetch states when the component mounts
@@ -382,11 +374,6 @@ const NewOrders: React.FC = () => {
     const discount = parseFloat(value) || 0;
     setSubtotalDiscount(discount);
   };
-   // Handle subtotal parcel change
-  const handleParcelChange = (value: string) => {
-    const discount = parseFloat(value) || 0;
-    setParcelAmount(discount);
-  };
 
   // Calculate totals for display with subtotal discount
   const calculateTotals = () => {
@@ -402,20 +389,16 @@ const NewOrders: React.FC = () => {
 
     // Apply subtotal discount
     const discountedSubtotal = Math.max(0, subTotal - subtotalDiscount);
-    const order_amount= Math.max(0, subTotal - subtotalDiscount+parcelAmount);
 
-    const cgst = discountedSubtotal * 0.025;// 2.5%
+    const cgst = discountedSubtotal * 0.025; // 2.5%
     const sgst = discountedSubtotal * 0.025; // 2.5%
     const grandTotal = discountedSubtotal + cgst + sgst;
     // const parcelValue = discountedSubtotal + parcel; // parcel is the input field value
 
-
     return {
       rawSubTotal: subTotal,
-      parcel:parcelAmount,
       subTotal: discountedSubtotal,
       discount: subtotalDiscount,
-      orderamt:order_amount,
       cgst,
       sgst,
       grandTotal,
@@ -424,9 +407,12 @@ const NewOrders: React.FC = () => {
 
   // Handle full submission
   const handleSubmit = async () => {
-    let customerValues, itemValues, remarksValues, shippedValues;
-    console.log({customerForm});
-    
+    let customerValues: any,
+      itemValues: any,
+      remarksValues: any,
+      shippedValues: any;
+    console.log({ customerForm });
+
     try {
       customerValues = await customerForm.validateFields();
       itemValues = await itemForm.validateFields();
@@ -436,11 +422,11 @@ const NewOrders: React.FC = () => {
       notify('Please fill all required fields.', 'warning');
       return;
     }
-    
+
     if (!customerValues || !itemValues || !remarksValues || !shippedValues) {
       return;
     }
-    
+
     // Get current form values for items
     const currentData = itemValues.data || {};
 
@@ -458,7 +444,7 @@ const NewOrders: React.FC = () => {
       const { data } = await generateOrderId(get); // generate orderId
 
       const formData = new FormData();
-      console.log({customerValues})
+      console.log({ customerValues });
       if (userType === 1) {
         const selectedState = customerValues.state?.value
           ? JSON.parse(customerValues.state.value)
@@ -485,14 +471,16 @@ const NewOrders: React.FC = () => {
         if (userType === 1) {
           // Shipment is same as manually entered customer
           formData.append('sh_name', customerValues.customerName);
-          formData.append('sh_business_name', customerValues.businessName || '');
+          formData.append(
+            'sh_business_name',
+            customerValues.businessName || '',
+          );
           formData.append('sh_address1', customerValues.address1);
           formData.append('sh_mobile_number1', customerValues.mobile_number1);
           formData.append('shipment_email', customerValues.email || '');
         } else if (userType === 2) {
           // Shipment is same as selected existing user
           formData.append('sh_name', customerValues.existingUser);
-          
         }
       } else {
         // Custom shipment address entered
@@ -509,7 +497,6 @@ const NewOrders: React.FC = () => {
         formData.append('sh_state', selectedState?.id?.toString() || '');
         formData.append('gst_no', customerValues.gstn || '');
       }
-            
 
       formData.append(
         'delivery_date',
@@ -519,7 +506,6 @@ const NewOrders: React.FC = () => {
       formData.append('net_cost', subTotal.toString());
       formData.append('remarks', remarksValues?.remarks || '');
       formData.append('discount', subtotalDiscount.toString());
-      formData.append('parcel', parcelAmount.toString());
 
       const items = Object.keys(itemValues.data || {}).map((key) => {
         const row = itemValues.data[key];
@@ -978,7 +964,6 @@ const NewOrders: React.FC = () => {
                 <span className="font-medium">Subtotal:</span>
                 <span>{subTotal.toFixed(2)}</span>
               </div>
-            
 
               <div className="flex justify-between w-64">
                 <span className="font-medium">CGST (2.5%):</span>
@@ -1096,7 +1081,6 @@ const CustomerDetails: React.FC<any> = ({
   const [customerDetails, setCustomerDetails] = useState<any>(null);
   const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
   const [states, setStates] = useState<{ id: number; name: string }[]>([]);
-  
 
   const onChange = (e: any) => {
     setUserType(e.target.value);
@@ -1116,19 +1100,17 @@ const CustomerDetails: React.FC<any> = ({
   );
   // Fetch existing customers with search
   useEffect(() => {
-  const getStates = async () => {
-    try {
-      const { data } = await fetchStates(get);
-      setStates(data);  // Assuming `data` is an array of state names or objects
-    } catch (error) {
-      notify('Failed to fetch states', 'error');
-    }
+    const getStates = async () => {
+      try {
+        const { data } = await fetchStates(get);
+        setStates(data); // Assuming `data` is an array of state names or objects
+      } catch (error) {
+        notify('Failed to fetch states', 'error');
+      }
     };
 
-
-  getStates();
-}, [get]);
-
+    getStates();
+  }, [get]);
 
   // Handle GST verification
   const handleGSTVerification = async (gstn: string) => {
@@ -1190,13 +1172,10 @@ const CustomerDetails: React.FC<any> = ({
     }
   }, [userType, fetchCustomers]);
 
-
-  
   // Handle clear event to refetch full customer list
   // const handleClear = () => {
   //   fetchCustomers();
   // };
-
 
   return (
     <Form
@@ -1238,9 +1217,7 @@ const CustomerDetails: React.FC<any> = ({
             className="!mb-0"
             label="Business Name"
             name="businessName"
-            rules={[
-              {  message: 'Please enter the Business Name' },
-            ]}
+            rules={[{ message: 'Please enter the Business Name' }]}
           >
             <Input
               placeholder="Enter business name"
@@ -1335,26 +1312,21 @@ const CustomerDetails: React.FC<any> = ({
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
-           <Form.Item
-  label="State"
-  name="state"
-  rules={[{ required: true }]}
->
-  <Select
-  placeholder="Select a State"
-  showSearch
-  labelInValue
-  className="w-full"
-  optionFilterProp="children"
->
-  {states.map((state) => (
-    <Select.Option key={state.id} value={JSON.stringify(state)}>
-      {state.name}
-    </Select.Option>
-  ))}
-</Select>
-</Form.Item>
-
+          <Form.Item label="State" name="state" rules={[{ required: true }]}>
+            <Select
+              placeholder="Select a State"
+              showSearch
+              labelInValue
+              className="w-full"
+              optionFilterProp="children"
+            >
+              {states.map((state) => (
+                <Select.Option key={state.id} value={JSON.stringify(state)}>
+                  {state.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
 
           <Form.Item
             className="!mb-0"
@@ -1427,30 +1399,23 @@ const CustomerDetails: React.FC<any> = ({
                   {customerDetails?.mobile_number1}
                 </div>
                 <div>
-                <span className="font-semibold text-gray-950">State</span>{' '}
-                {customerDetails?.state?.name || customerDetails?.state__name}
-              </div>
+                  <span className="font-semibold text-gray-950">State</span>{' '}
+                  {customerDetails?.state?.name || customerDetails?.state__name}
+                </div>
               </div>
             </div>
           )}
-          
         </div>
       )}
-    
     </Form>
   );
-
-  
 };
 const ShippedDetails: React.FC<any> = ({
   shippedForm,
   setLoading,
   userType,
-  setUserType,
 }) => {
   const { get } = useApiJSON();
-  const [shippedcustomer, setShippedCustomers] = useState<any[]>([]);
-  const [shippedcustomerDetails, setShippedCustomerDetails] = useState<any>(null);
   const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
   const [states, setStates] = useState<{ id: number; name: string }[]>([]);
   const [sameAsCustomer, setSameAsCustomer] = useState(false);
@@ -1458,34 +1423,24 @@ const ShippedDetails: React.FC<any> = ({
   const GST_PATTERN =
     /^[0-3][0-9][A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
-const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
-  const isChecked = e.target.checked;
-  console.log("Same as Customer:", isChecked);
+  const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
+    const isChecked = e.target.checked;
+    console.log('Same as Customer:', isChecked);
 
-  setSameAsCustomer(isChecked);
+    setSameAsCustomer(isChecked);
 
-  // Check userType immediately (you can access it here if it's in scope)
-  if (isChecked && userType === 1) {
-    console.log("Checkbox checked AND userType === 1");
-  }
-  else if (isChecked && userType === 2) {
-    console.log("Checkbox checked AND userType === 1");
-  }
-};
-  useEffect(() => {
-  if (sameAsCustomer && userType === 1) {
-    console.log("Same as Customer is checked AND userType is New User (1)");
-  }
-}, [sameAsCustomer, userType]);
-
-  const fetchCustomers = useCallback(async (searchTerm = '') => {
-    try {
-      const { data } = await getCustomers(get, searchTerm);
-      setShippedCustomers(data);
-    } catch {
-      notify('Failed to fetch existing customers', 'error');
+    // Check userType immediately (you can access it here if it's in scope)
+    if (isChecked && userType === 1) {
+      console.log('Checkbox checked AND userType === 1');
+    } else if (isChecked && userType === 2) {
+      console.log('Checkbox checked AND userType === 1');
     }
-  }, [get]);
+  };
+  useEffect(() => {
+    if (sameAsCustomer && userType === 1) {
+      console.log('Same as Customer is checked AND userType is New User (1)');
+    }
+  }, [sameAsCustomer, userType]);
 
   useEffect(() => {
     const fetchAllStates = async () => {
@@ -1527,7 +1482,7 @@ const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
 
   const debouncedGSTVerification = useCallback(
     debounce((value: string) => handleGSTVerification(value), 500),
-    [handleGSTVerification]
+    [handleGSTVerification],
   );
 
   const handleGSTChange = (value: string) => {
@@ -1538,56 +1493,54 @@ const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
     }
   };
 
-  const onCheckboxChange = (checkedValues: number[]) => {
-    const lastSelected = checkedValues[checkedValues.length - 1];
-    setUserType([lastSelected]);
-  };
-
-  const shhandleClear = () => {
-    setShippedCustomerDetails(null);
-  };
-
-  const handleSearch = (searchTerm: string) => {
-    fetchCustomers(searchTerm);
-  };
-
-  useEffect(() => {
-    if (sameAsCustomer) {
-      const customerValues = shippedForm.getFieldsValue();
-      shippedForm.setFieldsValue({
-        customerName: customerValues.customerName,
-        businessName: customerValues.businessName,
-        email: customerValues.email,
-        address1: customerValues.address1,
-        address2: customerValues.address2,
-        mobile_number1: customerValues.mobile_number1,
-        mobile_number2: customerValues.mobile_number2,
-        state: customerValues.state,
-        gstn: customerValues.gstn,
-      });
-      setIsBusinessNameDisabled(true);
-    } else {
-      shippedForm.setFieldsValue({
-        customerName: '',
-        businessName: '',
-        email: '',
-        address1: '',
-        address2: '',
-        mobile_number1: '',
-        mobile_number2: '',
-        state: undefined,
-        gstn: '',
-      });
-      setIsBusinessNameDisabled(false);
-    }
-  }, [sameAsCustomer, shippedForm]);
+  // useEffect(() => {
+  //   if (sameAsCustomer) {
+  //     const customerValues = shippedForm.getFieldsValue();
+  //     shippedForm.setFieldsValue({
+  //       customerName: customerValues.customerName,
+  //       businessName: customerValues.businessName,
+  //       email: customerValues.email,
+  //       address1: customerValues.address1,
+  //       address2: customerValues.address2,
+  //       mobile_number1: customerValues.mobile_number1,
+  //       mobile_number2: customerValues.mobile_number2,
+  //       state: customerValues.state,
+  //       gstn: customerValues.gstn,
+  //     });
+  //     setIsBusinessNameDisabled(true);
+  //   } else {
+  //     shippedForm.setFieldsValue({
+  //       customerName: '',
+  //       businessName: '',
+  //       email: '',
+  //       address1: '',
+  //       address2: '',
+  //       mobile_number1: '',
+  //       mobile_number2: '',
+  //       state: undefined,
+  //       gstn: '',
+  //     });
+  //     setIsBusinessNameDisabled(false);
+  //   }
+  // }, [sameAsCustomer, shippedForm]);
 
   return (
-    <Form form={shippedForm} layout="vertical" className="p-3 bg-white rounded-md md:p-5">
+    <Form
+      form={shippedForm}
+      layout="vertical"
+      className="p-3 bg-white rounded-md md:p-5"
+    >
       <h5 className="mb-4 text-xl font-medium flex items-center justify-between">
         Shipped Details:
-        <Form.Item name="sameAsCustomer" valuePropName="checked" className="mb-0">
-          <Checkbox checked={sameAsCustomer} onChange={handleSameAsCustomerChange}>
+        <Form.Item
+          name="sameAsCustomer"
+          valuePropName="checked"
+          className="mb-0"
+        >
+          <Checkbox
+            checked={sameAsCustomer}
+            onChange={handleSameAsCustomerChange}
+          >
             Same as Customer Details
           </Checkbox>
         </Form.Item>
@@ -1598,9 +1551,14 @@ const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
           <Form.Item
             label="Customer Name"
             name="customerName"
-            rules={[{ required: true, message: 'Please enter the Customer Name' }]}
+            rules={[
+              { required: true, message: 'Please enter the Customer Name' },
+            ]}
           >
-            <Input placeholder="Enter customer name" className="w-full py-2 h-9" />
+            <Input
+              placeholder="Enter customer name"
+              className="w-full py-2 h-9"
+            />
           </Form.Item>
 
           <Form.Item
@@ -1650,7 +1608,10 @@ const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
               type="tel"
               placeholder="Enter mobile"
               onInput={(e) =>
-                (e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''))
+                (e.currentTarget.value = e.currentTarget.value.replace(
+                  /\D/g,
+                  '',
+                ))
               }
               className="w-full py-2 h-9"
             />
@@ -1664,7 +1625,9 @@ const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
                 validator: (_, value) =>
                   !value || /^\d{10}$/.test(value)
                     ? Promise.resolve()
-                    : Promise.reject(new Error('Mobile must be exactly 10 digits')),
+                    : Promise.reject(
+                        new Error('Mobile must be exactly 10 digits'),
+                      ),
               },
             ]}
           >
@@ -1672,7 +1635,10 @@ const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
               type="tel"
               placeholder="Enter mobile 2"
               onInput={(e) =>
-                (e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''))
+                (e.currentTarget.value = e.currentTarget.value.replace(
+                  /\D/g,
+                  '',
+                ))
               }
               className="w-full py-2 h-9"
             />
@@ -1715,8 +1681,5 @@ const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
     </Form>
   );
 };
-
-
-
 
 export default NewOrders;
