@@ -1,5 +1,3 @@
-import { promises } from "dns";
-
 // Define the orders list function
 export const items = async (
   get: (url: string) => Promise<any>,
@@ -74,7 +72,7 @@ export const updateItem = async (
   return { data: response.data, status: response.status, ok: response.ok };
 };
 
-//definr the deactivate function 
+//definr the deactivate function
 export const DeactivateItem = async (
   put: (url: string, payload: any) => Promise<any>,
   payload: any,
@@ -82,10 +80,10 @@ export const DeactivateItem = async (
 ): Promise<any> => {
   // Use the correct URL format here
   const response = await put(`api_item/${itemId}/`, payload);
-  
-  return { 
-    data: response.data, 
-    status: response.status, 
-    ok: response.status >= 200 && response.status < 300 
+
+  return {
+    data: response.data,
+    status: response.status,
+    ok: response.status >= 200 && response.status < 300,
   };
 };

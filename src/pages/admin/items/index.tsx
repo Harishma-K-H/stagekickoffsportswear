@@ -4,14 +4,21 @@ import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { getSleeveCaseConfig } from '@utils/sleeveCaseUtils'; // Adjust the import path
-import { Form, Input, Pagination, Popconfirm, Select, Table } from 'antd';
+import {
+  Form,
+  Input,
+  message,
+  Pagination,
+  Popconfirm,
+  Select,
+  Table,
+} from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { FaRegEdit,FaToggleOn, FaToggleOff } from 'react-icons/fa';
-import { DeactivateItem } from './api';  // Import the function
-import { message } from 'antd';
+import { FaRegEdit, FaToggleOff, FaToggleOn } from 'react-icons/fa';
 
 import {
+  DeactivateItem,
   fetchBranches,
   fetchMaterial,
   fetchModels,
@@ -89,42 +96,48 @@ const Items: React.FC = () => {
   //   console.error(error);
   // }
   // };
-const handleToggleStatus = async (id: number, currentStatus: boolean) => {
-  // Flip the current status
-  const newStatus = !currentStatus;
+  const handleToggleStatus = async (id: number, currentStatus: boolean) => {
+    // Flip the current status
+    const newStatus = !currentStatus;
 
-  // Build the payload
-  const payload = { is_active: newStatus };
+    // Build the payload
+    const payload = { is_active: newStatus };
 
-  // Optional: log what we're sending
-  console.log(`Toggling ID: ${id}, from ${currentStatus} to ${newStatus}`);
-  console.log('Sending PUT request to:', `/api/api_item/${id}/`, 'with payload:', payload);
-
-  // API call
-  const res = await DeactivateItem(put, payload, id);
-
-  // Response check
-  if (res && res.ok) {
-    message.success(`Item ${newStatus ? 'activated' : 'deactivated'} successfully`);
-
-    // Update UI state
-    setItemsList((prev: any[]) =>
-      prev.map(item =>
-        item.id === id ? { ...item, is_active: newStatus } : item
-      )
+    // Optional: log what we're sending
+    console.log(`Toggling ID: ${id}, from ${currentStatus} to ${newStatus}`);
+    console.log(
+      'Sending PUT request to:',
+      `/api/api_item/${id}/`,
+      'with payload:',
+      payload,
     );
-  } else {
-    message.error('Failed to update item status');
-  }
-};
 
-const toBoolean = (val: any) => {
-  if (typeof val === 'boolean') return val;
-  if (typeof val === 'string') return val.toLowerCase() === 'true';
-  if (typeof val === 'number') return val === 1;
-  return false;
-};
+    // API call
+    const res = await DeactivateItem(put, payload, id);
 
+    // Response check
+    if (res && res.ok) {
+      message.success(
+        `Item ${newStatus ? 'activated' : 'deactivated'} successfully`,
+      );
+
+      // Update UI state
+      setItemsList((prev: any[]) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, is_active: newStatus } : item,
+        ),
+      );
+    } else {
+      message.error('Failed to update item status');
+    }
+  };
+
+  const toBoolean = (val: any) => {
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'string') return val.toLowerCase() === 'true';
+    if (typeof val === 'number') return val === 1;
+    return false;
+  };
 
   // const handleDeactivate = async (id: number) => {
   // try {
@@ -142,10 +155,10 @@ const toBoolean = (val: any) => {
   //   message.error('Something went wrong');
   // }
   // };
-//   const handleActivate = async (id: number) => {
-//   const payload = { is_active: true };
-//   await DeactivateItem(put, payload, id);
-// };
+  //   const handleActivate = async (id: number) => {
+  //   const payload = { is_active: true };
+  //   await DeactivateItem(put, payload, id);
+  // };
   const getMaterialsForModel = useCallback(
     async (modelId: string | number) => {
       if (!modelId) return;
@@ -506,7 +519,10 @@ const toBoolean = (val: any) => {
       width: 170,
       render: (_: any, record: any) => {
         const editable = isEditing(record);
-        const isActive = record.is_active === true || record.is_active === 'true' || record.is_active === 1;
+        const isActive =
+          record.is_active === true ||
+          record.is_active === 'true' ||
+          record.is_active === 1;
         return editable ? (
           <span className="flex gap-2">
             <Popconfirm title="Sure to Save?" onConfirm={() => save(record.id)}>
@@ -528,30 +544,31 @@ const toBoolean = (val: any) => {
           </span>
         ) : (
           <div className="flex gap-3">
-          <FaRegEdit
-            className="w-8 h-8 p-1 cursor-pointer"
-            onClick={() => edit(record)}
-              />
-       <Popconfirm
-          title={`Are you sure you want to ${isActive ? 'deactivate' : 'activate'} this item?`}
-          onConfirm={() => handleToggleStatus(record.id, toBoolean(record.is_active))}
-          okText="Yes"
-          cancelText="No"
-        >
-          {isActive ? (
-            <FaToggleOn
-              className="w-8 h-8 cursor-pointer text-green-600 hover:text-green-800"
-              title="Active"
+            <FaRegEdit
+              className="w-8 h-8 p-1 cursor-pointer"
+              onClick={() => edit(record)}
             />
-          ) : (
-            <FaToggleOff
-              className="w-8 h-8 cursor-pointer text-red-600 hover:text-red-800"
-              title="Inactive"
-            />
-          )}
-        </Popconfirm>
-      </div>
-            
+            <Popconfirm
+              title={`Are you sure you want to ${isActive ? 'deactivate' : 'activate'} this item?`}
+              onConfirm={() =>
+                handleToggleStatus(record.id, toBoolean(record.is_active))
+              }
+              okText="Yes"
+              cancelText="No"
+            >
+              {isActive ? (
+                <FaToggleOn
+                  className="w-8 h-8 cursor-pointer text-green-600 hover:text-green-800"
+                  title="Active"
+                />
+              ) : (
+                <FaToggleOff
+                  className="w-8 h-8 cursor-pointer text-red-600 hover:text-red-800"
+                  title="Inactive"
+                />
+              )}
+            </Popconfirm>
+          </div>
         );
       },
     },
