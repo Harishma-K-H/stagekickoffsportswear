@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
+import { useEffect } from 'react';
 
 const Invoice: React.FC<{
   type: 'ORDER' | 'INVOICE';
@@ -31,6 +32,7 @@ const Invoice: React.FC<{
     gst,
     total_cost,
     customer,
+    shipped_customer,
     items,
     payment_details,
     created_by,
@@ -39,7 +41,77 @@ const Invoice: React.FC<{
 
   const totalPaid = paidAmount(payment_details);
   const currentBalance = parseInt(total_cost) - totalPaid;
-
+  const taxRows =
+  customer?.state_name === 'KERALA'
+    ? [
+        {
+          heading: 'CGST (2.5%)',
+          value: (parseInt(gst) / 2).toFixed(2),
+          visibility: true,
+          rowClassName: '!border-b-0',
+          labelColumnClassName: '!text-right pr-4 w-[60%]',
+          valueColumnClassName: '!pr-4',
+        },
+        {
+          heading: 'SGST (2.5%)',
+          value: (parseInt(gst) / 2).toFixed(2),
+          visibility: true,
+          rowClassName: '!border-b-0',
+          labelColumnClassName: '!text-right pr-4 w-[60%]',
+          valueColumnClassName: '!pr-4',
+        },
+      ]
+    : [
+        {
+          heading: 'IGST (5%)',
+          value: parseInt(gst).toFixed(2),
+          visibility: true,
+          rowClassName: '!border-b-0',
+          labelColumnClassName: '!text-right pr-4 w-[60%]',
+          valueColumnClassName: '!pr-4',
+        },
+      ];
+useEffect(() => {
+  console.log('Customer ID:', customer?.id);
+  console.log('Shipped Customer ID:', shipped_customer?.custom_id);
+}, [customer?.id, shipped_customer?.custom_id]);
+// const extraRows = [
+//   type === 'ORDER' && {
+//     heading: 'Paid Amount',
+//     value: totalPaid?.toFixed(2),
+//     visibility: true,
+//     rowClassName: '!border-b-0',
+//     labelColumnClassName: '!text-right pr-4 w-[60%]',
+//     valueColumnClassName: '!pr-4',
+//   },
+//   discount > 0 && {
+//     heading: 'Discount',
+//     value: parseInt(discount)?.toFixed(2),
+//     visibility: true,
+//     rowClassName: '!border-b-0',
+//     labelColumnClassName: '!text-right pr-4 w-[60%]',
+//     valueColumnClassName: '!pr-4',
+//   },
+//   currentBalance > 0 && type === 'ORDER' && {
+//     heading: 'Balance Due',
+//     value: currentBalance?.toFixed(2),
+//     visibility: true,
+//     rowClassName: '!text-red-500 !text-[15px] !font-semibold',
+//     labelColumnClassName: '!text-right pr-4 w-[60%]',
+//     valueColumnClassName: '!pr-4',
+//   },
+//   currentBalance > 0 && printForOfficeInvoice && {
+//     heading: 'Balance Due',
+//     value: currentBalance?.toFixed(2),
+//     visibility: true,
+//     rowClassName: '!text-red-500 !text-[15px] !font-semibold',
+//     labelColumnClassName: '!text-right pr-4 w-[60%]',
+//     valueColumnClassName: '!pr-4',
+//   },
+  // ].filter(Boolean);
+  console.log("Logo URL:", created_by?.logo);
+  console.log("dhgdhgdhgdh", import.meta.env.VITE_MEDIA_BASE_PATH);
+  console.log("Logo Path:", created_by?.logo);
   return (
     <div
       id="invoice-print"
@@ -54,7 +126,7 @@ const Invoice: React.FC<{
     >
       {/* Header */}
       <div className="grid items-end grid-cols-1 gap-4 md:grid-cols-2 print:grid-cols-2">
-        <img src="/logo.png" alt="Company Logo" className="max-w-[200px]" />
+        <img src={`${import.meta.env.VITE_MEDIA_BASE_PATH}${created_by?.logo}`}  className="max-w-[200px]" />
         <div className="text-right">
           <h5 className="text-lg font-extrabold leading-5 ">
             KICKOFF SPORTS WEAR
@@ -96,51 +168,99 @@ const Invoice: React.FC<{
         <span className="absolute left-0 w-full h-[2px] bg-black/70 top-3.5 -z-10"></span>
       </h5>
 
-      {/* Order Details */}
-      <div className="grid grid-cols-5 gap-8 mb-7">
-        <div className="col-span-3 space-y-1">
-          <h2 className="text-base font-semibold dark:text-white">Bill To:</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            {customer?.business_name && customer?.business_name}
-            {customer?.name} <br />
-            {customer?.address1}, {customer?.address2 && customer?.address2}{' '}
-            <br />
-            {customer?.mobile_number1 && customer?.mobile_number1}
-            <br />
-            {customer?.gst_no && `GSTN: ${customer?.gst_no}`}
-          </p>
+{/* Order Details */}
+<div className="grid grid-cols-2 gap-8 mb-7">
+  <div className="space-y-1">
+    {customer?.id === shipped_customer?.custom_id ? (
+      <>
+        <h2 className="text-base font-semibold dark:text-white">Bill To & Shipped Address</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          {customer?.business_name && `${customer.business_name}`}<br />
+          {customer?.name} <br />
+          {customer?.address1}
+          {customer?.address2 && `, ${customer.address2}`} <br />
+          {customer?.mobile_number1} <br />
+          {customer?.gst_no && `GSTN: ${customer?.gst_no}`}
+        </p>
+      </>
+    ) : (
+      <>
+        <h2 className="text-base font-semibold dark:text-white">Bill To</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          {customer?.business_name && `${customer.business_name}`}<br />
+          {customer?.name} <br />
+          {customer?.address1}
+          {customer?.address2 && `, ${customer.address2}`} <br />
+          {customer?.mobile_number1} <br />
+          {customer?.gst_no && `GSTN: ${customer?.gst_no}`}
+        </p>
+      </>
+    )}
+  </div>
+
+  {/* Right Side: Shipped Address (if different) */}
+  {/* {customer?.id !== shipped_customer?.custom_id && (
+    <div className="space-y-1">
+      <h2 className="text-base font-semibold dark:text-white">Shipped Address</h2>
+      <p className="text-sm text-gray-600 dark:text-gray-300">
+        {shipped_customer?.business_name && `${shipped_customer.business_name}`}<br />
+        {shipped_customer?.name} <br />
+        {shipped_customer?.address1}
+        {shipped_customer?.address2 && `, ${shipped_customer.address2}`} <br />
+        {shipped_customer?.mobile_number1} <br />
+        {shipped_customer?.gst_no && `GSTN: ${shipped_customer?.gst_no}`}
+      </p>
+    </div>
+  )} */}
+
+
+
+  {/* Row 1 - Shipped To (right)
+  <div className="space-y-1 text-right">
+    <h2 className="text-base font-semibold dark:text-white">Shipped To:</h2>
+    <p className="text-sm text-gray-600 dark:text-gray-300">
+      {shipped_customer?.business_name && `${shipped_customer.business_name}`}<br />
+      {shipped_customer?.name} <br />
+      {shipped_customer?.address1}
+      {shipped_customer?.address2 && `, ${shipped_customer.address2}`} <br />
+      {shipped_customer?.mobile_number1} <br />
+      {shipped_customer?.gst_no && `GSTN: ${shipped_customer?.gst_no}`}
+    </p>
+  </div> */}
+{/* </div> */}
+
+{/* Row 2 - TableView (Full Width) */}
+<div className="w-[400px] ml-auto mb-7">
+  <TableView
+    rowData={[
+      {
+        heading: `${type}`,
+        value: `${type === 'INVOICE' ? invoice_id : orderID}`,
+        visibility: true,
+        rowClassName: 'px-3',
+        valueColumnClassName: '!text-left',
+        labelColumnClassName: '!text-left bg-black/70 text-white',
+      },
+      {
+        heading: `${type} Date`,
+        value: `${dayjs(order_date).format('DD-MM-YYYY')}`,
+        visibility: true,
+        rowClassName: 'px-3',
+        valueColumnClassName: '!text-left',
+        labelColumnClassName: '!text-left bg-black/70 text-white',
+      },
+      {
+        heading: 'Delivery Date',
+        value: `${dayjs(delivery_date).format('DD-MM-YYYY')}`,
+        visibility: true,
+        rowClassName: 'px-3',
+        valueColumnClassName: '!text-left',
+        labelColumnClassName: '!text-left bg-black/70 text-white',
+      },
+    ]}
+  />
+</div>
         </div>
-        <div className="col-span-2 space-y-1 text-right">
-          <TableView
-            rowData={[
-              {
-                heading: `${type}`,
-                value: `${type == 'INVOICE' ? invoice_id : orderID}`,
-                visibility: true,
-                rowClassName: 'px-3',
-                valueColumnClassName: '!text-left',
-                labelColumnClassName: '!text-left bg-black/70 text-white',
-              },
-              {
-                heading: `${type} Date`,
-                value: `${dayjs(order_date).format('DD-MM-YYYY')}`,
-                visibility: true,
-                rowClassName: 'px-3',
-                valueColumnClassName: '!text-left',
-                labelColumnClassName: '!text-left bg-black/70 text-white',
-              },
-              {
-                heading: 'Delivery Date',
-                value: `${dayjs(delivery_date).format('DD-MM-YYYY')}`,
-                visibility: true,
-                rowClassName: 'px-3',
-                valueColumnClassName: '!text-left',
-                labelColumnClassName: '!text-left bg-black/70 text-white',
-              },
-            ]}
-          />
-        </div>
-      </div>
 
       {/* Order Items Table */}
       <div className="mb-8">
@@ -252,22 +372,17 @@ const Invoice: React.FC<{
                   labelColumnClassName: '!text-right pr-4 w-[60%]',
                   valueColumnClassName: '!pr-4',
                 },
-                {
-                  heading: 'CGST2.5 (2.5%)',
-                  value: (parseInt(gst) / 2).toFixed(2),
+                discount > 0 && {
+                  heading: 'Discount',
+                  value: parseInt(discount)?.toFixed(2),
                   visibility: true,
                   rowClassName: '!border-b-0',
                   labelColumnClassName: '!text-right pr-4 w-[60%]',
                   valueColumnClassName: '!pr-4',
                 },
-                {
-                  heading: 'SGST2.5 (2.5%)',
-                  value: (parseInt(gst) / 2).toFixed(2),
-                  visibility: true,
-                  rowClassName: '!border-b-0',
-                  labelColumnClassName: '!text-right pr-4 w-[60%]',
-                  valueColumnClassName: '!pr-4',
-                },
+                 ...taxRows,
+                 
+            
                 {
                   heading: 'Paid Amount',
                   value: totalPaid?.toFixed(2),
@@ -277,14 +392,7 @@ const Invoice: React.FC<{
                   valueColumnClassName: '!pr-4',
                 },
 
-                discount > 0 && {
-                  heading: 'Discount',
-                  value: parseInt(discount)?.toFixed(2),
-                  visibility: true,
-                  rowClassName: '!border-b-0',
-                  labelColumnClassName: '!text-right pr-4 w-[60%]',
-                  valueColumnClassName: '!pr-4',
-                },
+                
                 {
                   heading: 'Total',
                   value: parseInt(total_cost).toFixed(2),
@@ -315,6 +423,24 @@ const Invoice: React.FC<{
           </div>
         </div>
       </div>
+      <div className="grid grid-cols-2 gap-8 mb-7">
+  {/* Row 1 - Bill To (left) */}
+  <div className="space-y-1">
+     {customer?.id !== shipped_customer?.custom_id && (
+      <>
+        <h2 className="text-base font-semibold dark:text-white">Shipped Address</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+           {shipped_customer?.business_name && `${shipped_customer.business_name}`}<br />
+            {shipped_customer?.name} <br />
+            {shipped_customer?.address1}
+            {shipped_customer?.address2 && `, ${shipped_customer.address2}`} <br />
+            {shipped_customer?.mobile_number1} <br />
+            {shipped_customer?.gst_no && `GSTN: ${shipped_customer?.gst_no}`}
+        </p>
+      </>
+    )}
+  </div>
+</div>
       <div className="grid grid-cols-2 gap-3 mt-5">
         <div>
           <span className="text-sm">Bank Account Details,</span>

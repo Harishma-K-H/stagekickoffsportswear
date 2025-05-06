@@ -16,6 +16,7 @@ import {
   Select,
   Table,
   TableProps,
+  Checkbox
 } from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -23,19 +24,23 @@ import { Helmet } from 'react-helmet';
 import { FaPlus } from 'react-icons/fa';
 import { MdDeleteForever } from 'react-icons/md';
 import { useNavigate } from 'react-router';
+import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 
 import {
   fetchItemCost,
   fetchMaterial,
   fetchModels,
   fetchPrintTypes,
+  fetchStates,
   generateOrderId,
   getCustomers,
   GstVerification,
   newOrder,
 } from './api';
+import Customers from '@pages/admin/customers';
 
 type ColumnTypes = Exclude<TableProps['columns'], undefined>;
+
 
 const NewOrders: React.FC = () => {
   const { get } = useApiJSON();
@@ -45,10 +50,15 @@ const NewOrders: React.FC = () => {
   const [itemForm] = Form.useForm();
   const [customerForm] = Form.useForm();
   const [remarksForm] = Form.useForm();
+  // const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [shippedForm] = Form.useForm();
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
 
   const [userType, setUserType] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [count, setCount] = useState(1);
+
+ 
 
   const [models, setModels] = useState<any[]>([]);
   const [materialOptions, setMaterialOptions] = useState<Record<string, any[]>>(
@@ -60,13 +70,50 @@ const NewOrders: React.FC = () => {
     { value: '26', label: '26' },
     { value: '28', label: '28' },
     { value: '30', label: '30' },
+    { value: '32', label: '32' },
+    { value: '34', label: '34' },
+    { value: '36', label: '36' },
+    { value: '38', label: '38' },
+    { value: '40', label: '40' },
+    { value: '42', label: '42' },
+    { value: '44', label: '44' },
+    { value: '46', label: '46' },
+    { value: '48', label: '48' },
+    { value: '50', label: '50' },
+    { value: '52', label: '52' },
+    { value: '54', label: '54' },
+    { value: '56', label: '56' },
+    { value: '58', label: '58' },
+    { value: '60', label: '60' },
+    
+
   ]);
   const [baseCosts, setBaseCosts] = useState<Record<string, number>>({});
   const [totalCosts, setTotalCosts] = useState<Record<string, number>>({});
   const [modelName, setModelName] = useState<any>({});
   const [dataSource, setDataSource] = useState<any[]>([{ key: '0' }]);
   const [subtotalDiscount, setSubtotalDiscount] = useState<number>(0);
+  const [parcelAmount, setParcelAmount,] = useState<number>(0);
   const [sleeveConfigs, setSleeveConfigs] = useState<Record<string, any>>({});
+
+  // Fetch states when the component mounts
+  // useEffect(() => {
+  //   const fetchStates = async () => {
+  //     try {
+  //       const response = await axios.get('/api/statelist'); // Adjust the URL based on your API
+  //       setStateList(response.data); // Assuming response is an array of states
+  //     } catch (error) {
+  //       message.error('Failed to fetch states');
+  //     }
+  //   };
+
+  //   fetchStates();
+  // }, []);
+
+  // // Handle state change
+  // const handleStateChange = (stateId) => {
+  //   setSelectedState(stateId);
+  // };
 
   // Fetch models
   const getModels = useCallback(async () => {
@@ -335,6 +382,11 @@ const NewOrders: React.FC = () => {
     const discount = parseFloat(value) || 0;
     setSubtotalDiscount(discount);
   };
+   // Handle subtotal parcel change
+  const handleParcelChange = (value: string) => {
+    const discount = parseFloat(value) || 0;
+    setParcelAmount(discount);
+  };
 
   // Calculate totals for display with subtotal discount
   const calculateTotals = () => {
@@ -350,15 +402,20 @@ const NewOrders: React.FC = () => {
 
     // Apply subtotal discount
     const discountedSubtotal = Math.max(0, subTotal - subtotalDiscount);
+    const order_amount= Math.max(0, subTotal - subtotalDiscount+parcelAmount);
 
-    const cgst = discountedSubtotal * 0.025; // 2.5%
+    const cgst = discountedSubtotal * 0.025;// 2.5%
     const sgst = discountedSubtotal * 0.025; // 2.5%
     const grandTotal = discountedSubtotal + cgst + sgst;
+    // const parcelValue = discountedSubtotal + parcel; // parcel is the input field value
+
 
     return {
       rawSubTotal: subTotal,
+      parcel:parcelAmount,
       subTotal: discountedSubtotal,
       discount: subtotalDiscount,
+      orderamt:order_amount,
       cgst,
       sgst,
       grandTotal,
@@ -367,14 +424,23 @@ const NewOrders: React.FC = () => {
 
   // Handle full submission
   const handleSubmit = async () => {
-    const customerValues = await customerForm.validateFields();
-    const itemValues = await itemForm.validateFields();
-    const remarksValues = await remarksForm.validateFields();
-
-    if (!customerValues || !itemValues || !remarksValues) {
+    let customerValues, itemValues, remarksValues, shippedValues;
+    console.log({customerForm});
+    
+    try {
+      customerValues = await customerForm.validateFields();
+      itemValues = await itemForm.validateFields();
+      remarksValues = await remarksForm.validateFields();
+      shippedValues = await shippedForm.validateFields(); // Validate shipment details form
+    } catch (err) {
+      notify('Please fill all required fields.', 'warning');
       return;
     }
-
+    
+    if (!customerValues || !itemValues || !remarksValues || !shippedValues) {
+      return;
+    }
+    
     // Get current form values for items
     const currentData = itemValues.data || {};
 
@@ -392,8 +458,12 @@ const NewOrders: React.FC = () => {
       const { data } = await generateOrderId(get); // generate orderId
 
       const formData = new FormData();
-
+      console.log({customerValues})
       if (userType === 1) {
+        const selectedState = customerValues.state?.value
+          ? JSON.parse(customerValues.state.value)
+          : null;
+
         formData.append('is_exist', 'false');
         formData.append('name', customerValues.customerName);
         formData.append('address1', customerValues.address1);
@@ -401,12 +471,45 @@ const NewOrders: React.FC = () => {
         formData.append('mobile_number1', customerValues.mobile_number1);
         formData.append('mobile_number2', customerValues.mobile_number2 || '');
         formData.append('email', customerValues.email || '');
+        formData.append('state', selectedState?.id?.toString() || '');
         formData.append('gst_no', customerValues.gstn || '');
         formData.append('business_name', customerValues.businessName);
       } else {
         formData.append('is_exist', 'true');
         formData.append('customer', customerValues.existingUser);
       }
+      // Shipment details (if "same as customer" is not selected)
+      if (shippedValues.sameAsCustomer) {
+        formData.append('sh_is_exist', 'true');
+
+        if (userType === 1) {
+          // Shipment is same as manually entered customer
+          formData.append('sh_name', customerValues.customerName);
+          formData.append('sh_business_name', customerValues.businessName || '');
+          formData.append('sh_address1', customerValues.address1);
+          formData.append('sh_mobile_number1', customerValues.mobile_number1);
+          formData.append('shipment_email', customerValues.email || '');
+        } else if (userType === 2) {
+          // Shipment is same as selected existing user
+          formData.append('sh_name', customerValues.existingUser);
+          
+        }
+      } else {
+        // Custom shipment address entered
+        const selectedState = shippedValues.state?.value
+          ? JSON.parse(shippedValues.state.value)
+          : null;
+
+        formData.append('sh_is_exist', 'false');
+        formData.append('sh_name', shippedValues.customerName);
+        formData.append('sh_business_name', shippedValues.businessName || '');
+        formData.append('sh_address1', shippedValues.shaddress1);
+        formData.append('sh_mobile_number1', shippedValues.sh_mobile_number1);
+        formData.append('shipment_email', shippedValues.shipmentEmail || '');
+        formData.append('sh_state', selectedState?.id?.toString() || '');
+        formData.append('gst_no', customerValues.gstn || '');
+      }
+            
 
       formData.append(
         'delivery_date',
@@ -416,6 +519,7 @@ const NewOrders: React.FC = () => {
       formData.append('net_cost', subTotal.toString());
       formData.append('remarks', remarksValues?.remarks || '');
       formData.append('discount', subtotalDiscount.toString());
+      formData.append('parcel', parcelAmount.toString());
 
       const items = Object.keys(itemValues.data || {}).map((key) => {
         const row = itemValues.data[key];
@@ -798,6 +902,12 @@ const NewOrders: React.FC = () => {
           userType={userType}
           setUserType={setUserType}
         />
+        <ShippedDetails
+          shippedForm={shippedForm}
+          // setLoading={setLoading}
+          userType={userType}
+          // setUserType={setUserType}
+        />
         {/* Item Details Table */}
         <div className="relative p-3 bg-white rounded-md md:p-5">
           <Form
@@ -868,6 +978,7 @@ const NewOrders: React.FC = () => {
                 <span className="font-medium">Subtotal:</span>
                 <span>{subTotal.toFixed(2)}</span>
               </div>
+            
 
               <div className="flex justify-between w-64">
                 <span className="font-medium">CGST (2.5%):</span>
@@ -884,6 +995,51 @@ const NewOrders: React.FC = () => {
                 <span className="font-bold">{grandTotal.toFixed(2)}</span>
               </div>
             </div>
+
+            {/* <div>
+                <div className="flex items-center justify-between w-64">
+                <span className="font-medium">Parcel(Service Charge 18%):</span>
+                <Form.Item
+                  name="parcel"
+                  className="!mb-0"
+                  rules={[
+                    {
+                      validator: (_, value) =>
+                        value && parseFloat(value) < 0
+                          ? Promise.reject(new Error('Cannot be negative'))
+                          : Promise.resolve(),
+                    },
+                    {
+                      validator: (_, value) =>
+                        value && isNaN(parseFloat(value))
+                          ? Promise.reject(new Error('Must be a valid number'))
+                          : Promise.resolve(),
+                    },
+                    {
+                      validator: (_, value) =>
+                        value && parseFloat(value) > rawSubTotal
+                          ? Promise.reject(new Error('Cannot exceed total'))
+                          : Promise.resolve(),
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder="0.00"
+                    className="w-32 text-right h-9"
+                    value={parcelAmount || ''}
+                    onChange={(e) => handleParcelChange(e.target.value)}
+                    onInput={(e) => {
+                      e.currentTarget.value = e.currentTarget.value.replace(
+                        /[^0-9.]/g,
+                        '',
+                      );
+                    }}
+                  />
+                </Form.Item>
+              </div>
+              <div><span className="font-medium">Order Amount:</span>
+                <span></span></div>
+            </div> */}
 
             <div className="grid justify-between grid-cols-1 gap-5 mt-3 md:grid-cols-3">
               <Form.Item
@@ -939,6 +1095,8 @@ const CustomerDetails: React.FC<any> = ({
   const [customers, setCustomers] = useState<any[]>([]);
   const [customerDetails, setCustomerDetails] = useState<any>(null);
   const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
+  const [states, setStates] = useState<{ id: number; name: string }[]>([]);
+  
 
   const onChange = (e: any) => {
     setUserType(e.target.value);
@@ -956,6 +1114,21 @@ const CustomerDetails: React.FC<any> = ({
     },
     [get],
   );
+  // Fetch existing customers with search
+  useEffect(() => {
+  const getStates = async () => {
+    try {
+      const { data } = await fetchStates(get);
+      setStates(data);  // Assuming `data` is an array of state names or objects
+    } catch (error) {
+      notify('Failed to fetch states', 'error');
+    }
+    };
+
+
+  getStates();
+}, [get]);
+
 
   // Handle GST verification
   const handleGSTVerification = async (gstn: string) => {
@@ -1013,8 +1186,17 @@ const CustomerDetails: React.FC<any> = ({
   useEffect(() => {
     if (userType === 2) {
       fetchCustomers();
+      // fetchStates();
     }
   }, [userType, fetchCustomers]);
+
+
+  
+  // Handle clear event to refetch full customer list
+  // const handleClear = () => {
+  //   fetchCustomers();
+  // };
+
 
   return (
     <Form
@@ -1057,7 +1239,7 @@ const CustomerDetails: React.FC<any> = ({
             label="Business Name"
             name="businessName"
             rules={[
-              { required: true, message: 'Please enter the Business Name' },
+              {  message: 'Please enter the Business Name' },
             ]}
           >
             <Input
@@ -1153,6 +1335,26 @@ const CustomerDetails: React.FC<any> = ({
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
+           <Form.Item
+  label="State"
+  name="state"
+  rules={[{ required: true }]}
+>
+  <Select
+  placeholder="Select a State"
+  showSearch
+  labelInValue
+  className="w-full"
+  optionFilterProp="children"
+>
+  {states.map((state) => (
+    <Select.Option key={state.id} value={JSON.stringify(state)}>
+      {state.name}
+    </Select.Option>
+  ))}
+</Select>
+</Form.Item>
+
 
           <Form.Item
             className="!mb-0"
@@ -1224,13 +1426,297 @@ const CustomerDetails: React.FC<any> = ({
                   <span className="font-semibold text-gray-950">Mobile:</span>{' '}
                   {customerDetails?.mobile_number1}
                 </div>
+                <div>
+                <span className="font-semibold text-gray-950">State</span>{' '}
+                {customerDetails?.state?.name || customerDetails?.state__name}
+              </div>
               </div>
             </div>
           )}
+          
+        </div>
+      )}
+    
+    </Form>
+  );
+
+  
+};
+const ShippedDetails: React.FC<any> = ({
+  shippedForm,
+  setLoading,
+  userType,
+  setUserType,
+}) => {
+  const { get } = useApiJSON();
+  const [shippedcustomer, setShippedCustomers] = useState<any[]>([]);
+  const [shippedcustomerDetails, setShippedCustomerDetails] = useState<any>(null);
+  const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
+  const [states, setStates] = useState<{ id: number; name: string }[]>([]);
+  const [sameAsCustomer, setSameAsCustomer] = useState(false);
+
+  const GST_PATTERN =
+    /^[0-3][0-9][A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
+  const isChecked = e.target.checked;
+  console.log("Same as Customer:", isChecked);
+
+  setSameAsCustomer(isChecked);
+
+  // Check userType immediately (you can access it here if it's in scope)
+  if (isChecked && userType === 1) {
+    console.log("Checkbox checked AND userType === 1");
+  }
+  else if (isChecked && userType === 2) {
+    console.log("Checkbox checked AND userType === 1");
+  }
+};
+  useEffect(() => {
+  if (sameAsCustomer && userType === 1) {
+    console.log("Same as Customer is checked AND userType is New User (1)");
+  }
+}, [sameAsCustomer, userType]);
+
+  const fetchCustomers = useCallback(async (searchTerm = '') => {
+    try {
+      const { data } = await getCustomers(get, searchTerm);
+      setShippedCustomers(data);
+    } catch {
+      notify('Failed to fetch existing customers', 'error');
+    }
+  }, [get]);
+
+  useEffect(() => {
+    const fetchAllStates = async () => {
+      try {
+        const { data } = await fetchStates(get);
+        setStates(data);
+      } catch {
+        notify('Failed to fetch states', 'error');
+      }
+    };
+    fetchAllStates();
+  }, [get]);
+
+  const handleGSTVerification = async (gstn: string) => {
+    setLoading(true);
+    try {
+      if (gstn) {
+        const { data } = await GstVerification(gstn);
+        if (data?.taxpayerInfo) {
+          shippedForm.setFieldsValue({
+            businessName: data?.taxpayerInfo?.tradeNam,
+          });
+          setIsBusinessNameDisabled(true);
+          notify('Business name auto-filled successfully!', 'success');
+        } else {
+          setIsBusinessNameDisabled(false);
+          notify('Invalid GST Number or details not found.', 'error');
+        }
+      } else {
+        setIsBusinessNameDisabled(false);
+      }
+    } catch {
+      setIsBusinessNameDisabled(false);
+      notify('Failed to verify GST Number. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const debouncedGSTVerification = useCallback(
+    debounce((value: string) => handleGSTVerification(value), 500),
+    [handleGSTVerification]
+  );
+
+  const handleGSTChange = (value: string) => {
+    if (value && GST_PATTERN.test(value)) {
+      debouncedGSTVerification(value);
+    } else {
+      setIsBusinessNameDisabled(false);
+    }
+  };
+
+  const onCheckboxChange = (checkedValues: number[]) => {
+    const lastSelected = checkedValues[checkedValues.length - 1];
+    setUserType([lastSelected]);
+  };
+
+  const shhandleClear = () => {
+    setShippedCustomerDetails(null);
+  };
+
+  const handleSearch = (searchTerm: string) => {
+    fetchCustomers(searchTerm);
+  };
+
+  useEffect(() => {
+    if (sameAsCustomer) {
+      const customerValues = shippedForm.getFieldsValue();
+      shippedForm.setFieldsValue({
+        customerName: customerValues.customerName,
+        businessName: customerValues.businessName,
+        email: customerValues.email,
+        address1: customerValues.address1,
+        address2: customerValues.address2,
+        mobile_number1: customerValues.mobile_number1,
+        mobile_number2: customerValues.mobile_number2,
+        state: customerValues.state,
+        gstn: customerValues.gstn,
+      });
+      setIsBusinessNameDisabled(true);
+    } else {
+      shippedForm.setFieldsValue({
+        customerName: '',
+        businessName: '',
+        email: '',
+        address1: '',
+        address2: '',
+        mobile_number1: '',
+        mobile_number2: '',
+        state: undefined,
+        gstn: '',
+      });
+      setIsBusinessNameDisabled(false);
+    }
+  }, [sameAsCustomer, shippedForm]);
+
+  return (
+    <Form form={shippedForm} layout="vertical" className="p-3 bg-white rounded-md md:p-5">
+      <h5 className="mb-4 text-xl font-medium flex items-center justify-between">
+        Shipped Details:
+        <Form.Item name="sameAsCustomer" valuePropName="checked" className="mb-0">
+          <Checkbox checked={sameAsCustomer} onChange={handleSameAsCustomerChange}>
+            Same as Customer Details
+          </Checkbox>
+        </Form.Item>
+      </h5>
+
+      {!sameAsCustomer && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 custom-application-form">
+          <Form.Item
+            label="Customer Name"
+            name="customerName"
+            rules={[{ required: true, message: 'Please enter the Customer Name' }]}
+          >
+            <Input placeholder="Enter customer name" className="w-full py-2 h-9" />
+          </Form.Item>
+
+          <Form.Item
+            label="Business Name"
+            name="businessName"
+            rules={[{ message: 'Please enter the Business Name' }]}
+          >
+            <Input
+              placeholder="Enter business name"
+              className="w-full h-9"
+              disabled={isBusinessNameDisabled}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[{ type: 'email', message: 'Invalid email format' }]}
+          >
+            <Input placeholder="Enter email" className="w-full py-2 h-9" />
+          </Form.Item>
+
+          <Form.Item
+            label="Address 1"
+            name="shaddress1"
+            rules={[{ required: true, message: 'Please enter Address 1' }]}
+          >
+            <Input placeholder="Enter address 1" className="w-full py-2 h-9" />
+          </Form.Item>
+
+          <Form.Item label="Address 2" name="address2">
+            <Input placeholder="Enter address 2" className="w-full py-2 h-9" />
+          </Form.Item>
+
+          <Form.Item
+            label="Mobile 1"
+            name="sh_mobile_number1"
+            rules={[
+              { required: true, message: 'Please enter Mobile' },
+              {
+                pattern: /^\d{10}$/,
+                message: 'Mobile must be exactly 10 digits',
+              },
+            ]}
+          >
+            <Input
+              type="tel"
+              placeholder="Enter mobile"
+              onInput={(e) =>
+                (e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''))
+              }
+              className="w-full py-2 h-9"
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Mobile 2"
+            name="mobile_number2"
+            rules={[
+              {
+                validator: (_, value) =>
+                  !value || /^\d{10}$/.test(value)
+                    ? Promise.resolve()
+                    : Promise.reject(new Error('Mobile must be exactly 10 digits')),
+              },
+            ]}
+          >
+            <Input
+              type="tel"
+              placeholder="Enter mobile 2"
+              onInput={(e) =>
+                (e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''))
+              }
+              className="w-full py-2 h-9"
+            />
+          </Form.Item>
+
+          <Form.Item label="State" name="state" rules={[{ required: true }]}>
+            <Select
+              placeholder="Select a State"
+              showSearch
+              labelInValue
+              className="w-full"
+              optionFilterProp="children"
+            >
+              {states.map((state) => (
+                <Select.Option key={state.id} value={JSON.stringify(state)}>
+                  {state.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="GSTN (Optional)"
+            name="gstn"
+            rules={[
+              {
+                pattern: GST_PATTERN,
+                message: 'Please enter a valid GSTIN (e.g., 22ABCDE1234F1Z5)',
+              },
+            ]}
+          >
+            <Input
+              placeholder="Enter GST Number"
+              className="w-full h-9"
+              onChange={(e) => handleGSTChange(e.target.value)}
+            />
+          </Form.Item>
         </div>
       )}
     </Form>
   );
 };
+
+
+
 
 export default NewOrders;

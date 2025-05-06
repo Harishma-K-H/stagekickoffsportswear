@@ -85,3 +85,11 @@ export const newOrder = async (
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
+// Define the get states list function
+export const fetchStates = async (
+  get: (url: string) => Promise<any>,
+): Promise<any> => {
+  const response = await get('/state_list/');
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
