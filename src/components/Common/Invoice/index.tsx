@@ -137,26 +137,27 @@ const Invoice: React.FC<{
               {created_by?.branch}
             </span>
           </h5>
-          <p className="text-xs">
-            {created_by?.address} <br />
-            {created_by?.district}, {created_by?.state}, {created_by?.pincode}{' '}
-            <br />
-            {created_by?.GSTN && `GSTN: ${created_by?.GSTN}`}
-            <br />
-            <div className="flex justify-end gap-3">
-              {created_by?.phn_no && (
-                <span className="flex items-center gap-1">
-                  <FaPhoneAlt className="w-3.5 h-3.w-3.5" />{' '}
-                  {created_by?.phn_no}
-                </span>
-              )}
-              {created_by?.email && (
-                <span className="flex items-center gap-1">
-                  <MdEmail className="w-4 h-4" /> {created_by?.email}
-                </span>
-              )}
-            </div>
-          </p>
+           <p className="text-xs">
+        {created_by?.address} <br />
+        {created_by?.district}, {created_by?.state}, {created_by?.pincode}{' '}
+        <br />
+        {created_by?.GSTN && `GSTN: ${created_by?.GSTN}`}
+        <br />
+      </p>
+      {/* Move the div outside of the <p> */}
+      <div className="flex justify-end gap-3">
+        {created_by?.phn_no && (
+          <span className="flex items-center gap-1">
+            <FaPhoneAlt className="w-3.5 h-3.5" />{' '}
+            {created_by?.phn_no}
+          </span>
+        )}
+        {created_by?.email && (
+          <span className="flex items-center gap-1">
+            <MdEmail className="w-4 h-4" /> {created_by?.email}
+          </span>
+        )}
+      </div>
         </div>
       </div>
       <h5 className="relative z-20 mb-2 text-xl font-extrabold text-center text-black bg-white">
