@@ -126,7 +126,7 @@ const Invoice: React.FC<{
       {/* Header */}
       <div className="grid items-end grid-cols-1 gap-4 md:grid-cols-2 print:grid-cols-2">
         <img
-          src={`${import.meta.env.VITE_MEDIA_BASE_PATH}${created_by?.logo}`}
+          src={`${import.meta.env.VITE_MEDIA_BASE_PATH.replace(/\/$/, '')}${created_by?.logo}`}
           className="max-w-[200px]"
         />
         <div className="text-right">
