@@ -125,10 +125,13 @@ const Invoice: React.FC<{
     >
       {/* Header */}
       <div className="grid items-end grid-cols-1 gap-4 md:grid-cols-2 print:grid-cols-2">
-        <img
-          src={`${import.meta.env.VITE_MEDIA_BASE_PATH}${created_by.logo}`}
-          className="max-w-[200px]"
-        />
+        {created_by?.logo ? (
+          <img
+            src={`${import.meta.env.VITE_MEDIA_BASE_PATH}${created_by.logo}`}
+            className="max-w-[200px]"
+            alt="Logo"
+          />
+        ) : null}
         <div className="text-right">
           <h5 className="text-lg font-extrabold leading-5 ">
             KICKOFF SPORTS WEAR
