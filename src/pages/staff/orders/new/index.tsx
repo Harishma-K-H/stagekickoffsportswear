@@ -1573,13 +1573,14 @@ const ShippedDetails: React.FC<any> = ({
             />
           </Form.Item>
 
-          <Form.Item
+        
+          {/* <Form.Item
             label="Email"
             name="email"
             rules={[{ type: 'email', message: 'Invalid email format' }]}
           >
             <Input placeholder="Enter email" className="w-full py-2 h-9" />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             label="Address 1"
@@ -1589,9 +1590,10 @@ const ShippedDetails: React.FC<any> = ({
             <Input placeholder="Enter address 1" className="w-full py-2 h-9" />
           </Form.Item>
 
-          <Form.Item label="Address 2" name="address2">
+          
+          {/* <Form.Item label="Address 2" name="address2">
             <Input placeholder="Enter address 2" className="w-full py-2 h-9" />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             label="Mobile 1"
@@ -1617,7 +1619,7 @@ const ShippedDetails: React.FC<any> = ({
             />
           </Form.Item>
 
-          <Form.Item
+         {/* <Form.Item
             label="Mobile 2"
             name="mobile_number2"
             rules={[
@@ -1642,7 +1644,7 @@ const ShippedDetails: React.FC<any> = ({
               }
               className="w-full py-2 h-9"
             />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item label="State" name="state" rules={[{ required: true }]}>
             <Select
@@ -1660,7 +1662,7 @@ const ShippedDetails: React.FC<any> = ({
             </Select>
           </Form.Item>
 
-          <Form.Item
+         {/* <Form.Item
             label="GSTN (Optional)"
             name="gstn"
             rules={[
@@ -1675,7 +1677,7 @@ const ShippedDetails: React.FC<any> = ({
               className="w-full h-9"
               onChange={(e) => handleGSTChange(e.target.value)}
             />
-          </Form.Item>
+          </Form.Item> */}
         </div>
       )}
     </Form>
