@@ -123,45 +123,47 @@ const Invoice: React.FC<{
           print:relative
           [@page{margin:15mm_15mm_15mm_15mm}]"
     >
-      {/* Header */}
-      <div className="grid items-end grid-cols-1 gap-4 md:grid-cols-2 print:grid-cols-2">
-        {created_by?.logo ? (
-          <img
-            src={`${import.meta.env.VITE_MEDIA_BASE_PATH}${created_by.logo}`}
-            className="max-w-[200px]"
-            alt="Logo"
-          />
-        ) : null}
-        <div className="text-right">
-          <h5 className="text-lg font-extrabold leading-5 ">
-            KICKOFF SPORTS WEAR
-            <br />
-            <span className="text-sm font-semibold uppercase">
-              {created_by?.branch}
-            </span>
-          </h5>
-           <p className="text-xs">
-            {created_by?.address} <br />
-            {created_by?.district}, {created_by?.state}, {created_by?.pincode}{' '}
-            <br />
-            {created_by?.GSTN && `GSTN: ${created_by?.GSTN}`}
-            <br />
-            <div className="flex justify-end gap-3">
-              {created_by?.phn_no && (
-                <span className="flex items-center gap-1">
-                  <FaPhoneAlt className="w-3.5 h-3.w-3.5" />{' '}
-                  {created_by?.phn_no}
-                </span>
-              )}
-              {created_by?.email && (
-                <span className="flex items-center gap-1">
-                  <MdEmail className="w-4 h-4" /> {created_by?.email}
-                </span>
-              )}
-            </div>
-          </p>
+       {/* Header */}
+      <div className="flex justify-between items-center gap-4">
+      {created_by?.logo ? (
+        <img
+          src={`${import.meta.env.VITE_MEDIA_BASE_PATH}${created_by.logo}`}
+          className="max-w-[200px]"
+          alt="Logo"
+        />
+      ) : null}
+    
+      <div className="text-right">
+        <h5 className="text-lg font-extrabold leading-5">
+          KICKOFF SPORTS WEAR
+          <br />
+          <span className="text-sm font-semibold uppercase">
+            {created_by?.branch}
+          </span>
+        </h5>
+    
+        <div className="text-xs">
+          {created_by?.address} <br />
+          {created_by?.district}, {created_by?.state}, {created_by?.pincode}
+          <br />
+          {created_by?.GSTN && `GSTN: ${created_by?.GSTN}`}
+          <div className="flex justify-end gap-3 mt-1">
+            {created_by?.phn_no && (
+              <span className="flex items-center gap-1">
+                <FaPhoneAlt className="w-3.5 h-3.5" />
+                {created_by?.phn_no}
+              </span>
+            )}
+            {created_by?.email && (
+              <span className="flex items-center gap-1">
+                <MdEmail className="w-4 h-4" />
+                {created_by?.email}
+              </span>
+            )}
+          </div>
         </div>
       </div>
+    </div>
       <h5 className="relative z-20 mb-2 text-xl font-extrabold text-center text-black bg-white">
         <span className="px-5 text-lg bg-white">
           {printForOfficeInvoice
