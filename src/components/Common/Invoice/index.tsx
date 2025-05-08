@@ -191,6 +191,8 @@ const Invoice: React.FC<{
                 {customer?.address2 && `, ${customer.address2}`} <br />
                 {customer?.mobile_number1} <br />
                 {customer?.gst_no && `GSTN: ${customer?.gst_no}`}
+                {customer?.state_name &&
+                `${customer.state_name}`}
               </p>
             </>
           ) : (
@@ -205,7 +207,9 @@ const Invoice: React.FC<{
                 {customer?.address1}
                 {customer?.address2 && `, ${customer.address2}`} <br />
                 {customer?.mobile_number1} <br />
-                {customer?.gst_no && `GSTN: ${customer?.gst_no}`}
+                {customer?.gst_no && `GSTN: ${customer?.gst_no}`}<br/>
+                {customer?.state_name &&
+                `${customer.state_name}`}
               </p>
             </>
           )}
@@ -452,6 +456,8 @@ const Invoice: React.FC<{
                 {shipped_customer?.mobile_number1} <br />
                 {shipped_customer?.gst_no &&
                   `GSTN: ${shipped_customer?.gst_no}`}
+                {shipped_customer?.state_name &&
+                `${shipped_customer.state_name}`}
               </p>
             </>
           )}
