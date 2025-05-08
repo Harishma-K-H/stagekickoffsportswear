@@ -45,7 +45,7 @@ const Invoice: React.FC<{
       ? [
           {
             heading: 'CGST (2.5%)',
-            value: (parseInt(gst) / 2).toFixed(2),
+            value: (parseFloat(gst) / 2).toFixed(2),
             visibility: true,
             rowClassName: '!border-b-0',
             labelColumnClassName: '!text-right pr-4 w-[60%]',
@@ -53,7 +53,7 @@ const Invoice: React.FC<{
           },
           {
             heading: 'SGST (2.5%)',
-            value: (parseInt(gst) / 2).toFixed(2),
+            value: (parseFloat(gst) / 2).toFixed(2),
             visibility: true,
             rowClassName: '!border-b-0',
             labelColumnClassName: '!text-right pr-4 w-[60%]',
@@ -63,7 +63,7 @@ const Invoice: React.FC<{
       : [
           {
             heading: 'IGST (5%)',
-            value: parseInt(gst).toFixed(2),
+            value: Number(parseFloat(gst).toFixed(2)),
             visibility: true,
             rowClassName: '!border-b-0',
             labelColumnClassName: '!text-right pr-4 w-[60%]',
