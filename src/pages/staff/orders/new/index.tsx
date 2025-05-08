@@ -1662,7 +1662,7 @@ const ShippedDetails: React.FC<any> = ({
             </Select>
           </Form.Item>
 
-         {/* <Form.Item
+           <Form.Item
             label="GSTN (Optional)"
             name="gstn"
             rules={[
@@ -1677,7 +1677,7 @@ const ShippedDetails: React.FC<any> = ({
               className="w-full h-9"
               onChange={(e) => handleGSTChange(e.target.value)}
             />
-          </Form.Item> */}
+          </Form.Item> 
         </div>
       )}
     </Form>
