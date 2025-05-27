@@ -51,12 +51,28 @@ const NewOrders: React.FC = () => {
   const [materialOptions, setMaterialOptions] = useState<Record<string, any[]>>(
     {},
   );
+  const [priceOverrides, setPriceOverrides] = useState<{ [key: string]: string }>({});
   const [printType, setPrintType] = useState<Record<string, any[]>>({});
   const [size] = useState<any[]>([
     { value: '24', label: '24' },
     { value: '26', label: '26' },
     { value: '28', label: '28' },
     { value: '30', label: '30' },
+    { value: '32', label: '32' },
+    { value: '34', label: '34' },
+    { value: '36', label: '36' },
+    { value: '38', label: '38' },
+    { value: '40', label: '40' },
+    { value: '42', label: '42' },
+    { value: '44', label: '44' },
+    { value: '46', label: '46' },
+    { value: '48', label: '48' },
+    { value: '50', label: '50' },
+    { value: '52', label: '52' },
+    { value: '54', label: '54' },
+    { value: '56', label: '56' },
+    { value: '58', label: '58' },
+    { value: '60', label: '60' },
   ]);
   const [baseCosts, setBaseCosts] = useState<Record<string, number>>({});
   const [totalCosts, setTotalCosts] = useState<Record<string, number>>({});
@@ -97,6 +113,7 @@ const NewOrders: React.FC = () => {
         setModelName((prev: any) => ({ ...prev, [rowKey]: modelName }));
         const { data } = await fetchMaterial(get, modelId);
         setMaterialOptions((prev) => ({ ...prev, [rowKey]: data }));
+        
       } catch (error: any) {
         setMaterialOptions((prev) => ({ ...prev, [rowKey]: [] }));
         notify(error?.response?.data?.error, 'error');
@@ -104,7 +121,7 @@ const NewOrders: React.FC = () => {
     },
     [get],
   );
-
+  
   // Fetch print types
   const getPrintTypes = useCallback(
     async (modelId: string | number, rowKey: string) => {
@@ -221,12 +238,14 @@ const NewOrders: React.FC = () => {
     console.log(deletedItem, 'deletedItem');
 
     if (deletedItem?.id) {
-      setDeletedItemIds((prev) => [...prev, deletedItem.id]);
+      setDeletedItemIds((prev) => [...prev, deletedItem.order_item_id]);
     }
 
     const newData = dataSource.filter((item) => item.key !== key);
     setDataSource(newData);
 
+
+    
     // Clean up states for the deleted row
     setBaseCosts((prev) => {
       const { [key as string]: _, ...rest } = prev;
@@ -266,8 +285,7 @@ const NewOrders: React.FC = () => {
         const modelOption = models.find((m: any) => m.id === row?.model);
         const currentConfig = getSleeveCaseConfig(
           modelOption?.name,
-          materialOptions[rowKey]?.find((m: any) => m.id === row?.material)
-            ?.name,
+          materialOptions[rowKey]?.find((m: any) => m.id === row?.material)?.name,
         );
 
         // Build validation conditions
@@ -346,7 +364,7 @@ const NewOrders: React.FC = () => {
 
     // Apply subtotal discount
     const discountedSubtotal = Math.max(0, subTotal - subtotalDiscount);
-
+    const discountAmount = ((subTotal-(discountedSubtotal * 0.025+discountedSubtotal * 0.025))*0.05);
     const cgst = discountedSubtotal * 0.025; // 2.5%
     const sgst = discountedSubtotal * 0.025; // 2.5%
     const grandTotal = discountedSubtotal + cgst + sgst;
@@ -354,10 +372,10 @@ const NewOrders: React.FC = () => {
     return {
       rawSubTotal: subTotal,
       subTotal: discountedSubtotal,
-      discount: subtotalDiscount,
       cgst,
       sgst,
       grandTotal,
+      discount: discountAmount
     };
   };
 
@@ -367,6 +385,7 @@ const NewOrders: React.FC = () => {
     try {
       if (orderId === null || orderId === undefined) return; // Skip if orderId is null
       const itemValues = await itemForm.validateFields();
+      console.log("item values...",itemValues)
       const remarksValues = await remarksForm.validateFields();
 
       if (!itemValues || !remarksValues) {
@@ -401,6 +420,11 @@ const NewOrders: React.FC = () => {
 
       const items = Object.keys(itemValues.data || {}).map((key) => {
         const row = itemValues.data[key];
+        const item_id = dataSource.find((ds) => ds.key === key)?.item_id || null;
+
+        
+        console.log("Item ITEMIDROW3333:", row.id);
+        console.log("row data for key", key, row);
         const item: any = {
           name: modelName[key],
           model: row.model,
@@ -408,10 +432,13 @@ const NewOrders: React.FC = () => {
           print_type_id: row.print_type,
           size: parseInt(row.size, 10),
           qty: parseInt(row.quantity, 10),
+          item_id: item_id || null, 
+         
           // discount: 0, // No per-product discount anymore
           total_item_cost: totalCosts[key],
         };
-
+        console.log("Item ITEMIDROW:", row.id);
+        console.log("Row data for key", key, row);
         if (
           modelName[key] !== 'SHORTS' &&
           modelName[key] !== 'LOWER' &&
@@ -422,17 +449,22 @@ const NewOrders: React.FC = () => {
 
         return item;
       });
+      
 
       items.forEach((item, index) => {
         formData.append(`items[${index}][name]`, item.name);
-        formData.append(`items[${index}][model]`, item.model.toString());
+        formData.append(`items[${ index }][model]`, item.model.toString());
+        console.log("Item Material:", item.material);
+        formData.append(`items[${index}][item_id]`, item.item_id || null);
+        console.log("Item ITEMID:", item.id);
+        console.log("Item ITEMMMMMMM:", item.item_id);
         formData.append(
           `items[${index}][material]`,
-          item?.material?.toString(),
+          item?.material || null,  // Ensure you're appending the material's ID
         );
         formData.append(
           `items[${index}][print_type]`,
-          item.print_type_id.toString(),
+          item.print_type_id || null, 
         );
         formData.append(`items[${index}][size]`, item.size.toString());
         formData.append(`items[${index}][qty]`, item.qty.toString());
@@ -449,7 +481,12 @@ const NewOrders: React.FC = () => {
       });
 
       // Call update API instead of create
-      await updateOrderById(FormDataPut, formData);
+      const response = await updateOrderById(FormDataPut, formData);
+      if (response?.data?.refund_alert) {
+        notify(response.data.refund_alert, 'warning');
+        window.alert(response.data.refund_alert);
+      }
+      console.log('Submitting order update...', formData);
       navigate(Paths.Staff.orders.index);
       notify('Order updated successfully!', 'success');
     } catch (error: any) {
@@ -481,6 +518,7 @@ const NewOrders: React.FC = () => {
         const newDataSource = orderDetails.items.map(
           (_item: any, index: number) => ({
             key: String(index),
+            item_id: _item.id, 
           }),
         );
         setDataSource(newDataSource);
@@ -492,20 +530,27 @@ const NewOrders: React.FC = () => {
         };
 
         // Initialize form values for each item
-        orderDetails.items.forEach((item: any, index: number) => {
+        orderDetails.items.forEach((item: any, index: number) =>
+        {
+          // Correctly assign itemId before using it in the object
+          const itemId = item.id || null;
           itemFormValues.data[String(index)] = {
+          
+  
             model: models.find((m) => m.name === item.model)?.id,
-            material: item.material,
-            print_type: item.print_type,
+            material: item.material_id,
+            // material_id: item.material ?.id,
+            print_type: item.print_type_id,
             sleevecase: item.sleeve_case,
+            item_id:itemId,
             size: item.size,
             quantity: item.qty,
           };
-
+          console.log(`Item ID for index ${index}:`, item.id);
           // Set base costs and total costs
           setBaseCosts((prev) => ({
             ...prev,
-            [String(index)]: item.unit_cost,
+            [String(index)]: item.item_cost,
           }));
           setTotalCosts((prev) => ({
             ...prev,
@@ -550,8 +595,8 @@ const NewOrders: React.FC = () => {
     remarksForm,
   ]);
 
-  const { rawSubTotal, subTotal, cgst, sgst, grandTotal } = calculateTotals();
-
+  const { rawSubTotal, subTotal, cgst, sgst, grandTotal, discount} = calculateTotals();
+  console.log("abcddddddddddd",discount)
   // Columns definition
   const defaultColumns: (ColumnTypes[number] & {
     editable?: boolean;
@@ -688,6 +733,11 @@ const NewOrders: React.FC = () => {
             disabled={printType[record.key]?.length == 0 ? true : false}
             size="middle"
             placeholder="Select Print Type"
+            value={record.printType}
+            onChange={(value) => {
+    console.log('Selected Print Type ID:', value); // You can now access the selected ID
+    // Update form state or perform any necessary logic with the selected print type ID
+  }}
             options={
               printType[record.key]?.map((type: any) => ({
                 value: type.id,
@@ -766,24 +816,92 @@ const NewOrders: React.FC = () => {
           <Select size="middle" placeholder="Select size" options={size} />
         </Form.Item>
       ),
-    },
-    {
-      title: 'Price',
-      dataIndex: 'price',
-      align: 'center',
-      width: '8%',
-      render: (_, record) => {
-        const sizeSelected = itemForm.getFieldValue([
-          'data',
-          record.key,
-          'size',
-        ]);
-
-        return sizeSelected && baseCosts[record.key]
-          ? baseCosts[record.key].toFixed(2)
-          : '-';
       },
-    },
+      // {
+      //   title: 'Price',
+      //   dataIndex: 'price',
+      //   align: 'center',
+      //   width: '8%',
+      //   render: (_, record) => {
+      //     const sizeSelected = itemForm.getFieldValue([
+      //       'data',
+      //       record.key,
+      //       'size',
+      //     ]);
+  
+      //     return sizeSelected && baseCosts[record.key]
+      //       ? baseCosts[record.key].toFixed(2)
+      //       : '-';
+      //   },
+      // },
+      {
+        title: 'Price',
+        dataIndex: 'price',
+        align: 'center',
+        width: '8%',
+        render: (_, record) => {
+          const rowKey = record.order_item_id || record.key;
+          const sizeSelected = itemForm.getFieldValue(['data', rowKey, 'size']);
+          const isOverridden = priceOverrides[rowKey];
+          const basePrice = baseCosts[rowKey];
+      
+          if (!sizeSelected) {
+            return <span>-</span>;
+          }
+      
+          // Determine the value to show: overridden price or base price
+          const displayedPrice = isOverridden !== undefined ? isOverridden : (basePrice ? basePrice.toFixed(2) : '');
+      
+          // Set the initial value of the Form.Item
+          // IMPORTANT: Use 'initialValue' here, so when form initializes, it shows this price
+          return (
+            <Form.Item
+              name={['data', rowKey, 'price']}
+              initialValue={displayedPrice}
+              className="!mb-0"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (value && isNaN(parseFloat(value))) {
+                      return Promise.reject('Must be a valid number');
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <Input
+                placeholder="Enter Price"
+                className="w-full h-9"
+                onChange={(e) => {
+                  const newPrice = e.target.value;
+                  if (/^\d*\.?\d*$/.test(newPrice)) {
+                    setPriceOverrides((prev) => ({
+                      ...prev,
+                      [rowKey]: newPrice,
+                    }));
+                    itemForm.setFieldValue(['data', rowKey, 'price'], newPrice);
+                  }
+                }}
+                onBlur={() => {
+                  const current = itemForm.getFieldValue(['data', rowKey, 'price']);
+                  const formatted = parseFloat(current);
+                  if (!isNaN(formatted)) {
+                    const finalVal = formatted.toFixed(2);
+                    setPriceOverrides((prev) => ({
+                      ...prev,
+                      [rowKey]: finalVal,
+                    }));
+                    itemForm.setFieldValue(['data', rowKey, 'price'], finalVal);
+                  }
+                }}
+              />
+            </Form.Item>
+          );
+        },
+      },
+      
+    
     {
       title: 'Quantity',
       dataIndex: 'quantity',
@@ -857,7 +975,7 @@ const NewOrders: React.FC = () => {
           <div className="flex">
             <Breadcrumb rootClass="rounded" />
             <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-              Create new order
+              Update new order
             </h3>
           </div>
         </div>
@@ -888,7 +1006,7 @@ const NewOrders: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between w-64">
-                <span className="font-medium">Discount:</span>
+              <span className="font-medium">Discount: ({discount.toFixed(2)}) </span>
                 <Form.Item
                   name="discount"
                   className="!mb-0"
@@ -988,17 +1106,18 @@ const NewOrders: React.FC = () => {
   );
 };
 
+
 const CustomerDetails: React.FC<any> = ({ customerData }) => {
   return (
     <div className="p-3 bg-gray-100 rounded-md md:p-5">
       <h5 className="mb-4 text-xl font-medium">Customer Details</h5>
       {customerData && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="grid grid-cols-1 gap-x-3 gap-y-2">
-            <div className="flex flex-col">
-              <span className="text-sm text-gray-500">Customer Name</span>
-              <span className="font-medium">{customerData.name}</span>
-            </div>
+          <div className="grid grid-cols-1 gap-x-2 gap-y-0">
+          {/* <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Business Name</span>
+              <span className="font-medium">{customerData.business_name}</span>
+            </div> */}
             <div className="flex flex-col">
               <span className="text-sm text-gray-500">Business Name</span>
               <span className="font-medium">{customerData.business_name}</span>

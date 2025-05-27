@@ -1,7 +1,7 @@
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
-import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
+// import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { Form, Input, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
@@ -39,13 +39,13 @@ const Customers: React.FC = () => {
       dataIndex: 'slNo',
       key: 'slNo',
     },
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      // ...getColumnSearchProps('name'),
-      width: '15%',
-    },
+    // {
+    //   title: 'Name',
+    //   dataIndex: 'name',
+    //   key: 'name',
+    //   // ...getColumnSearchProps('name'),
+    //   width: '15%',
+    // },
     {
       title: 'Business Name',
       dataIndex: 'businessName',
@@ -101,7 +101,7 @@ const Customers: React.FC = () => {
   const tableDataSource = customers?.map((customer: any, i: number) => ({
     key: customer.id,
     slNo: i + 1,
-    name: capitalizeFirstLetterOfEachWord(customer.name),
+    // name: capitalizeFirstLetterOfEachWord(customer.name),
     businessName: customer?.business_name.toUpperCase(),
     mobile: `${customer?.mobile_number1}${customer?.mobile_number2 ? `, ${customer?.mobile_number2}` : ''}`,
     address: `${customer?.address1} ${customer?.address2}`,

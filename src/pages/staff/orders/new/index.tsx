@@ -8,7 +8,7 @@ import { useApiFormData, useApiJSON } from '@services/ApiService/Api.service';
 import { debounce } from '@utils/common/debounce';
 import { getSleeveCaseConfig } from '@utils/sleeveCaseUtils'; // Adjust the import path
 import {
-  Checkbox,
+  // Checkbox,
   DatePicker,
   Form,
   Input,
@@ -18,7 +18,7 @@ import {
   Table,
   TableProps,
 } from 'antd';
-import type { CheckboxChangeEvent } from 'antd/es/checkbox';
+// import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
@@ -49,7 +49,7 @@ const NewOrders: React.FC = () => {
   const [customerForm] = Form.useForm();
   const [remarksForm] = Form.useForm();
 
-  const [shippedForm] = Form.useForm();
+  // const [shippedForm] = Form.useForm();
 
   const [userType, setUserType] = useState<number>(1);
   const [loading, setLoading] = useState(false);
@@ -59,6 +59,7 @@ const NewOrders: React.FC = () => {
   const [materialOptions, setMaterialOptions] = useState<Record<string, any[]>>(
     {},
   );
+  const [priceOverrides, setPriceOverrides] = useState<{ [key: string]: string }>({});
   const [printType, setPrintType] = useState<Record<string, any[]>>({});
   const [size] = useState<any[]>([
     { value: '24', label: '24' },
@@ -161,35 +162,47 @@ const NewOrders: React.FC = () => {
       try {
         const { data } = await fetchItemCost(get, payload);
         const cost = data.cost || 0;
+  
         if (cost === 0) {
           notify(`Item is not valid`, 'warning');
         }
-
-        // Update base cost first
-        setBaseCosts((prev) => {
-          const newCosts = { ...prev, [rowKey]: cost };
-          return newCosts;
-        });
-
-        // Then update row total cost with the new base cost
-        setTimeout(() => {
-          const quantity = itemForm.getFieldValue(['data', rowKey, 'quantity']);
-          if (quantity) {
-            const newTotalCost = calculateRowTotalCost(rowKey, quantity, cost);
-            setTotalCosts((prev) => ({
-              ...prev,
-              [rowKey]: newTotalCost,
-            }));
-          }
-        }, 0);
+  
+        // 1. Update baseCosts
+        setBaseCosts((prev) => ({
+          ...prev,
+          [rowKey]: cost,
+        }));
+  
+        // 2. Update form field only if no override
+        if (!priceOverrides[rowKey]) {
+          itemForm.setFieldValue(['data', rowKey, 'price'], cost.toFixed(2));
+        }
+  
+        // 3. Recalculate total cost
+        const quantity = itemForm.getFieldValue(['data', rowKey, 'quantity']);
+        if (quantity) {
+          const newTotalCost = calculateRowTotalCost(rowKey, quantity, cost);
+          setTotalCosts((prev) => ({
+            ...prev,
+            [rowKey]: newTotalCost,
+          }));
+        }
+  
       } catch (error: any) {
-        notify(error?.response?.data?.error, 'error');
+        console.error('Failed to fetch item cost:', error);
+        notify(error?.response?.data?.error || 'Failed to fetch item cost', 'error');
+        
+        // Reset price and total cost to 0
         setBaseCosts((prev) => ({ ...prev, [rowKey]: 0 }));
         setTotalCosts((prev) => ({ ...prev, [rowKey]: 0 }));
+  
+        // Also optionally clear the price field in the form
+        itemForm.setFieldValue(['data', rowKey, 'price'], '0.00');
       }
     },
-    [get, itemForm],
+    [fetchItemCost, get, itemForm, priceOverrides]
   );
+  
 
   // Calculate row total cost based on base cost and quantity
   const calculateRowTotalCost = (
@@ -295,44 +308,37 @@ const NewOrders: React.FC = () => {
   // Handle form field changes
   const handleFieldChange = (changedFields: any, allFields: any) => {
     const rowData = allFields.data || {};
+  
     Object.keys(rowData).forEach(async (rowKey) => {
       const row = rowData[rowKey];
       const changedField = Object.keys(changedFields.data?.[rowKey] || {})[0];
-
-      // Check if cost-related fields changed
+  
       if (
         ['model', 'material', 'print_type', 'sleevecase', 'size'].includes(
           changedField,
         )
       ) {
-        // Get current model configuration
         const modelOption = models.find((m: any) => m.id === row?.model);
         const currentConfig = getSleeveCaseConfig(
           modelOption?.name,
-          materialOptions[rowKey]?.find((m: any) => m.id === row?.material)
-            ?.name,
+          materialOptions[rowKey]?.find((m: any) => m.id === row?.material)?.name,
         );
-
-        // Build validation conditions
+  
         const isModelValid = !!row?.model;
         const isSizeValid = !!row?.size;
-
-        // Material validation
+  
         const isMaterialValid =
           materialOptions[rowKey]?.length === 0 ||
           (!!row?.material &&
             materialOptions[rowKey]?.some((m: any) => m.id === row.material));
-
-        // Print type validation
+  
         const isPrintTypeValid =
           printType[rowKey]?.length === 0 ||
           (!!row?.print_type &&
             printType[rowKey]?.some((p: any) => p.id === row.print_type));
-
-        // Sleeve validation considering config
+  
         const isSleeveCaseValid = currentConfig.isDisabled || !!row?.sleevecase;
-
-        // Check if all required fields are valid
+  
         if (
           isModelValid &&
           isSizeValid &&
@@ -346,21 +352,34 @@ const NewOrders: React.FC = () => {
             printId: row.print_type || null,
             sleeveCase: currentConfig.isDisabled ? null : row.sleevecase,
           };
-
-          // Add a small delay to ensure all state updates are processed
-          setTimeout(() => {
-            getItemCost(rowKey, payload);
-          }, 100);
+  
+          // Only fetch price if no override
+          if (!priceOverrides[rowKey]) {
+            setTimeout(() => {
+              getItemCost(rowKey, payload);
+            }, 100);
+          }
         }
       } else if (changedField === 'quantity') {
         const quantity = row.quantity;
-        const currentBaseCost = baseCosts[rowKey] || 0;
-        const newTotalCost = calculateRowTotalCost(
-          rowKey,
-          quantity,
-          currentBaseCost,
-        );
-
+        const price = parseFloat(itemForm.getFieldValue(['data', rowKey, 'price']) || 0);
+        const newTotalCost = quantity * price;
+  
+        setTotalCosts((prev) => ({
+          ...prev,
+          [rowKey]: newTotalCost,
+        }));
+      } else if (changedField === 'price') {
+        const price = row.price;
+        const quantity = row.quantity || 0;
+  
+        setPriceOverrides((prev) => ({
+          ...prev,
+          [rowKey]: price,
+        }));
+  
+        const newTotalCost = parseFloat(price || 0) * quantity;
+  
         setTotalCosts((prev) => ({
           ...prev,
           [rowKey]: newTotalCost,
@@ -368,6 +387,8 @@ const NewOrders: React.FC = () => {
       }
     });
   };
+  
+
 
   // Handle subtotal discount change
   const handleDiscountChange = (value: string) => {
@@ -379,51 +400,51 @@ const NewOrders: React.FC = () => {
   const calculateTotals = () => {
     const rowData = itemForm.getFieldsValue().data || {};
     let subTotal = 0;
-
+  
     Object.keys(rowData).forEach((rowKey) => {
       const row = rowData[rowKey];
       if (row?.quantity) {
         subTotal += totalCosts[rowKey] || 0;
       }
     });
-
+  
     // Apply subtotal discount
     const discountedSubtotal = Math.max(0, subTotal - subtotalDiscount);
-
+    const discountAmount = ((subTotal-(discountedSubtotal * 0.025+discountedSubtotal * 0.025))*0.05);
     const cgst = discountedSubtotal * 0.025; // 2.5%
     const sgst = discountedSubtotal * 0.025; // 2.5%
     const grandTotal = discountedSubtotal + cgst + sgst;
-    // const parcelValue = discountedSubtotal + parcel; // parcel is the input field value
-
+  
     return {
       rawSubTotal: subTotal,
       subTotal: discountedSubtotal,
-      discount: subtotalDiscount,
       cgst,
       sgst,
       grandTotal,
+      discount: discountAmount,
     };
+    
   };
-
+  
   // Handle full submission
   const handleSubmit = async () => {
     let customerValues: any,
       itemValues: any,
-      remarksValues: any,
-      shippedValues: any;
+      remarksValues: any;
+      // shippedValues: any;
     console.log({ customerForm });
 
     try {
       customerValues = await customerForm.validateFields();
       itemValues = await itemForm.validateFields();
       remarksValues = await remarksForm.validateFields();
-      shippedValues = await shippedForm.validateFields(); // Validate shipment details form
+      // shippedValues = await shippedForm.validateFields(); // Validate shipment details form
     } catch (err) {
       notify('Please fill all required fields.', 'warning');
       return;
     }
 
-    if (!customerValues || !itemValues || !remarksValues || !shippedValues) {
+    if (!customerValues || !itemValues || !remarksValues) {
       return;
     }
 
@@ -441,6 +462,7 @@ const NewOrders: React.FC = () => {
     try {
       setLoading(true);
       const { subTotal } = calculateTotals();
+      // const { discount } = calculateTotals();
       const { data } = await generateOrderId(get); // generate orderId
 
       const formData = new FormData();
@@ -454,6 +476,7 @@ const NewOrders: React.FC = () => {
         formData.append('name', customerValues.customerName);
         formData.append('address1', customerValues.address1);
         formData.append('address2', customerValues.address2 || '');
+        formData.append('address3', customerValues.address3 || '');
         formData.append('mobile_number1', customerValues.mobile_number1);
         formData.append('mobile_number2', customerValues.mobile_number2 || '');
         formData.append('email', customerValues.email || '');
@@ -465,38 +488,38 @@ const NewOrders: React.FC = () => {
         formData.append('customer', customerValues.existingUser);
       }
       // Shipment details (if "same as customer" is not selected)
-      if (shippedValues.sameAsCustomer) {
-        formData.append('sh_is_exist', 'true');
+      // if (shippedValues.sameAsCustomer) {
+      //   formData.append('sh_is_exist', 'true');
 
-        if (userType === 1) {
-          // Shipment is same as manually entered customer
-          formData.append('sh_name', customerValues.customerName);
-          formData.append(
-            'sh_business_name',
-            customerValues.businessName || '',
-          );
-          formData.append('sh_address1', customerValues.address1);
-          formData.append('sh_mobile_number1', customerValues.mobile_number1);
-          formData.append('shipment_email', customerValues.email || '');
-        } else if (userType === 2) {
-          // Shipment is same as selected existing user
-          formData.append('sh_name', customerValues.existingUser);
-        }
-      } else {
-        // Custom shipment address entered
-        const selectedState = shippedValues.state?.value
-          ? JSON.parse(shippedValues.state.value)
-          : null;
+      //   if (userType === 1) {
+      //     // Shipment is same as manually entered customer
+      //     formData.append('sh_name', customerValues.customerName);
+      //     formData.append(
+      //       'sh_business_name',
+      //       customerValues.businessName || '',
+      //     );
+      //     formData.append('sh_address1', customerValues.address1);
+      //     formData.append('sh_mobile_number1', customerValues.mobile_number1);
+      //     formData.append('shipment_email', customerValues.email || '');
+      //   } else if (userType === 2) {
+      //     // Shipment is same as selected existing user
+      //     formData.append('sh_name', customerValues.existingUser);
+      //   }
+      // } else {
+      //   // Custom shipment address entered
+      //   const selectedState = shippedValues.state?.value
+      //     ? JSON.parse(shippedValues.state.value)
+      //     : null;
 
-        formData.append('sh_is_exist', 'false');
-        formData.append('sh_name', shippedValues.customerName);
-        formData.append('sh_business_name', shippedValues.businessName || '');
-        formData.append('sh_address1', shippedValues.shaddress1);
-        formData.append('sh_mobile_number1', shippedValues.sh_mobile_number1);
-        formData.append('shipment_email', shippedValues.shipmentEmail || '');
-        formData.append('sh_state', selectedState?.id?.toString() || '');
-        formData.append('gst_no', customerValues.gstn || '');
-      }
+      //   formData.append('sh_is_exist', 'false');
+      //   formData.append('sh_name', shippedValues.customerName);
+      //   formData.append('sh_business_name', shippedValues.businessName || '');
+      //   formData.append('sh_address1', shippedValues.shaddress1);
+      //   formData.append('sh_mobile_number1', shippedValues.sh_mobile_number1);
+      //   formData.append('shipment_email', shippedValues.shipmentEmail || '');
+      //   formData.append('sh_state', selectedState?.id?.toString() || '');
+      //   formData.append('gst_no', customerValues.gstn || '');
+      // }
 
       formData.append(
         'delivery_date',
@@ -505,7 +528,7 @@ const NewOrders: React.FC = () => {
       formData.append('orderID', data?.order_number);
       formData.append('net_cost', subTotal.toString());
       formData.append('remarks', remarksValues?.remarks || '');
-      formData.append('discount', subtotalDiscount.toString());
+      formData.append('discount', discount.toString());
 
       const items = Object.keys(itemValues.data || {}).map((key) => {
         const row = itemValues.data[key];
@@ -559,8 +582,13 @@ const NewOrders: React.FC = () => {
       await newOrder(FormDataPost, formData);
       navigate(Paths.Staff.orders.index);
       notify('Order created successfully!', 'success');
-    } catch (error) {
-      notify('Failed to create order. Please try again.', 'error');
+    } catch (error: any) {
+      // Check if error response has the mobile number exists message
+      if (error.response && error.response.data?.error === 'Mobile number already exists') {
+        notify('Mobile number already exists', 'error');
+      } else {
+        notify('Failed to create order. Please try again.', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -577,8 +605,9 @@ const NewOrders: React.FC = () => {
     getModels();
   }, [getModels]);
 
-  const { rawSubTotal, subTotal, cgst, sgst, grandTotal } = calculateTotals();
-
+  const { rawSubTotal, subTotal, cgst, sgst, grandTotal , discount } = calculateTotals();
+  
+  console.log("abcddddddddddd",discount)
   // Columns definition
   const defaultColumns: (ColumnTypes[number] & {
     editable?: boolean;
@@ -794,23 +823,121 @@ const NewOrders: React.FC = () => {
         </Form.Item>
       ),
     },
-    {
-      title: 'Price',
-      dataIndex: 'price',
-      align: 'center',
-      width: '8%',
-      render: (_, record) => {
-        const sizeSelected = itemForm.getFieldValue([
-          'data',
-          record.key,
-          'size',
-        ]);
-
-        return sizeSelected && baseCosts[record.key]
-          ? baseCosts[record.key].toFixed(2)
-          : '-';
+    // {
+    //   title: 'Price',
+    //   dataIndex: 'price',
+    //   align: 'center',
+    //   width: '8%',
+    //   render: (_, record) => {
+    //     const rowKey = record.key;
+    //     const sizeSelected = itemForm.getFieldValue(['data', rowKey, 'size']);
+    //     const isOverridden = priceOverrides[rowKey];
+    //     const basePrice = baseCosts[rowKey];
+    
+    //     if (!sizeSelected) {
+    //       return <span>-</span>;
+    //     }
+    
+    //     return (
+    //       <Form.Item
+    //         name={['data', rowKey, 'price']}
+    //         className="!mb-0"
+    //         initialValue={isOverridden || (basePrice?.toFixed(2) ?? '')}
+    //         rules={[
+    //           {
+    //             validator: (_, value) => {
+    //               if (value && isNaN(parseFloat(value))) {
+    //                 return Promise.reject('Must be a valid number');
+    //               }
+    //               return Promise.resolve();
+    //             },
+    //           },
+    //         ]}
+    //       >
+    //         <Input
+    //           placeholder="Enter Price"
+    //           className="w-full h-9"
+    //           value={
+    //             isOverridden !== undefined
+    //               ? isOverridden
+    //               : basePrice?.toFixed(2) ?? ''
+    //           }
+    //           onChange={(e) => {
+    //             const newPrice = e.target.value.replace(/\D/g, '');
+    //             setPriceOverrides((prev) => ({
+    //               ...prev,
+    //               [rowKey]: newPrice,
+    //             }));
+    //             itemForm.setFieldValue(['data', rowKey, 'price'], newPrice);
+    //           }}
+    //         />
+    //       </Form.Item>
+    //     );
+    //   },
+      // },
+      {
+        title: 'Price',
+        dataIndex: 'price',
+        align: 'center',
+        width: '8%',
+        render: (_, record) => {
+          const rowKey = record.key;
+          const sizeSelected = itemForm.getFieldValue(['data', rowKey, 'size']);
+          const formValue = itemForm.getFieldValue(['data', rowKey, 'price']);
+          const basePrice = baseCosts[rowKey];
+      
+          if (!sizeSelected) return <span>-</span>;
+      
+          return (
+            <Form.Item
+              name={['data', rowKey, 'price']}
+              className="!mb-0"
+              initialValue={formValue ?? basePrice?.toFixed(2)}
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (value && isNaN(parseFloat(value))) {
+                      return Promise.reject('Must be a valid number');
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <Input
+                placeholder="Enter Price"
+                className="w-full h-9"
+                value={formValue ?? basePrice?.toFixed(2) ?? ''}
+                onChange={(e) => {
+                  const input = e.target.value;
+      
+                  // Allow numbers with optional one decimal point
+                  if (/^\d*\.?\d{0,2}$/.test(input)) {
+                    setPriceOverrides((prev) => ({
+                      ...prev,
+                      [rowKey]: input,
+                    }));
+                    itemForm.setFieldValue(['data', rowKey, 'price'], input);
+                  }
+                }}
+                onBlur={() => {
+                  const currentValue = itemForm.getFieldValue(['data', rowKey, 'price']);
+                  const formatted = parseFloat(currentValue);
+                  if (!isNaN(formatted)) {
+                    const finalValue = formatted.toFixed(2);
+                    setPriceOverrides((prev) => ({
+                      ...prev,
+                      [rowKey]: finalValue,
+                    }));
+                    itemForm.setFieldValue(['data', rowKey, 'price'], finalValue);
+                  }
+                }}
+              />
+            </Form.Item>
+          );
+        },
       },
-    },
+      
     {
       title: 'Quantity',
       dataIndex: 'quantity',
@@ -888,12 +1015,12 @@ const NewOrders: React.FC = () => {
           userType={userType}
           setUserType={setUserType}
         />
-        <ShippedDetails
+        {/* <ShippedDetails
           shippedForm={shippedForm}
           // setLoading={setLoading}
           userType={userType}
           // setUserType={setUserType}
-        />
+        /> */}
         {/* Item Details Table */}
         <div className="relative p-3 bg-white rounded-md md:p-5">
           <Form
@@ -918,47 +1045,51 @@ const NewOrders: React.FC = () => {
                 <span className="font-medium">Raw Subtotal:</span>
                 <span>{rawSubTotal.toFixed(2)}</span>
               </div>
-
-              <div className="flex items-center justify-between w-64">
-                <span className="font-medium">Discount:</span>
-                <Form.Item
-                  name="discount"
-                  className="!mb-0"
-                  rules={[
-                    {
-                      validator: (_, value) =>
-                        value && parseFloat(value) < 0
-                          ? Promise.reject(new Error('Cannot be negative'))
-                          : Promise.resolve(),
-                    },
-                    {
-                      validator: (_, value) =>
-                        value && isNaN(parseFloat(value))
-                          ? Promise.reject(new Error('Must be a valid number'))
-                          : Promise.resolve(),
-                    },
-                    {
-                      validator: (_, value) =>
-                        value && parseFloat(value) > rawSubTotal
-                          ? Promise.reject(new Error('Cannot exceed total'))
-                          : Promise.resolve(),
-                    },
-                  ]}
-                >
-                  <Input
-                    placeholder="0.00"
-                    className="w-32 text-right h-9"
-                    value={subtotalDiscount || ''}
-                    onChange={(e) => handleDiscountChange(e.target.value)}
-                    onInput={(e) => {
-                      e.currentTarget.value = e.currentTarget.value.replace(
-                        /[^0-9.]/g,
-                        '',
-                      );
-                    }}
-                  />
-                </Form.Item>
-              </div>
+              {/* <div className="flex justify-between w-64">
+                <span className="font-medium">Raw Subtotal:</span>
+                <span>{discount.toFixed(2)}</span>
+              </div> */}
+ 
+               <div className="flex items-center justify-between w-64">
+                 <span className="font-medium">Discount: ({discount.toFixed(2)}) </span>
+                 <Form.Item
+                   name="discount"
+                   className="!mb-0"
+                   rules={[
+                     {
+                       validator: (_, value) =>
+                         value && parseFloat(value) < 0
+                           ? Promise.reject(new Error('Cannot be negative'))
+                           : Promise.resolve(),
+                     },
+                     {
+                       validator: (_, value) =>
+                         value && isNaN(parseFloat(value))
+                           ? Promise.reject(new Error('Must be a valid number'))
+                           : Promise.resolve(),
+                     },
+                     {
+                       validator: (_, value) =>
+                         value && parseFloat(value) > rawSubTotal
+                           ? Promise.reject(new Error('Cannot exceed total'))
+                           : Promise.resolve(),
+                     },
+                   ]}
+               >
+                 <Input
+                     placeholder="0.00"
+                     className="w-32 text-right h-9"
+                     value={subtotalDiscount || ''}
+                    //  onChange={(e) => handleDiscountChange(e.target.value)}
+                     onInput={(e) => {
+                       e.currentTarget.value = e.currentTarget.value.replace(
+                         /[^0-9.]/g,
+                         '',
+                       );
+                     }}
+                   />
+                 </Form.Item>
+              </div> 
 
               <div className="flex justify-between w-64">
                 <span className="font-medium">Subtotal:</span>
@@ -1081,7 +1212,21 @@ const CustomerDetails: React.FC<any> = ({
   const [customerDetails, setCustomerDetails] = useState<any>(null);
   const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
   const [states, setStates] = useState<{ id: number; name: string }[]>([]);
-
+  const [showPincodeField, setShowPincodeField] = useState(false);
+  const defaultState = states.find((state) => state.name === 'Kerala');
+  useEffect(() => {
+    if (states.length > 0) {
+      const kerala = states.find((state) => state.name === 'KERALA');
+      if (kerala) {
+        customerForm.setFieldsValue({
+          state: {
+            label: kerala.name,
+            value: JSON.stringify(kerala),
+          },
+        });
+      }
+    }
+  }, [states]);
   const onChange = (e: any) => {
     setUserType(e.target.value);
   };
@@ -1147,12 +1292,23 @@ const CustomerDetails: React.FC<any> = ({
 
   // Handle GST input change
   const handleGSTChange = (value: string) => {
-    if (value && GST_PATTERN.test(value)) {
-      debouncedGSTVerification(value);
+    if (value?.trim().length > 0) {
+      setShowPincodeField(true);
     } else {
-      setIsBusinessNameDisabled(false);
+      setShowPincodeField(false);
+    }
+  
+    if (value && GST_PATTERN.test(value)) {
+      debouncedGSTVerification(value); // existing verification
     }
   };
+  // const handleGSTChange = (value: string) => {
+  //   if (value && GST_PATTERN.test(value)) {
+  //     debouncedGSTVerification(value);
+  //   } else {
+  //     setIsBusinessNameDisabled(false);
+  //   }
+  // };
 
   // Handle search for existing customers
   const handleSearch = (searchTerm: string) => {
@@ -1199,7 +1355,7 @@ const CustomerDetails: React.FC<any> = ({
       {/* Conditional Rendering */}
       {userType === 1 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 custom-application-form">
-          <Form.Item
+          {/* <Form.Item
             className="!mb-0"
             label="Customer Name"
             name="customerName"
@@ -1211,7 +1367,7 @@ const CustomerDetails: React.FC<any> = ({
               placeholder="Enter customer name"
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             className="!mb-0"
@@ -1225,21 +1381,26 @@ const CustomerDetails: React.FC<any> = ({
               disabled={isBusinessNameDisabled}
             />
           </Form.Item>
-
           <Form.Item
             className="!mb-0"
-            label="Email"
-            name="email"
+            label="GSTN (Optional)"
+            name="gstn"
             rules={[
-              { required: false, message: 'Please enter your Email' },
-              { type: 'email', message: 'Invalid email format' },
+              { required: false },
+              {
+                // pattern: GST_PATTERN,
+                message: 'Please enter a valid GSTIN (e.g., 22ABCDE1234F1Z5)',
+              },
             ]}
           >
             <Input
-              placeholder="Enter email"
-              className="w-full py-2 h-9 placeholder:text-gray-400"
+              placeholder="Enter GST Number"
+              className="w-full h-9"
+              onChange={(e) => handleGSTChange(e.target.value)}
             />
           </Form.Item>
+
+        
 
           <Form.Item
             className="!mb-0"
@@ -1256,6 +1417,12 @@ const CustomerDetails: React.FC<any> = ({
           <Form.Item className="!mb-0" label="Address 2" name="address2">
             <Input
               placeholder="Enter address 2"
+              className="w-full py-2 h-9 placeholder:text-gray-400"
+            />
+          </Form.Item>
+          <Form.Item className="!mb-0" label="Address 3" name="address3">
+            <Input
+              placeholder="Enter address 3"
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
@@ -1285,7 +1452,7 @@ const CustomerDetails: React.FC<any> = ({
             />
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             className="!mb-0"
             label="Mobile 2"
             name="mobile_number2"
@@ -1311,41 +1478,53 @@ const CustomerDetails: React.FC<any> = ({
               }}
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
-          </Form.Item>
-          <Form.Item label="State" name="state" rules={[{ required: true }]}>
-            <Select
-              placeholder="Select a State"
-              showSearch
-              labelInValue
-              className="w-full"
-              optionFilterProp="children"
-            >
-              {states.map((state) => (
-                <Select.Option key={state.id} value={JSON.stringify(state)}>
-                  {state.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
+          </Form.Item> */}
+         <Form.Item label="State" name="state" rules={[{ required: true }]}>
+  <Select
+    placeholder="Select a State"
+    showSearch
+    labelInValue
+    className="w-full"
+    optionFilterProp="children"
+  >
+    {states.map((state) => (
+      <Select.Option key={state.id} value={JSON.stringify(state)}>
+        {state.name}
+      </Select.Option>
+    ))}
+  </Select>
+</Form.Item>
+          {showPincodeField && (
+  <Form.Item
+    label="Pincode"
+    name="pincode"
+    rules={[
+      { required: true, message: 'Please enter a valid Pincode' },
+      {
+        pattern: /^\d{6}$/,
+        message: 'Pincode must be a 6-digit number',
+      },
+    ]}
+  >
+    <Input placeholder="Enter Pincode" />
+            </Form.Item>
+            
+          )}
+            <Form.Item
             className="!mb-0"
-            label="GSTN (Optional)"
-            name="gstn"
+            label="Email"
+            name="email"
             rules={[
-              { required: false },
-              {
-                pattern: GST_PATTERN,
-                message: 'Please enter a valid GSTIN (e.g., 22ABCDE1234F1Z5)',
-              },
+              { required: false, message: 'Please enter your Email' },
+              { type: 'email', message: 'Invalid email format' },
             ]}
           >
             <Input
-              placeholder="Enter GST Number"
-              className="w-full h-9"
-              onChange={(e) => handleGSTChange(e.target.value)}
+              placeholder="Enter email"
+              className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
+                  
         </div>
       )}
 
@@ -1370,7 +1549,8 @@ const CustomerDetails: React.FC<any> = ({
               filterOption={false}
               options={customers?.map((customer) => ({
                 value: customer.id,
-                label: customer.name,
+                label: customer.business_name
+                ,
                 data: customer,
               }))}
             />
@@ -1378,12 +1558,12 @@ const CustomerDetails: React.FC<any> = ({
           {customerDetails && (
             <div className="p-4 mt-2 bg-gray-100 rounded-md">
               <div className="grid grid-cols-1 gap-x-3 gap-y-1 md:grid-cols-2">
-                <div>
+                {/* <div>
                   <span className="font-semibold text-gray-950">
                     Customer Name:
                   </span>{' '}
                   {customerDetails?.name}
-                </div>
+                </div> */}
                 <div>
                   <span className="font-semibold text-gray-950">
                     Business Name:
@@ -1393,6 +1573,10 @@ const CustomerDetails: React.FC<any> = ({
                 <div>
                   <span className="font-semibold text-gray-950">Address:</span>{' '}
                   {customerDetails?.address1} {customerDetails?.address2}
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-950">Address:</span>{' '}
+                  {customerDetails?.address1} {customerDetails?.address3}
                 </div>
                 <div>
                   <span className="font-semibold text-gray-950">Mobile:</span>{' '}
@@ -1410,88 +1594,88 @@ const CustomerDetails: React.FC<any> = ({
     </Form>
   );
 };
-const ShippedDetails: React.FC<any> = ({
-  shippedForm,
-  setLoading,
-  userType,
-}) => {
-  const { get } = useApiJSON();
-  const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
-  const [states, setStates] = useState<{ id: number; name: string }[]>([]);
-  const [sameAsCustomer, setSameAsCustomer] = useState(false);
+// const ShippedDetails: React.FC<any> = ({
+//   shippedForm,
+//   setLoading,
+//   userType,
+// }) => {
+//   const { get } = useApiJSON();
+//   const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
+//   const [states, setStates] = useState<{ id: number; name: string }[]>([]);
+//   const [sameAsCustomer, setSameAsCustomer] = useState(false);
 
-  const GST_PATTERN =
-    /^[0-3][0-9][A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+//   const GST_PATTERN =
+//     /^[0-3][0-9][A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
-  const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
-    const isChecked = e.target.checked;
-    console.log('Same as Customer:', isChecked);
+//   const handleSameAsCustomerChange = (e: CheckboxChangeEvent) => {
+//     const isChecked = e.target.checked;
+//     console.log('Same as Customer:', isChecked);
 
-    setSameAsCustomer(isChecked);
+//     setSameAsCustomer(isChecked);
 
-    // Check userType immediately (you can access it here if it's in scope)
-    if (isChecked && userType === 1) {
-      console.log('Checkbox checked AND userType === 1');
-    } else if (isChecked && userType === 2) {
-      console.log('Checkbox checked AND userType === 1');
-    }
-  };
-  useEffect(() => {
-    if (sameAsCustomer && userType === 1) {
-      console.log('Same as Customer is checked AND userType is New User (1)');
-    }
-  }, [sameAsCustomer, userType]);
+//     // Check userType immediately (you can access it here if it's in scope)
+//     if (isChecked && userType === 1) {
+//       console.log('Checkbox checked AND userType === 1');
+//     } else if (isChecked && userType === 2) {
+//       console.log('Checkbox checked AND userType === 1');
+//     }
+//   };
+//   useEffect(() => {
+//     if (sameAsCustomer && userType === 1) {
+//       console.log('Same as Customer is checked AND userType is New User (1)');
+//     }
+//   }, [sameAsCustomer, userType]);
 
-  useEffect(() => {
-    const fetchAllStates = async () => {
-      try {
-        const { data } = await fetchStates(get);
-        setStates(data);
-      } catch {
-        notify('Failed to fetch states', 'error');
-      }
-    };
-    fetchAllStates();
-  }, [get]);
+//   useEffect(() => {
+//     const fetchAllStates = async () => {
+//       try {
+//         const { data } = await fetchStates(get);
+//         setStates(data);
+//       } catch {
+//         notify('Failed to fetch states', 'error');
+//       }
+//     };
+//     fetchAllStates();
+//   }, [get]);
 
-  const handleGSTVerification = async (gstn: string) => {
-    setLoading(true);
-    try {
-      if (gstn) {
-        const { data } = await GstVerification(gstn);
-        if (data?.taxpayerInfo) {
-          shippedForm.setFieldsValue({
-            businessName: data?.taxpayerInfo?.tradeNam,
-          });
-          setIsBusinessNameDisabled(true);
-          notify('Business name auto-filled successfully!', 'success');
-        } else {
-          setIsBusinessNameDisabled(false);
-          notify('Invalid GST Number or details not found.', 'error');
-        }
-      } else {
-        setIsBusinessNameDisabled(false);
-      }
-    } catch {
-      setIsBusinessNameDisabled(false);
-      notify('Failed to verify GST Number. Please try again.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+//   const handleGSTVerification = async (gstn: string) => {
+//     setLoading(true);
+//     try {
+//       if (gstn) {
+//         const { data } = await GstVerification(gstn);
+//         if (data?.taxpayerInfo) {
+//           shippedForm.setFieldsValue({
+//             businessName: data?.taxpayerInfo?.tradeNam,
+//           });
+//           setIsBusinessNameDisabled(true);
+//           notify('Business name auto-filled successfully!', 'success');
+//         } else {
+//           setIsBusinessNameDisabled(false);
+//           notify('Invalid GST Number or details not found.', 'error');
+//         }
+//       } else {
+//         setIsBusinessNameDisabled(false);
+//       }
+//     } catch {
+//       setIsBusinessNameDisabled(false);
+//       notify('Failed to verify GST Number. Please try again.', 'error');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
-  const debouncedGSTVerification = useCallback(
-    debounce((value: string) => handleGSTVerification(value), 500),
-    [handleGSTVerification],
-  );
+//   const debouncedGSTVerification = useCallback(
+//     debounce((value: string) => handleGSTVerification(value), 500),
+//     [handleGSTVerification],
+//   );
 
-  const handleGSTChange = (value: string) => {
-    if (value && GST_PATTERN.test(value)) {
-      debouncedGSTVerification(value);
-    } else {
-      setIsBusinessNameDisabled(false);
-    }
-  };
+//   const handleGSTChange = (value: string) => {
+//     if (value && GST_PATTERN.test(value)) {
+//       debouncedGSTVerification(value);
+//     } else {
+//       setIsBusinessNameDisabled(false);
+//     }
+//   };
 
   // useEffect(() => {
   //   if (sameAsCustomer) {
@@ -1524,164 +1708,7 @@ const ShippedDetails: React.FC<any> = ({
   //   }
   // }, [sameAsCustomer, shippedForm]);
 
-  return (
-    <Form
-      form={shippedForm}
-      layout="vertical"
-      className="p-3 bg-white rounded-md md:p-5"
-    >
-      <h5 className="mb-4 text-xl font-medium flex items-center justify-between">
-        Shipped Details:
-        <Form.Item
-          name="sameAsCustomer"
-          valuePropName="checked"
-          className="mb-0"
-        >
-          <Checkbox
-            checked={sameAsCustomer}
-            onChange={handleSameAsCustomerChange}
-          >
-            Same as Customer Details
-          </Checkbox>
-        </Form.Item>
-      </h5>
 
-      {!sameAsCustomer && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 custom-application-form">
-          <Form.Item
-            label="Customer Name"
-            name="customerName"
-            rules={[
-              { required: true, message: 'Please enter the Customer Name' },
-            ]}
-          >
-            <Input
-              placeholder="Enter customer name"
-              className="w-full py-2 h-9"
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Business Name"
-            name="businessName"
-            rules={[{ message: 'Please enter the Business Name' }]}
-          >
-            <Input
-              placeholder="Enter business name"
-              className="w-full h-9"
-              disabled={isBusinessNameDisabled}
-            />
-          </Form.Item>
-
-        
-          {/* <Form.Item
-            label="Email"
-            name="email"
-            rules={[{ type: 'email', message: 'Invalid email format' }]}
-          >
-            <Input placeholder="Enter email" className="w-full py-2 h-9" />
-          </Form.Item> */}
-
-          <Form.Item
-            label="Address 1"
-            name="shaddress1"
-            rules={[{ required: true, message: 'Please enter Address 1' }]}
-          >
-            <Input placeholder="Enter address 1" className="w-full py-2 h-9" />
-          </Form.Item>
-
-          
-          {/* <Form.Item label="Address 2" name="address2">
-            <Input placeholder="Enter address 2" className="w-full py-2 h-9" />
-          </Form.Item> */}
-
-          <Form.Item
-            label="Mobile 1"
-            name="sh_mobile_number1"
-            rules={[
-              { required: true, message: 'Please enter Mobile' },
-              {
-                pattern: /^\d{10}$/,
-                message: 'Mobile must be exactly 10 digits',
-              },
-            ]}
-          >
-            <Input
-              type="tel"
-              placeholder="Enter mobile"
-              onInput={(e) =>
-                (e.currentTarget.value = e.currentTarget.value.replace(
-                  /\D/g,
-                  '',
-                ))
-              }
-              className="w-full py-2 h-9"
-            />
-          </Form.Item>
-
-         {/* <Form.Item
-            label="Mobile 2"
-            name="mobile_number2"
-            rules={[
-              {
-                validator: (_, value) =>
-                  !value || /^\d{10}$/.test(value)
-                    ? Promise.resolve()
-                    : Promise.reject(
-                        new Error('Mobile must be exactly 10 digits'),
-                      ),
-              },
-            ]}
-          >
-            <Input
-              type="tel"
-              placeholder="Enter mobile 2"
-              onInput={(e) =>
-                (e.currentTarget.value = e.currentTarget.value.replace(
-                  /\D/g,
-                  '',
-                ))
-              }
-              className="w-full py-2 h-9"
-            />
-          </Form.Item> */}
-
-          <Form.Item label="State" name="state" rules={[{ required: true }]}>
-            <Select
-              placeholder="Select a State"
-              showSearch
-              labelInValue
-              className="w-full"
-              optionFilterProp="children"
-            >
-              {states.map((state) => (
-                <Select.Option key={state.id} value={JSON.stringify(state)}>
-                  {state.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-           <Form.Item
-            label="GSTN (Optional)"
-            name="gstn"
-            rules={[
-              {
-                pattern: GST_PATTERN,
-                message: 'Please enter a valid GSTIN (e.g., 22ABCDE1234F1Z5)',
-              },
-            ]}
-          >
-            <Input
-              placeholder="Enter GST Number"
-              className="w-full h-9"
-              onChange={(e) => handleGSTChange(e.target.value)}
-            />
-          </Form.Item> 
-        </div>
-      )}
-    </Form>
-  );
-};
+// };
 
 export default NewOrders;
