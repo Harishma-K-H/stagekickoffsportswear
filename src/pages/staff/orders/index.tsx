@@ -50,7 +50,7 @@ const Orders: React.FC = () => {
       key: 'OrderId',
     },
     {
-      title: 'Customer Name',
+      title: 'Customer',
       dataIndex: 'customerName',
       key: 'name',
     },
@@ -169,7 +169,7 @@ const Orders: React.FC = () => {
     key: i,
     slNo: i + 1,
     OrderId: order?.orderID,
-    customerName: capitalizeFirstLetterOfEachWord(order?.customer?.name),
+    customerName: capitalizeFirstLetterOfEachWord(order?.customer?.business_name),
     orderDate: dayjs(order?.order_date).format('DD-MM-YYYY - h:mm A'),
     deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
     payment_details: order?.payment_details, // Pass payment_details to the record
