@@ -391,10 +391,10 @@ const NewOrders: React.FC = () => {
 
 
   // Handle subtotal discount change
-  const handleDiscountChange = (value: string) => {
-    const discount = parseFloat(value) || 0;
-    setSubtotalDiscount(discount);
-  };
+  // const handleDiscountChange = (value: string) => {
+  //   const discount = parseFloat(value) || 0;
+  //   setSubtotalDiscount(discount);
+  // };
 
   // Calculate totals for display with subtotal discount
   const calculateTotals = () => {
@@ -1213,7 +1213,7 @@ const CustomerDetails: React.FC<any> = ({
   const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
   const [states, setStates] = useState<{ id: number; name: string }[]>([]);
   const [showPincodeField, setShowPincodeField] = useState(false);
-  const defaultState = states.find((state) => state.name === 'Kerala');
+  // const defaultState = states.find((state) => state.name === 'Kerala');
   useEffect(() => {
     if (states.length > 0) {
       const kerala = states.find((state) => state.name === 'KERALA');
