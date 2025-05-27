@@ -86,7 +86,7 @@ const NewOrders: React.FC = () => {
   const [totalCosts, setTotalCosts] = useState<Record<string, number>>({});
   const [modelName, setModelName] = useState<any>({});
   const [dataSource, setDataSource] = useState<any[]>([{ key: '0' }]);
-  const [subtotalDiscount, setSubtotalDiscount] = useState<number>(0);
+  const [subtotalDiscount] = useState<number>(0);
   const [sleeveConfigs, setSleeveConfigs] = useState<Record<string, any>>({});
 
   // Fetch states when the component mounts
