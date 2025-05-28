@@ -395,26 +395,28 @@ const ModalDetails: React.FC<any> = ({
           <h3 className="mb-3 text-xl font-semibold">Customer Details</h3>
           <div className="p-4 mb-3 bg-gray-100 rounded-md">
             <div className="grid grid-cols-1 gap-x-3 gap-y-1 md:grid-cols-2">
-              <div>
+              {/* <div>
                 <span className="font-semibold text-gray-950">
                   Customer Name:
                 </span>{' '}
                 {orderDetails?.customer?.name}
-              </div>
+              </div> */}
               <div>
                 <span className="font-semibold text-gray-950">
                   Business Name:
                 </span>{' '}
                 {orderDetails?.customer?.business_name}
               </div>
-              <div>
-                <span className="font-semibold text-gray-950">Address:</span>{' '}
-                {orderDetails?.customer?.address1}{' '}
-                {orderDetails?.customer?.address2}
-              </div>
+              
               <div>
                 <span className="font-semibold text-gray-950">Mobile:</span>{' '}
                 {orderDetails?.customer?.mobile_number1}
+              </div>
+              <div>
+                <span className="font-semibold text-gray-950">Address:</span>{' '}
+                {orderDetails?.customer?.address1}{' , '}
+                {orderDetails?.customer?.address2}{' , '}
+                {orderDetails?.customer?.address3}
               </div>
             </div>
           </div>
