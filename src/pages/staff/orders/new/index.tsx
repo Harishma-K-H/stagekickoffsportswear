@@ -86,7 +86,7 @@ const NewOrders: React.FC = () => {
   const [totalCosts, setTotalCosts] = useState<Record<string, number>>({});
   const [modelName, setModelName] = useState<any>({});
   const [dataSource, setDataSource] = useState<any[]>([{ key: '0' }]);
-  const [subtotalDiscount] = useState<number>(0);
+  const [subtotalDiscount, setSubtotalDiscount] = useState(0);
   const [sleeveConfigs, setSleeveConfigs] = useState<Record<string, any>>({});
 
   // Fetch states when the component mounts
@@ -400,17 +400,21 @@ const NewOrders: React.FC = () => {
   const calculateTotals = () => {
     const rowData = itemForm.getFieldsValue().data || {};
     let subTotal = 0;
+    let rawSubTotal = 0;
   
     Object.keys(rowData).forEach((rowKey) => {
       const row = rowData[rowKey];
       if (row?.quantity) {
         subTotal += totalCosts[rowKey] || 0;
+        // rawSubTotal=subTotal
       }
     });
-  
+    console.log('rawSubTotal:', rawSubTotal);
     // Apply subtotal discount
     const discountedSubtotal = Math.max(0, subTotal - subtotalDiscount);
-    const discountAmount = ((subTotal-(discountedSubtotal * 0.025+discountedSubtotal * 0.025))*0.05);
+    console.log("discountedSubtotal",discountedSubtotal)
+    // const discountAmount1 = ((rawSubTotal-(rawSubTotal * 0.025+discountedSubtotal * 0.025))*0.05);
+    const discountAmount = subtotalDiscount || 0;
     const cgst = discountedSubtotal * 0.025; // 2.5%
     const sgst = discountedSubtotal * 0.025; // 2.5%
     const grandTotal = discountedSubtotal + cgst + sgst;
@@ -422,6 +426,7 @@ const NewOrders: React.FC = () => {
       sgst,
       grandTotal,
       discount: discountAmount,
+      discount1:discountedSubtotal
     };
     
   };
@@ -605,9 +610,23 @@ const NewOrders: React.FC = () => {
     getModels();
   }, [getModels]);
 
-  const { rawSubTotal, subTotal, cgst, sgst, grandTotal , discount } = calculateTotals();
-  
-  console.log("abcddddddddddd",discount)
+  const { rawSubTotal, subTotal, cgst, sgst, grandTotal , discount,  discount1 } = calculateTotals();
+  console.log("=== Debug Start ===");
+console.log("rawSubTotal:", rawSubTotal);
+console.log("discount1:", discount1);
+
+const step1 = discount1 * 0.025;
+console.log("Step 1 (discount1 * 0.025):", step1);
+
+const step2 = discount1 * 0.025;
+console.log("Step 2 (discount1 * 0.025):", step2);
+
+const step3 = rawSubTotal - (step1 + step2);
+console.log("Step 3 (rawSubTotal - (step1 + step2)):", step3);
+
+const finalDiscount = (step3 * 0.05).toFixed(2);
+console.log("Final Discount (step3 * 0.05):", finalDiscount);
+console.log("=== Debug End ===");
   // Columns definition
   const defaultColumns: (ColumnTypes[number] & {
     editable?: boolean;
@@ -1051,7 +1070,10 @@ const NewOrders: React.FC = () => {
               </div> */}
  
                <div className="flex items-center justify-between w-64">
-                 <span className="font-medium">Discount: ({discount.toFixed(2)}) </span>
+               <span className="font-medium">
+                  {/* Discount: {((rawSubTotal - (rawSubTotal * 0.025 + discount1 * 0.025)) * 0.05).toFixed(2)} */}
+                  Discount: { finalDiscount }
+                </span>
                  <Form.Item
                    name="discount"
                    className="!mb-0"
@@ -1079,21 +1101,20 @@ const NewOrders: React.FC = () => {
                  <Input
                      placeholder="0.00"
                      className="w-32 text-right h-9"
-                     value={subtotalDiscount || ''}
-                    //  onChange={(e) => handleDiscountChange(e.target.value)}
-                     onInput={(e) => {
-                       e.currentTarget.value = e.currentTarget.value.replace(
-                         /[^0-9.]/g,
-                         '',
-                       );
-                     }}
+                     value={subtotalDiscount.toString()}
+                     onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9.]/g, '');
+                      setSubtotalDiscount(parseFloat(val || '0')); // Convert input string to number
+                    }}
                    />
                  </Form.Item>
               </div> 
 
               <div className="flex justify-between w-64">
-                <span className="font-medium">Subtotal:</span>
-                <span>{subTotal.toFixed(2)}</span>
+              <span className="font-medium">Subtotal:</span>
+              <span>
+              {discount1.toFixed(2)}
+        </span>
               </div>
 
               <div className="flex justify-between w-64">

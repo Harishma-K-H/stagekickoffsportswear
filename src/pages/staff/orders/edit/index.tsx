@@ -364,7 +364,8 @@ const NewOrders: React.FC = () => {
 
     // Apply subtotal discount
     const discountedSubtotal = Math.max(0, subTotal - subtotalDiscount);
-    const discountAmount = ((subTotal-(discountedSubtotal * 0.025+discountedSubtotal * 0.025))*0.05);
+    // const discountAmount1 = ((subTotal - (discountedSubtotal * 0.025 + discountedSubtotal * 0.025)) * 0.05);
+    const discountAmount = subtotalDiscount || 0;
     const cgst = discountedSubtotal * 0.025; // 2.5%
     const sgst = discountedSubtotal * 0.025; // 2.5%
     const grandTotal = discountedSubtotal + cgst + sgst;
@@ -375,7 +376,8 @@ const NewOrders: React.FC = () => {
       cgst,
       sgst,
       grandTotal,
-      discount: discountAmount
+      discount: discountAmount,
+      discount1:discountedSubtotal
     };
   };
 
@@ -595,7 +597,23 @@ const NewOrders: React.FC = () => {
     remarksForm,
   ]);
 
-  const { rawSubTotal, subTotal, cgst, sgst, grandTotal, discount} = calculateTotals();
+  const { rawSubTotal, subTotal, cgst, sgst, grandTotal, discount, discount1 } = calculateTotals();
+  console.log("=== Debug Start ===");
+  console.log("rawSubTotal:", rawSubTotal);
+  console.log("discount1:", discount1);
+  
+  const step1 = discount1 * 0.025;
+  console.log("Step 1 (discount1 * 0.025):", step1);
+  
+  const step2 = discount1 * 0.025;
+  console.log("Step 2 (discount1 * 0.025):", step2);
+  
+  const step3 = rawSubTotal - (step1 + step2);
+  console.log("Step 3 (rawSubTotal - (step1 + step2)):", step3);
+  
+  const finalDiscount = (step3 * 0.05).toFixed(2);
+  console.log("Final Discount (step3 * 0.05):", finalDiscount);
+  console.log("=== Debug End ===");
   console.log("abcddddddddddd",discount)
   // Columns definition
   const defaultColumns: (ColumnTypes[number] & {
@@ -1006,7 +1024,7 @@ const NewOrders: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between w-64">
-              <span className="font-medium">Discount: ({discount.toFixed(2)}) </span>
+              <span className="font-medium">Discount: { finalDiscount } </span>
                 <Form.Item
                   name="discount"
                   className="!mb-0"
@@ -1048,7 +1066,7 @@ const NewOrders: React.FC = () => {
 
               <div className="flex justify-between w-64">
                 <span className="font-medium">Subtotal:</span>
-                <span>{subTotal.toFixed(2)}</span>
+                <span>{discount1.toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between w-64">
