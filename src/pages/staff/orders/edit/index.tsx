@@ -1066,7 +1066,7 @@ const NewOrders: React.FC = () => {
 
               <div className="flex justify-between w-64">
                 <span className="font-medium">Subtotal:</span>
-                <span>{discount1.toFixed(2)}</span>
+                <span>{subTotal.toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between w-64">

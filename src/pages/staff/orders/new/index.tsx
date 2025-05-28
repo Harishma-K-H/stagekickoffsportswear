@@ -1113,7 +1113,7 @@ console.log("=== Debug End ===");
               <div className="flex justify-between w-64">
               <span className="font-medium">Subtotal:</span>
               <span>
-              {discount1.toFixed(2)}
+              {subTotal.toFixed(2)}
         </span>
               </div>
 
