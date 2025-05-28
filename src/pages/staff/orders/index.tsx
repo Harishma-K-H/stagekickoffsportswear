@@ -413,11 +413,11 @@ const ModalDetails: React.FC<any> = ({
                 {orderDetails?.customer?.mobile_number1}
               </div>
               <div>
-                <span className="font-semibold text-gray-950">Address:</span>{' '}
-                {orderDetails?.customer?.address1}{' , '}
-                {orderDetails?.customer?.address2}{' , '}
-                {orderDetails?.customer?.address3}
-              </div>
+              <span className="font-semibold text-gray-950">Address:</span>{' '}
+              {[orderDetails?.customer?.address1, orderDetails?.customer?.address2, orderDetails?.customer?.address3]
+                .filter(Boolean) // filters out undefined, null, or empty string
+                .join(', ')}
+            </div>
             </div>
           </div>
           <PaymentHistory
