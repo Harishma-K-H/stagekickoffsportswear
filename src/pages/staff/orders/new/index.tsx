@@ -1255,7 +1255,9 @@ const CustomerDetails: React.FC<any> = ({
   // Fetch existing customers with search
   const fetchCustomers = useCallback(
     async (searchTerm: string = '') => {
-      try {
+      try
+      {
+        console.log("Searching customers with term:", searchTerm);
         const { data } = await getCustomers(get, searchTerm);
         setCustomers(data);
       } catch (error: any) {

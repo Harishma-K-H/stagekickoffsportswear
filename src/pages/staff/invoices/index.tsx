@@ -58,6 +58,11 @@ const Invoices: React.FC = () => {
       key: 'name',
     },
     {
+      title: 'Total Amount',
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
+    },
+    {
       title: 'Invoice number',
       dataIndex: 'invoiceNumber',
       key: 'invoiceNumber',
@@ -130,6 +135,7 @@ const Invoices: React.FC = () => {
     OrderId: invoice?.orderID,
     customerName: invoice?.customer?.business_name,
     invoiceNumber: invoice?.invoice_id,
+    totalAmount:invoice?.order_amount,
     // orderDate: dayjs(invoice?.order_date).format('DD-MM-YYYY'),
     deliveryDate: invoice?.delivery_date,
   }));

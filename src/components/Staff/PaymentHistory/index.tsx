@@ -33,10 +33,21 @@ const PaymentHistory: React.FC<any> = ({
   );
 
   // Calculate total paid amount and current balance
-  const totalPaid = Math.round(paidAmount(payment_details));
+  const totalPaid = Math.round(
+    payment_details?.reduce((sum: number, payment: PaymentDetail) => {
+      if (payment?.payment_method?.toUpperCase() === "REFUND") {
+        return sum; // skip refund
+      }
+      const amount = parseFloat(payment?.paid_amount?.toString() || "0");
+      return sum + amount;
+    }, 0) || 0
+  );
+  
+  
   const balanceAmount =
     payment_details?.length > 0 &&
-    payment_details[payment_details?.length - 1]?.balance_amount;
+    payment_details[payment_details.length - 1]?.balance_amount;
+  
   const currentBalance = balanceAmount
     ? parseFloat(balanceAmount)
     : Math.round(parseFloat(total_cost) - totalPaid);
