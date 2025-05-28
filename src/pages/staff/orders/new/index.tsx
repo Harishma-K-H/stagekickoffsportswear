@@ -1393,6 +1393,7 @@ const CustomerDetails: React.FC<any> = ({
           <Form.Item
             className="!mb-0"
             label="Business Name"
+            required
             name="businessName"
             rules={[{ message: 'Please enter the Business Name' }]}
           >
@@ -1415,6 +1416,7 @@ const CustomerDetails: React.FC<any> = ({
             ]}
           >
             <Input
+              maxLength={15}
               placeholder="Enter GST Number"
               className="w-full h-9"
               onChange={(e) => handleGSTChange(e.target.value)}
@@ -1435,13 +1437,13 @@ const CustomerDetails: React.FC<any> = ({
             />
           </Form.Item>
 
-          <Form.Item className="!mb-0" label="Address 2" name="address2">
+          <Form.Item className="!mb-0" label="City" name="address2">
             <Input
               placeholder="Enter address 2"
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
-          <Form.Item className="!mb-0" label="Address 3" name="address3">
+          <Form.Item className="!mb-0" label="District" name="address3">
             <Input
               placeholder="Enter address 3"
               className="w-full py-2 h-9 placeholder:text-gray-400"
