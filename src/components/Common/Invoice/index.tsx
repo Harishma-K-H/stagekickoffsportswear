@@ -487,24 +487,26 @@ const Invoice: React.FC<{
           <p className="text-sm whitespace-pre-line leading-relaxed">{remarks}</p>
         </div>
       )}
-
-      <div className="grid grid-cols-2 gap-3 mt-5">
-        <div>
-          {/* <span className="text-sm">Bank Account Details,</span> */}
-          <h4 className="font-semibold mb-1">Bank Account Details,</h4>
-          <h3 className="text-[15px] font-semibold text-gray-600 whitespace-pre-wrap dark:text-gray-300">
-            {created_by?.account_details}
-          </h3>
+      {type === 'INVOICE' && (
+        <div className="grid grid-cols-2 gap-3 mt-5">
+          <div>
+            {/* <span className="text-sm">Bank Account Details,</span> */}
+            <h4 className="font-semibold mb-1">Bank Account Details,</h4>
+            <h3 className="text-[15px] font-semibold text-gray-600 whitespace-pre-wrap dark:text-gray-300">
+              {created_by?.account_details}
+            </h3>
+          </div>
+          {created_by?.qr_code && (
+            <img
+              src={`https://kickoffsportswear.app${ created_by?.qr_code }`}
+              alt="QR Code"
+              className="h-full ml-auto"
+            />
+          )}
         </div>
-        {created_by?.qr_code && (
-          <img
-            src={`https://kickoffsportswear.app${created_by?.qr_code}`}
-            alt="QR Code"
-            className="h-full ml-auto"
-          />
-        )}
-      </div>
+      )}
     </div>
+      
   );
 };
 
