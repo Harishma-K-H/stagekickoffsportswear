@@ -389,7 +389,7 @@ const Invoice: React.FC<{
               rowData={[
                 {
                   heading: 'Sub Total',
-                  value: parseInt(net_cost).toFixed(2),
+                  value: parseFloat(net_cost).toFixed(2),
                   visibility: true,
                   rowClassName: '!border-b-0',
                   labelColumnClassName: '!text-right pr-4 w-[60%]',
@@ -397,12 +397,14 @@ const Invoice: React.FC<{
                 },
                 discount > 0 && {
                   heading: 'Discount',
-                  value: parseInt(discount)?.toFixed(2),
-                  visibility: true,
+                  value: parseFloat(discount)?.toFixed(2),
+                  // visibility: true,
+                  visibility: ['INVOICE', 'ORDER'].includes(type),
                   rowClassName: '!border-b-0',
                   labelColumnClassName: '!text-right pr-4 w-[60%]',
                   valueColumnClassName: '!pr-4',
                 },
+             
                 ...taxRows,
 
                 {
