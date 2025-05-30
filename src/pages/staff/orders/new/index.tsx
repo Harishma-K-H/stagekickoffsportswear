@@ -60,6 +60,8 @@ const NewOrders: React.FC = () => {
     {},
   );
   const [priceOverrides, setPriceOverrides] = useState<{ [key: string]: string }>({});
+  const [disabledFields, setDisabledFields] = useState<{ [key: string]: boolean }>({});
+
   const [printType, setPrintType] = useState<Record<string, any[]>>({});
   const [size] = useState<any[]>([
     { value: '24', label: '24' },
@@ -167,6 +169,12 @@ const NewOrders: React.FC = () => {
           notify(`Item is not valid`, 'warning');
         }
   
+        // ✅ Re-enable price/quantity on success
+        setDisabledFields((prev) => ({
+          ...prev,
+          [rowKey]: false,
+        }));
+  
         // 1. Update baseCosts
         setBaseCosts((prev) => ({
           ...prev,
@@ -190,18 +198,33 @@ const NewOrders: React.FC = () => {
   
       } catch (error: any) {
         console.error('Failed to fetch item cost:', error);
-        notify(error?.response?.data?.error || 'Failed to fetch item cost', 'error');
-        
-        // Reset price and total cost to 0
+        const errorMsg = error?.response?.data?.error || 'Failed to fetch item cost';
+        notify(errorMsg, 'error');
+  
+        // Reset price and total cost
         setBaseCosts((prev) => ({ ...prev, [rowKey]: 0 }));
         setTotalCosts((prev) => ({ ...prev, [rowKey]: 0 }));
-  
-        // Also optionally clear the price field in the form
         itemForm.setFieldValue(['data', rowKey, 'price'], '0.00');
+  
+        if (errorMsg === 'Model not match' || errorMsg === 'Material not found in database') {
+          // ✅ Disable price/quantity only if this error
+          setDisabledFields((prev) => ({
+            ...prev,
+            [rowKey]: true,
+          }));
+          itemForm.setFieldValue(['data', rowKey, 'quantity'], null);
+        } else {
+          // ✅ Enable fields for other types of errors
+          setDisabledFields((prev) => ({
+            ...prev,
+            [rowKey]: false,
+          }));
+        }
       }
     },
     [fetchItemCost, get, itemForm, priceOverrides]
   );
+  
   
 
   // Calculate row total cost based on base cost and quantity
@@ -482,6 +505,7 @@ const NewOrders: React.FC = () => {
         formData.append('address1', customerValues.address1);
         formData.append('address2', customerValues.address2 || '');
         formData.append('address3', customerValues.address3 || '');
+        formData.append('pincode', customerValues.pincode || '');
         formData.append('mobile_number1', customerValues.mobile_number1);
         formData.append('mobile_number2', customerValues.mobile_number2 || '');
         formData.append('email', customerValues.email || '');
@@ -926,6 +950,7 @@ console.log("=== Debug End ===");
               <Input
                 placeholder="Enter Price"
                 className="w-full h-9"
+                disabled={!!disabledFields[rowKey]}
                 value={formValue ?? basePrice?.toFixed(2) ?? ''}
                 onChange={(e) => {
                   const input = e.target.value;
@@ -970,6 +995,7 @@ console.log("=== Debug End ===");
           <Input
             placeholder="Enter Quantity"
             className="w-full h-9"
+            disabled={!!disabledFields[record.key]}
             onInput={(e) => {
               e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
             }}
@@ -1233,7 +1259,7 @@ const CustomerDetails: React.FC<any> = ({
   const [customerDetails, setCustomerDetails] = useState<any>(null);
   const [isBusinessNameDisabled, setIsBusinessNameDisabled] = useState(false);
   const [states, setStates] = useState<{ id: number; name: string }[]>([]);
-  const [showPincodeField, setShowPincodeField] = useState(false);
+  // const [showPincodeField, setShowPincodeField] = useState(false);
   // const defaultState = states.find((state) => state.name === 'Kerala');
   useEffect(() => {
     if (states.length > 0) {
@@ -1315,11 +1341,11 @@ const CustomerDetails: React.FC<any> = ({
 
   // Handle GST input change
   const handleGSTChange = (value: string) => {
-    if (value?.trim().length > 0) {
-      setShowPincodeField(true);
-    } else {
-      setShowPincodeField(false);
-    }
+    // if (value?.trim().length > 0) {
+    //   setShowPincodeField(true);
+    // } else {
+    //   setShowPincodeField(false);
+    // }
   
     if (value && GST_PATTERN.test(value)) {
       debouncedGSTVerification(value); // existing verification
@@ -1405,25 +1431,7 @@ const CustomerDetails: React.FC<any> = ({
               disabled={isBusinessNameDisabled}
             />
           </Form.Item>
-          <Form.Item
-            className="!mb-0"
-            label="GSTN (Optional)"
-            name="gstn"
-            rules={[
-              { required: false },
-              {
-                // pattern: GST_PATTERN,
-                message: 'Please enter a valid GSTIN (e.g., 22ABCDE1234F1Z5)',
-              },
-            ]}
-          >
-            <Input
-              maxLength={15}
-              placeholder="Enter GST Number"
-              className="w-full h-9"
-              onChange={(e) => handleGSTChange(e.target.value)}
-            />
-          </Form.Item>
+         
 
         
 
@@ -1439,22 +1447,54 @@ const CustomerDetails: React.FC<any> = ({
             />
           </Form.Item>
 
-          <Form.Item className="!mb-0" label="City" name="address2">
+          <Form.Item className="!mb-0" label="Address 2" name="address2">
             <Input
               placeholder="Enter address 2"
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
-          <Form.Item className="!mb-0" label="District" name="address3">
+          <Form.Item className="!mb-0" label="Address 3" name="address3">
             <Input
               placeholder="Enter address 3"
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
-
+          <Form.Item label="State" name="state" rules={[{ required: true }]}>
+  <Select
+    placeholder="Select a State"
+    showSearch
+    labelInValue
+    className="w-full"
+    optionFilterProp="children"
+  >
+    {states.map((state) => (
+      <Select.Option key={state.id} value={JSON.stringify(state)}>
+        {state.name}
+      </Select.Option>
+    ))}
+            </Select>
+            
+          </Form.Item>
+        
+          <Form.Item
+              label="Pincode"
+              name="pincode"
+              
+              rules={[
+                { required: true, message: 'Please enter a valid Pincode' },
+                {
+                  pattern: /^\d{6}$/,
+                  message: 'Pincode must be a 6-digit number',
+                },
+              ]}
+            >
+              <Input placeholder="Enter Pincode" />
+                      </Form.Item>
+                      
+                  
           <Form.Item
             className="!mb-0"
-            label="Mobile 1"
+            label="Mobile"
             name="mobile_number1"
             rules={[
               { required: true, message: 'Please enter Mobile' },
@@ -1504,37 +1544,6 @@ const CustomerDetails: React.FC<any> = ({
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item> */}
-         <Form.Item label="State" name="state" rules={[{ required: true }]}>
-  <Select
-    placeholder="Select a State"
-    showSearch
-    labelInValue
-    className="w-full"
-    optionFilterProp="children"
-  >
-    {states.map((state) => (
-      <Select.Option key={state.id} value={JSON.stringify(state)}>
-        {state.name}
-      </Select.Option>
-    ))}
-  </Select>
-</Form.Item>
-          {showPincodeField && (
-  <Form.Item
-    label="Pincode"
-    name="pincode"
-    rules={[
-      { required: true, message: 'Please enter a valid Pincode' },
-      {
-        pattern: /^\d{6}$/,
-        message: 'Pincode must be a 6-digit number',
-      },
-    ]}
-  >
-    <Input placeholder="Enter Pincode" />
-            </Form.Item>
-            
-          )}
             <Form.Item
             className="!mb-0"
             label="Email"
@@ -1549,6 +1558,26 @@ const CustomerDetails: React.FC<any> = ({
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item>
+          <Form.Item
+            className="!mb-0"
+            label="GSTN (Optional)"
+            name="gstn"
+            rules={[
+              { required: false },
+              {
+                // pattern: GST_PATTERN,
+                message: 'Please enter a valid GSTIN (e.g., 22ABCDE1234F1Z5)',
+              },
+            ]}
+          >
+            <Input
+              maxLength={15}
+              placeholder="Enter GST Number"
+              className="w-full h-9"
+              onChange={(e) => handleGSTChange(e.target.value)}
+            />
+          </Form.Item>
+           
                   
         </div>
       )}

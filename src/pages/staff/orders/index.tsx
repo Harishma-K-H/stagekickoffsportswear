@@ -98,13 +98,22 @@ const Orders: React.FC = () => {
               type="button"
               className={`text-white ${currentBalance <= 0 ? 'bg-gray-500' : 'bg-green-700'}  rounded-md !py-2`}
             />
+           {currentBalance <= 0 ? (
+            <Button
+              title="Edit"
+              type="button"
+              disabled
+              className="text-white bg-gray-400 rounded-md !py-2 cursor-not-allowed"
+            />
+          ) : (
             <Link to={Paths.Staff.orders.edit(ordersList[record?.key]?.id)}>
               <Button
                 title="Edit"
                 type="button"
-                className={`text-white bg-gray-500 rounded-md !py-2`}
+                className="text-white bg-gray-500 rounded-md !py-2"
               />
             </Link>
+          )}
           </div>
         );
       },

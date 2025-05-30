@@ -8,6 +8,7 @@ import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
 
 import { getCustomers } from './api';
+import { title } from 'process';
 
 const Customers: React.FC = () => {
   const { get } = useApiJSON();
@@ -72,6 +73,11 @@ const Customers: React.FC = () => {
       dataIndex: 'gstn',
       key: 'gstn',
     },
+    {
+      title: 'Pincode',
+      dataIndex: 'pincode',
+      key: 'pincode'
+    }
   ];
 
   const fetchCustomers = useCallback(
@@ -107,6 +113,7 @@ const Customers: React.FC = () => {
     address: `${customer?.address1} ${customer?.address2}`,
     email: customer?.email ? customer?.email : '-',
     gstn: customer?.gstn ? customer?.gstn : '-',
+    pincode:customer?.pincode? customer?. pincode: '-'
   }));
 
   const handlePageChange = useCallback((page: number) => {
