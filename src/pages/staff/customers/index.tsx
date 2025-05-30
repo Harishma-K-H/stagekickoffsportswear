@@ -8,7 +8,7 @@ import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
 
 import { getCustomers } from './api';
-import { title } from 'process';
+// import { title } from 'process';
 
 const Customers: React.FC = () => {
   const { get } = useApiJSON();
