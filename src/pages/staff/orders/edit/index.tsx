@@ -54,6 +54,8 @@ const NewOrders: React.FC = () => {
   const [priceOverrides, setPriceOverrides] = useState<{ [key: string]: string }>({});
   const [printType, setPrintType] = useState<Record<string, any[]>>({});
   const [size] = useState<any[]>([
+    { value: '20', label: '20' },
+    { value: '22', label: '22' },
     { value: '24', label: '24' },
     { value: '26', label: '26' },
     { value: '28', label: '28' },

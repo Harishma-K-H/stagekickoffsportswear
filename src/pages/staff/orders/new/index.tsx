@@ -64,6 +64,8 @@ const NewOrders: React.FC = () => {
 
   const [printType, setPrintType] = useState<Record<string, any[]>>({});
   const [size] = useState<any[]>([
+    { value: '20', label: '20' },
+    { value: '22', label: '22' },
     { value: '24', label: '24' },
     { value: '26', label: '26' },
     { value: '28', label: '28' },
@@ -1481,7 +1483,7 @@ const CustomerDetails: React.FC<any> = ({
               name="pincode"
               
               rules={[
-                { required: true, message: 'Please enter a valid Pincode' },
+                {message: 'Please enter a valid Pincode' },
                 {
                   pattern: /^\d{6}$/,
                   message: 'Pincode must be a 6-digit number',
