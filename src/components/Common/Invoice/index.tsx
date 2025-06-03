@@ -238,7 +238,7 @@ const Invoice: React.FC<{
           labelColumnClassName: '!text-left bg-black/70 text-white',
         },
         {
-          heading: `${type} Date`,
+          heading: `${type} DATE`,
           value: `${dayjs(order_date).format('DD-MM-YYYY')}`,
           visibility: true,
           rowClassName: 'px-3',
@@ -246,7 +246,7 @@ const Invoice: React.FC<{
           labelColumnClassName: '!text-left bg-black/70 text-white',
         },
         {
-          heading: 'Delivery Date',
+          heading: 'DELIVERY DATE',
           value: `${dayjs(delivery_date).format('DD-MM-YYYY')}`,
           visibility: true,
           rowClassName: 'px-3',
