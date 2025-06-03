@@ -48,10 +48,11 @@ const Invoices: React.FC = () => {
       key: 'slNo',
     },
     {
-      title: 'Order ID',
-      dataIndex: 'OrderId',
-      key: 'OrderId',
+      title: 'Invoice number',
+      dataIndex: 'invoiceNumber',
+      key: 'invoiceNumber',
     },
+    
     {
       title: 'Customer',
       dataIndex: 'customerName',
@@ -63,9 +64,9 @@ const Invoices: React.FC = () => {
       key: 'totalAmount',
     },
     {
-      title: 'Invoice number',
-      dataIndex: 'invoiceNumber',
-      key: 'invoiceNumber',
+      title: 'Order ID',
+      dataIndex: 'OrderId',
+      key: 'OrderId',
     },
     {
       title: 'Delivery Date',

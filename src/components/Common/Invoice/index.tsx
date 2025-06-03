@@ -489,7 +489,7 @@ const Invoice: React.FC<{
           <p className="text-sm whitespace-pre-line leading-relaxed">{remarks}</p>
         </div>
       )}
-      {type === 'INVOICE' && (
+      {(type === 'INVOICE' || printForOfficeInvoice) && (
         <div className="grid grid-cols-2 gap-3 mt-5">
           <div>
             {/* <span className="text-sm">Bank Account Details,</span> */}
