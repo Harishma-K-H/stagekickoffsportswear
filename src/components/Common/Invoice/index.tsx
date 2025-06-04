@@ -483,30 +483,29 @@ const Invoice: React.FC<{
         </div>
       </div>
       {/* Remarks Section */}
-      {remarks && remarks.trim() !== '' && (
-        <div className="col-span-3 mt-8 mb-6 rounded-md bg-white bg-opacity-20 backdrop-blur-sm text-gray-900 dark:text-gray-100">
-          <h3 className="font-semibold mb-1">Remarks</h3>
-          <p className="text-sm whitespace-pre-line leading-relaxed">{remarks}</p>
-        </div>
+      { (type === "ORDER" && !printForOfficeInvoice && remarks && remarks.trim() !== '') && (
+  <div className="col-span-3 mt-8 mb-6 rounded-md bg-white bg-opacity-20 backdrop-blur-sm text-gray-900 dark:text-gray-100">
+    <h3 className="font-semibold mb-1">Remarks</h3>
+    <p className="text-sm whitespace-pre-line leading-relaxed">{remarks}</p>
+  </div>
       )}
-      {(type === 'INVOICE' || printForOfficeInvoice) && (
-        <div className="grid grid-cols-2 gap-3 mt-5">
-          <div>
-            {/* <span className="text-sm">Bank Account Details,</span> */}
-            <h4 className="font-semibold mb-1">Bank Account Details,</h4>
-            <h3 className="text-[15px] font-semibold text-gray-600 whitespace-pre-wrap dark:text-gray-300">
-              {created_by?.account_details}
-            </h3>
-          </div>
-          {created_by?.qr_code && (
-            <img
-              src={`https://kickoffsportswear.app${ created_by?.qr_code }`}
-              alt="QR Code"
-              className="h-full ml-auto"
-            />
-          )}
-        </div>
-      )}
+  { (type === "INVOICE" || printForOfficeInvoice )&& (
+  <div className="grid grid-cols-2 gap-3 mt-5">
+    <div>
+      <h4 className="font-semibold mb-1">Bank Account Details,</h4>
+      <h3 className="text-[15px] font-semibold text-gray-600 whitespace-pre-wrap dark:text-gray-300">
+        {created_by?.account_details}
+      </h3>
+    </div>
+    {created_by?.qr_code && (
+      <img
+        src={`https://kickoffsportswear.app${created_by?.qr_code}`}
+        alt="QR Code"
+        className="h-full ml-auto"
+      />
+    )}
+  </div>
+)}
     </div>
       
   );
