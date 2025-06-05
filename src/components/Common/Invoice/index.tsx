@@ -28,6 +28,7 @@ const Invoice: React.FC<{
     order_date,
     delivery_date,
     net_cost,
+    items_total_cost,
     gst,
     total_cost,
     customer,
@@ -387,9 +388,10 @@ const Invoice: React.FC<{
           <div className="space-y-2">
             <TableView
               rowData={[
+              
                 {
-                  heading: 'Sub Total',
-                  value: parseFloat(net_cost).toFixed(2),
+                  heading: 'Raw Subtotal',
+                  value: parseFloat(items_total_cost).toFixed(2),
                   visibility: true,
                   rowClassName: '!border-b-0',
                   labelColumnClassName: '!text-right pr-4 w-[60%]',
@@ -405,6 +407,15 @@ const Invoice: React.FC<{
                   valueColumnClassName: '!pr-4',
                 },
              
+                {
+                  heading: 'Sub Total',
+                  value: parseFloat(net_cost).toFixed(2),
+                  visibility: true,
+                  rowClassName: '!border-b-0',
+                  labelColumnClassName: '!text-right pr-4 w-[60%]',
+                  valueColumnClassName: '!pr-4',
+                },
+               
                 ...taxRows,
 
                 {
@@ -482,32 +493,49 @@ const Invoice: React.FC<{
           {/* )} */}
         </div>
       </div>
+    
       {/* Remarks Section */}
       { (type === "ORDER" && !printForOfficeInvoice && remarks && remarks.trim() !== '') && (
   <div className="col-span-3 mt-8 mb-6 rounded-md bg-white bg-opacity-20 backdrop-blur-sm text-gray-900 dark:text-gray-100">
     <h3 className="font-semibold mb-1">Remarks</h3>
     <p className="text-sm whitespace-pre-line leading-relaxed">{remarks}</p>
+    
   </div>
       )}
-  { (type === "INVOICE" || printForOfficeInvoice )&& (
+{(type === "INVOICE" || printForOfficeInvoice) && (
   <div className="grid grid-cols-2 gap-3 mt-5">
+    {/* Left side: Bank Details */}
     <div>
       <h4 className="font-semibold mb-1">Bank Account Details,</h4>
       <h3 className="text-[15px] font-semibold text-gray-600 whitespace-pre-wrap dark:text-gray-300">
         {created_by?.account_details}
       </h3>
     </div>
+
+    {/* Right side: QR Code and Signature */}
     {created_by?.qr_code && (
-      <img
-        src={`https://kickoffsportswear.app${created_by?.qr_code}`}
-        alt="QR Code"
-        className="h-full ml-auto"
-      />
-    )}
+      <div className="flex flex-col items-end justify-between h-full">
+        <img
+          src={`https://kickoffsportswear.app${created_by?.qr_code}`}
+          alt="QR Code"
+          className="h-32 w-32 object-contain"
+        />
+       
+      </div>
+          )}
+         
+     
+        </div>
+        
+      )}
+   
+   {type === "INVOICE" && (
+  <div className="print:block hidden mt-20 text-right">
+    <h5 className="text-base font-bold text-gray-700">Authorized Signature</h5>
   </div>
 )}
     </div>
-      
+   
   );
 };
 
@@ -534,6 +562,7 @@ const TableView: React.FC<any> = ({ rowData }) => {
         ))}
       </tbody>
     </table>
+    
   );
 };
 export default Invoice;
