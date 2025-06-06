@@ -522,7 +522,7 @@ const NewOrders: React.FC = () => {
         const newDataSource = orderDetails.items.map(
           (_item: any, index: number) => ({
             key: String(index),
-            item_id: _item.id, 
+            item_id: _item.order_item_id, 
           }),
         );
         setDataSource(newDataSource);

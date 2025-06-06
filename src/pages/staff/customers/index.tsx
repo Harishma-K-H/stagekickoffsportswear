@@ -112,7 +112,7 @@ const Customers: React.FC = () => {
     mobile: `${customer?.mobile_number1}${customer?.mobile_number2 ? `, ${customer?.mobile_number2}` : ''}`,
     address: `${customer?.address1} ${customer?.address2}`,
     email: customer?.email ? customer?.email : '-',
-    gstn: customer?.gstn ? customer?.gstn : '-',
+    gstn: customer?.gst_no    ? customer?.gst_no : '-',
     pincode:customer?.pincode? customer?. pincode: '-'
   }));
 
