@@ -6,7 +6,7 @@ const defaultTheme = require('tailwindcss/defaultTheme');
 module.exports = {
   mode: 'jit',
   purge: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
-  darkMode: false, // or 'media' or 'class'
+  darkMode: 'class', // or 'media' or 'class'
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     screens: {
@@ -28,7 +28,6 @@ module.exports = {
       heading: '#1A1A1A',
       'sub-heading': '#3A3A3A',
     },
-    darkMode: false,
     fontSize: {
       ...defaultTheme.fontSize,
       'lg-heading': '60px',
