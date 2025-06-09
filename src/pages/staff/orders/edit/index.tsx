@@ -156,7 +156,11 @@ const NewOrders: React.FC = () => {
         if (cost === 0) {
           notify(`Item is not valid`, 'warning');
         }
-
+        // ✅ Re-enable price/quantity on success
+        setDisabledFields((prev) => ({
+          ...prev,
+          [rowKey]: false,
+        }));
         // Update base cost first
         // 1. Update baseCosts
         setBaseCosts((prev) => ({
