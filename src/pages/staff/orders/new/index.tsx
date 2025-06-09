@@ -1231,15 +1231,22 @@ console.log("=== Debug End ===");
           </Form>
         </div>
 
-        <div className="w-full">
-          <Button
-            title="Submit"
-            type="submit"
-            loading={loading}
-            handleClick={handleSubmit}
-            className="bg-primary rounded-md w-full text-white h-12 font-medium hover:!text-white/90 mx-auto hover:!bg-primary/95"
-          />
-        </div>
+        <div className="flex w-full gap-4">
+        <Button
+          title="Cancel"
+          type="button"
+          loading={false}
+          handleClick={() => navigate('/branch/orders')}
+          className="bg-gray-400 rounded-md w-1/2 text-white h-12 font-medium hover:bg-blue-400"
+        />
+        <Button
+          title="Submit"
+          type="submit"
+          loading={loading}
+          handleClick={handleSubmit}
+          className="bg-primary rounded-md w-1/2 text-white h-12 font-medium hover:bg-primary/95"
+        />
+      </div>
       </div>
     </>
   );

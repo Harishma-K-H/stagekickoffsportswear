@@ -52,10 +52,10 @@ body {
 
 /* light Scroll Bar end */
 .force-light-mode:hover {
-  background-color: #4b5563 !important; /* Tailwind: bg-gray-600 */
+  background-color: #4b5563; /* Tailwind: bg-gray-600 */
 }
 .force-light-mode {
-  background-color: #6b7280 !important;
+  background-color: #6b7280;
   color: white !important;
   border: none !important;
 }
