@@ -51,7 +51,7 @@ const NewOrders: React.FC = () => {
   const [materialOptions, setMaterialOptions] = useState<Record<string, any[]>>(
     {},
   );
-  const [priceOverrides, setPriceOverrides] = useState<{ [key: string]: string }>({});
+  const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>({});
   const [printType, setPrintType] = useState<Record<string, any[]>>({});
   const [size] = useState<any[]>([
     { value: '20', label: '20' },
@@ -83,6 +83,7 @@ const NewOrders: React.FC = () => {
   const [subtotalDiscount, setSubtotalDiscount] = useState<number>(0);
   const [sleeveConfigs, setSleeveConfigs] = useState<Record<string, any>>({});
   const [deletedItemIds, setDeletedItemIds] = useState<number[]>([]);
+  const [disabledFields, setDisabledFields] = useState<{ [key: string]: boolean }>({});
 
   // function to fetch order by ID
   const getOrderById = useCallback(async () => {
@@ -157,10 +158,11 @@ const NewOrders: React.FC = () => {
         }
 
         // Update base cost first
-        setBaseCosts((prev) => {
-          const newCosts = { ...prev, [rowKey]: cost };
-          return newCosts;
-        });
+        // 1. Update baseCosts
+        setBaseCosts((prev) => ({
+          ...prev,
+          [rowKey]: cost,
+        }));
 
         // Then update row total cost with the new base cost
         setTimeout(() => {
@@ -185,15 +187,13 @@ const NewOrders: React.FC = () => {
   // Calculate row total cost based on base cost and quantity
   const calculateRowTotalCost = (
     rowKey: string,
-    quantity: string,
-    baseCostValue?: number,
+    quantity: number,
+    baseCostValue?: number
   ): number => {
-    const baseCost =
-      baseCostValue !== undefined ? baseCostValue : baseCosts[rowKey] || 0;
-    const qty = parseFloat(quantity) || 0;
-    return baseCost * qty;
+    const baseCost = baseCostValue ?? baseCosts[rowKey] ?? 0;
+    return baseCost * quantity;
   };
-
+  
   // Handle adding a new row
   const handleAdd = async () => {
     try {
@@ -273,6 +273,7 @@ const NewOrders: React.FC = () => {
   // Handle form field changes
   const handleFieldChange = (changedFields: any, allFields: any) => {
     const rowData = allFields.data || {};
+    
     Object.keys(rowData).forEach(async (rowKey) => {
       const row = rowData[rowKey];
       const changedField = Object.keys(changedFields.data?.[rowKey] || {})[0];
@@ -282,7 +283,8 @@ const NewOrders: React.FC = () => {
         ['model', 'material', 'print_type', 'sleevecase', 'size'].includes(
           changedField,
         )
-      ) {
+      )
+      {
         // Get current model configuration
         const modelOption = models.find((m: any) => m.id === row?.model);
         const currentConfig = getSleeveCaseConfig(
@@ -316,7 +318,8 @@ const NewOrders: React.FC = () => {
           isMaterialValid &&
           isPrintTypeValid &&
           isSleeveCaseValid
-        ) {
+        )
+        {
           const payload = {
             modelId: row.model,
             materialId: row.material || null,
@@ -325,24 +328,39 @@ const NewOrders: React.FC = () => {
           };
 
           // Add a small delay to ensure all state updates are processed
-          setTimeout(() => {
+          setTimeout(() =>
+          {
             getItemCost(rowKey, payload);
           }, 100);
         }
       } else if (changedField === 'quantity') {
-        const quantity = row.quantity;
-        const currentBaseCost = baseCosts[rowKey] || 0;
-        const newTotalCost = calculateRowTotalCost(
-          rowKey,
-          quantity,
-          currentBaseCost,
-        );
-
+        const quantity = Number(row.quantity || 0); // ✅ number
+        const currentBaseCost = priceOverrides[rowKey] ?? baseCosts[rowKey] ?? 0;
+      
+        const newTotalCost = calculateRowTotalCost(rowKey, quantity, currentBaseCost);
+      
+        setTotalCosts((prev) => ({
+          ...prev,
+          [rowKey]: newTotalCost,
+        }));
+      } else if (changedField === 'price') {
+        const price = Number(row.price || 0);       // ✅ number
+        const quantity = Number(row.quantity || 0); // ✅ number
+      
+        setPriceOverrides((prev) => ({
+          ...prev,
+          [rowKey]: price, // ✅ number
+        }));
+      
+        const newTotalCost = calculateRowTotalCost(rowKey, quantity, price);
+      
         setTotalCosts((prev) => ({
           ...prev,
           [rowKey]: newTotalCost,
         }));
       }
+      
+      
     });
   };
 
@@ -893,6 +911,7 @@ const NewOrders: React.FC = () => {
               <Input
                 placeholder="Enter Price"
                 className="w-full h-9"
+                disabled={!!disabledFields[rowKey]}
                 onChange={(e) => {
                   const newPrice = e.target.value;
                   if (/^\d*\.?\d*$/.test(newPrice)) {
@@ -934,6 +953,7 @@ const NewOrders: React.FC = () => {
         >
           <Input
             placeholder="Enter Quantity"
+            disabled={!!disabledFields[record.key]}
             className="w-full h-9"
             onInput={(e) => {
               e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters

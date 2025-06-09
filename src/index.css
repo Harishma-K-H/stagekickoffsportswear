@@ -11,7 +11,7 @@
 }
 
 body {
-  background-color: #f8fafc;
+  background-color: #f8fafc !important;
 }
 
 /* Scroll Bar start */
@@ -51,3 +51,11 @@ body {
 }
 
 /* light Scroll Bar end */
+.force-light-mode:hover {
+  background-color: #4b5563 !important; /* Tailwind: bg-gray-600 */
+}
+.force-light-mode {
+  background-color: #6b7280 !important;
+  color: white !important;
+  border: none !important;
+}

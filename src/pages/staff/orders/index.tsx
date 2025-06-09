@@ -90,7 +90,7 @@ const Orders: React.FC = () => {
               handleClick={() => showModal(ordersList[record?.key]?.id, 1)}
               title="View"
               type="button"
-              className="text-white bg-gray-500 rounded-md !py-2"
+              className="!bg-gray-500 !text-white rounded-md !py-2"
             />
             <Button
               handleClick={() => showModal(ordersList[record?.key]?.id, 2)}
@@ -255,7 +255,9 @@ const ModalDetails: React.FC<any> = ({
   setIsModalOpen,
   modalId,
   setOrderId,
-}) => {
+}) =>
+{
+  const [downloadClicked, setDownloadClicked] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [printForOffice, setPrintForOffice] = useState<boolean>(false);
   const [printForOfficeInvoice, setPrintForOfficeInvoice] =
@@ -317,15 +319,30 @@ const ModalDetails: React.FC<any> = ({
     }, 100);
   }, []);
 
-  const handleOfficeInvoiceDownload = useCallback(() => {
-    setPrintForOfficeInvoice(true);
-    setTimeout(() => {
-      handleDownload(
-        `Invoice_${orderDetails?.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`,
-      );
-      setPrintForOfficeInvoice(false);
-    }, 100);
-  }, [orderDetails]);
+  // const handleOfficeInvoiceDownload = useCallback(() => {
+  //   setPrintForOfficeInvoice(true);
+  //   setTimeout(() => {
+  //     handleDownload(
+  //       `Invoice_${orderDetails?.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`,
+  //     );
+  //     setPrintForOfficeInvoice(false);
+  //   }, 100);
+  // }, [orderDetails]);
+    const handleOfficeInvoiceDownload = () => {
+      setDownloadClicked(true);             // triggers the effect above
+    };
+    useEffect(() => {
+      if (!downloadClicked) return;
+  
+      (async () => {
+        const fileName = orderDetails?.invoice_id
+          ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
+          : 'Order_Invoice.pdf';
+  
+        await generatePDF({ contentRef, fileName });
+        setDownloadClicked(false);          // hide signature again
+      })();
+    }, [downloadClicked, contentRef, orderDetails]);
 
   return (
     <Modal
@@ -334,17 +351,19 @@ const ModalDetails: React.FC<any> = ({
       centered
       onCancel={handleCancel}
       footer={null}
+      className="dark-mode-modal"
     >
       {modalId === 1 && orderDetails && (
         <>
           <div ref={contentRef}>
             {' '}
             <Invoice
-              type={printForOfficeInvoice ? 'INVOICE' : 'ORDER'}
+              type={printForOfficeInvoice ? 'INVOICE' : 'ORDER' }
               data={orderDetails}
               printForOffice={printForOffice}
               downloadForOffice={downloadForOffice}
               printForOfficeInvoice={printForOfficeInvoice}
+              downloadClicked={downloadClicked}
             />
           </div>
           <div className="flex justify-end gap-2">

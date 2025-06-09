@@ -28,6 +28,7 @@ module.exports = {
       heading: '#1A1A1A',
       'sub-heading': '#3A3A3A',
     },
+    darkMode: false,
     fontSize: {
       ...defaultTheme.fontSize,
       'lg-heading': '60px',

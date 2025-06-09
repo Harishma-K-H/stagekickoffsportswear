@@ -13,6 +13,7 @@ const Invoice: React.FC<{
   printForOffice?: boolean;
   downloadForOffice?: boolean;
   printForOfficeInvoice?: boolean;
+  downloadClicked?: boolean;
   paid?: boolean;
 }> = ({
   type = 'ORDER',
@@ -20,6 +21,7 @@ const Invoice: React.FC<{
   printForOffice = false,
   downloadForOffice = false,
   printForOfficeInvoice = false,
+  downloadClicked=false,
   paid = false,
 }) => {
   const {
@@ -113,6 +115,8 @@ const Invoice: React.FC<{
   console.log('Logo URL:', created_by?.logo);
   console.log('dhgdhgdhgdh', import.meta.env.VITE_MEDIA_BASE_PATH);
   console.log('Logo Path:', created_by?.logo);
+  console.log("printForOfficeInvoice", printForOfficeInvoice)
+  console.log("downloadClicked",downloadClicked)
   return (
     <div 
       id="invoice-print"
@@ -528,9 +532,8 @@ const Invoice: React.FC<{
         </div>
         
       )}
-   
-   {type === "INVOICE" && (
-  <div className="print:block hidden mt-20 text-right">
+{(downloadClicked || type === "INVOICE") && (
+  <div className={`mt-20 text-right ${downloadClicked ? 'block' : 'print:block hidden'}`}>
     <h5 className="text-base font-bold text-gray-700">Authorized Signature</h5>
   </div>
 )}

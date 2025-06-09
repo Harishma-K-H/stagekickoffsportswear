@@ -12,7 +12,6 @@ import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
-
 import { invoiceById, invoices } from './api';
 
 const Invoices: React.FC = () => {
@@ -32,7 +31,7 @@ const Invoices: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [invoiceId, setInvoiceId] = useState<number | null>(null);
   const [invoiceDetails, setInvoiceDetails] = useState<any>({});
-
+  // const [downloadClicked, setDownloadClicked] = useState(false);
   // Configure react-to-print with a custom document title
   const reactToPrintFn = useReactToPrint({
     contentRef,
@@ -184,6 +183,7 @@ const Invoices: React.FC = () => {
         setInvoiceId={setInvoiceId}
         contentRef={contentRef}
         reactToPrintFn={reactToPrintFn}
+        // setDownloadClicked={setDownloadClicked}
       />
     </>
   );
@@ -196,7 +196,9 @@ const ModalDetails: React.FC<any> = ({
   setInvoiceId,
   contentRef,
   reactToPrintFn,
-}) => {
+}) =>
+{
+  const [downloadClicked, setDownloadClicked] = useState(false);
   const handleCancel = useCallback(() => {
     setIsModalOpen(false);
     setInvoiceId(null); // Reset invoiceId when closing modal
@@ -208,17 +210,37 @@ const ModalDetails: React.FC<any> = ({
   }, [reactToPrintFn]);
 
   // Add this new function for download
-  const handleDownload = useCallback(async () => {
-    const fileName = invoiceDetails?.invoice_id
-      ? `Invoice_${invoiceDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
-      : 'Order_Invoice.pdf';
+  // const handleDownload = useCallback(async () =>
+  // {
+  //   setDownloadClicked(true);
+  //   const fileName = invoiceDetails?.invoice_id
+  //     ? `Invoice_${invoiceDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
+  //     : 'Order_Invoice.pdf';
+  //     // invoiceDetails.downloadForOfficeInvoice=true
+  //   await generatePDF({
+  //     contentRef,
+  //     fileName,
+  //   });
+  //   // setDownloadClicked(false);
+  // }, [contentRef, invoiceDetails,setDownloadClicked]);
+  
+  const handleDownload = () => {
+    setDownloadClicked(true);             // triggers the effect above
+  };
+  useEffect(() => {
+    if (!downloadClicked) return;
 
-    await generatePDF({
-      contentRef,
-      fileName,
-    });
-  }, [contentRef, invoiceDetails]);
+    (async () => {
+      const fileName = invoiceDetails?.invoice_id
+        ? `Invoice_${invoiceDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
+        : 'Order_Invoice.pdf';
 
+      await generatePDF({ contentRef, fileName });
+      setDownloadClicked(false);          // hide signature again
+    })();
+  }, [downloadClicked, contentRef, invoiceDetails]);
+
+console.log("setDownloadClicked",setDownloadClicked)
   return (
     <Modal
       open={isModalOpen}
@@ -228,7 +250,7 @@ const ModalDetails: React.FC<any> = ({
       footer={null}
     >
       <div ref={contentRef}>
-        <Invoice type={'INVOICE'} data={invoiceDetails} paid={true} />
+        <Invoice type={'INVOICE'} data={invoiceDetails} paid={true} downloadClicked={downloadClicked} />
       </div>
       <div className="flex justify-end gap-3">
         <Button
