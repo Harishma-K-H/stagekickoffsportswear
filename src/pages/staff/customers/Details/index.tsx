@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { Card, Collapse, Spin, Table } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
