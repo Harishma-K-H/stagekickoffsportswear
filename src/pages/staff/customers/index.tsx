@@ -6,7 +6,8 @@ import { Form, Input, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
-
+// import { Link } from 'react-router-dom';
+// import Paths from '@routes/paths';
 import { getCustomers } from './api';
 // import { title } from 'process';
 
@@ -51,6 +52,14 @@ const Customers: React.FC = () => {
       title: 'Business Name',
       dataIndex: 'businessName',
       key: 'businessName',
+      render: (_: any, record: any) => (
+        <a
+          href={`/branch/customers/${record.key}/details`}
+          className="text-blue-600 hover:underline"
+        >
+          {record.businessName}
+        </a>
+      )
     },
     {
       title: 'Mobile',

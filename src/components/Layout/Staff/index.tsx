@@ -36,8 +36,8 @@ const StaffLayout: React.FC<{}> = () => {
     },
     {
       title: 'Customers',
-      link: Paths.Staff.customers,
-      route: Paths.Staff.customers,
+      link: Paths.Staff.customers.index,
+      route: Paths.Staff.customers.index,
       Icon: <FaUsers className="w-[22px] h-auto" />,
     },
   ]);

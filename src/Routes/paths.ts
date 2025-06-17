@@ -9,7 +9,10 @@ interface PathsType {
   };
   Staff: {
     dashboard: string;
-    customers: string;
+    customers: {
+      index: string;
+      details: (id?: string | number) => string;
+    };
     orders: {
       index: string;
       new: string;
@@ -34,7 +37,10 @@ const Paths: PathsType = {
   },
   Staff: {
     dashboard: '/branch/dashboard',
-    customers: '/branch/customers',
+    customers: {
+      index: '/branch/customers',
+      details: (id = ':id') => `/branch/customers/${id}/details`,
+    },
     orders: {
       index: '/branch/orders',
       new: '/branch/orders/new',

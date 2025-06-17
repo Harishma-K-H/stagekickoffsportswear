@@ -39,6 +39,7 @@ interface Item {
   key: number;
   slNo: number;
   model_name: string;
+  is_active: boolean;
 }
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
@@ -67,7 +68,8 @@ const Items: React.FC = () => {
     label: string;
   }>({ value: '', label: '' });
 
-  const [itemsList, setItemsList] = useState<any>([]);
+  // const [itemsList, setItemsList] = useState<any>([]);
+  const [itemsList, setItemsList] = useState<Item[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [paginationData, setPaginationData] = useState({
@@ -96,48 +98,42 @@ const Items: React.FC = () => {
   //   console.error(error);
   // }
   // };
-  const handleToggleStatus = async (id: number, currentStatus: boolean) => {
-    // Flip the current status
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    console.log('Current Status:', currentStatus); // ✅ should be true or false
     const newStatus = !currentStatus;
-
-    // Build the payload
+    console.log('Toggled New Status:', newStatus); // ✅ opposite of current
+  
     const payload = { is_active: newStatus };
-
-    // Optional: log what we're sending
-    console.log(`Toggling ID: ${id}, from ${currentStatus} to ${newStatus}`);
-    console.log(
-      'Sending PUT request to:',
-      `/api/api_item/${id}/`,
-      'with payload:',
-      payload,
-    );
-
-    // API call
-    const res = await DeactivateItem(put, payload, id);
-
-    // Response check
-    if (res && res.ok) {
-      message.success(
-        `Item ${newStatus ? 'activated' : 'deactivated'} successfully`,
-      );
-
-      // Update UI state
-      setItemsList((prev: any[]) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, is_active: newStatus } : item,
-        ),
-      );
-    } else {
-      message.error('Failed to update item status');
+  
+    try {
+      const res = await DeactivateItem(put, payload, id);
+  
+      if (res && res.ok) {
+        message.success(
+          newStatus ? "Item activated successfully" : "Item deactivated successfully"
+        );
+  
+        // Update local state
+        setItemsList((prev: Item[]) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, is_active: newStatus } : item
+          )
+        );
+      } else {
+        message.error("Failed to update item status");
+      }
+    } catch (error) {
+      console.error("Error toggling status:", error);
+      message.error("An error occurred while updating status");
     }
   };
-
-  const toBoolean = (val: any) => {
-    if (typeof val === 'boolean') return val;
-    if (typeof val === 'string') return val.toLowerCase() === 'true';
-    if (typeof val === 'number') return val === 1;
-    return false;
-  };
+  
+  // const toBoolean = (val: any) => {
+  //   if (typeof val === 'boolean') return val;
+  //   if (typeof val === 'string') return val.toLowerCase() === 'true';
+  //   if (typeof val === 'number') return val === 1;
+  //   return false;
+  // };
 
   // const handleDeactivate = async (id: number) => {
   // try {
@@ -224,6 +220,7 @@ const Items: React.FC = () => {
         sleevecase: record.sleevecase,
         price: record.price,
         branch: record.branch, // ID
+        
       });
 
       setEditingKey(record.id);
@@ -514,20 +511,17 @@ const Items: React.FC = () => {
     {
       title: 'Action',
       dataIndex: 'action',
-      dataName: 'action',
       key: 'action',
       width: 170,
       render: (_: any, record: any) => {
         const editable = isEditing(record);
-        const isActive =
-          record.is_active === true ||
-          record.is_active === 'true' ||
-          record.is_active === 1;
+        // const isActive = record.is_active === true;
+    
         return editable ? (
           <span className="flex gap-2">
             <Popconfirm title="Sure to Save?" onConfirm={() => save(record.id)}>
               <h2
-                className="flex items-center w-full px-4 py-3 font-semibold text-white rounded-md cursor-pointer bg-primary"
+                className="flex items-center px-4 py-2 font-semibold text-white rounded-md cursor-pointer bg-primary"
                 title="Save"
               >
                 Save
@@ -535,20 +529,43 @@ const Items: React.FC = () => {
             </Popconfirm>
             <Popconfirm title="Sure to Cancel?" onConfirm={cancel}>
               <h2
-                className="flex items-center w-full px-4 py-3 font-semibold text-white rounded-md cursor-pointer bg-primary"
-                title="Save"
+                className="flex items-center px-4 py-2 font-semibold text-white rounded-md cursor-pointer bg-gray-500"
+                title="Cancel"
               >
                 Cancel
               </h2>
             </Popconfirm>
           </span>
         ) : (
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
             <FaRegEdit
-              className="w-8 h-8 p-1 cursor-pointer"
+              className="w-8 h-8 p-1 cursor-pointer hover:text-blue-600"
               onClick={() => edit(record)}
+              title="Edit"
             />
-            <Popconfirm
+          <Popconfirm
+          title="Are you sure you want to change the status of this item?"
+          onConfirm={() => {
+            console.log("Clicked record:", record);
+            handleToggleStatus(record.id, record.is_active);
+          }}
+          okText="Yes"
+          cancelText="No"
+        >
+          {record.is_active === true ? (
+            <FaToggleOn
+              className="w-8 h-8 cursor-pointer text-green-600 hover:text-green-800"
+              title="Click to deactivate"
+            />
+          ) : (
+            <FaToggleOff
+              className="w-8 h-8 cursor-pointer text-red-600 hover:text-red-800"
+              title="Click to activate"
+            />
+          )}
+        </Popconfirm>
+
+            {/* <Popconfirm
               title={`Are you sure you want to ${isActive ? 'deactivate' : 'activate'} this item?`}
               onConfirm={() =>
                 handleToggleStatus(record.id, toBoolean(record.is_active))
@@ -567,7 +584,7 @@ const Items: React.FC = () => {
                   title="Inactive"
                 />
               )}
-            </Popconfirm>
+            </Popconfirm> */}
           </div>
         );
       },
@@ -667,6 +684,7 @@ const Items: React.FC = () => {
     id: item?.id,
     branch_name: item?.branch?.name,
     branch: item?.branch?.id,
+    is_active:item?.is_active
   }));
 
   // Initial data fetching on component mount
@@ -691,10 +709,28 @@ const Items: React.FC = () => {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
           <div>
-            <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-              Items List{' '}
-              <span className="ml-2 text-xl text-gray-600">{`${selectedBranch.label} - ${selectedModel.label}`}</span>
+          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
+            Items List
+            {selectedBranch?.label || selectedModel?.label ? (
+              <span className="ml-2 text-xl text-gray-600">
+                {selectedBranch?.label ?? '(branchname)'} 
+                {selectedBranch?.label && selectedModel?.label ? ' - ' : ''}
+                {selectedModel?.label ?? ''}
+              </span>
+            ) : null}
             </h3>
+{/*             
+            <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
+          Items List
+          {(selectedBranch?.label || selectedModel?.label) && (
+            <span className="ml-2 text-xl text-gray-600">
+              : {selectedBranch?.label}
+              {selectedBranch?.label && selectedModel?.label && ' - '}
+              {!selectedBranch?.label && selectedModel?.label && selectedModel.label}
+              {selectedBranch?.label && selectedModel?.label && selectedModel.label}
+            </span>
+          )}
+        </h3> */}
           </div>
           <div className="flex items-center gap-4">
             <Form.Item name="branch" label="Branch" className="!mb-0">

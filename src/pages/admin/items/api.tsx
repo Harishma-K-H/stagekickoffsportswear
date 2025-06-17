@@ -73,13 +73,27 @@ export const updateItem = async (
 };
 
 //definr the deactivate function
+// export const DeactivateItem = async (
+//   put: (url: string, payload: any) => Promise<any>,
+//   payload: any,
+//   itemId: number | string,
+// ): Promise<any> => {
+//   // Use the correct URL format here
+//   const response = await put(`api_item/${itemId}/`, payload);
+
+//   return {
+//     data: response.data,
+//     status: response.status,
+//     ok: response.status >= 200 && response.status < 300,
+//   };
+// };
+// api.tsx or a service file
 export const DeactivateItem = async (
   put: (url: string, payload: any) => Promise<any>,
-  payload: any,
-  itemId: number | string,
-): Promise<any> => {
-  // Use the correct URL format here
-  const response = await put(`api_item/${itemId}/`, payload);
+  payload: { is_active: boolean },
+  id: string
+) => {
+  const response = await put(`/api_item/${id}/?status=status_updation`, payload);
 
   return {
     data: response.data,
