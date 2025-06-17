@@ -19,16 +19,22 @@ interface Item {
   size: string;
   qty: number;
   total_item_cost: string;
+  print_type?: string;
+  sleeve_case?: string;
+  unit_cost?: string;
 }
 
 interface InvoiceItem {
   id: number;
+  model: string;
+  material: string;
   size: string;
   qty: number;
   discount: string | null;
   total_item_cost: string;
   sleeve_case: string;
-  item: number;
+  print_type: string;
+  unit_cost: string;
 }
 
 interface Payment {
@@ -44,6 +50,8 @@ interface Order {
   order_date: string;
   delivery_date: string;
   total_cost: string;
+  net_cost?: string;
+  gst?: string;
   status?: string;
   items: Item[];
   payment_details: Payment[];
@@ -52,6 +60,7 @@ interface Order {
 interface Invoice {
   id: number;
   invoice_id: string;
+  order_id?: string;
   total_cost: string;
   gst: string;
   net_cost: string;
@@ -67,7 +76,7 @@ interface CustomerDetailsResponse {
 }
 
 export default function CustomerDetailsPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { get } = useApiJSON();
 
@@ -116,10 +125,10 @@ export default function CustomerDetailsPage() {
   const itemCols: ColumnsType<Item> = [
     { title: 'Model', dataIndex: 'model', key: 'model' },
     { title: 'Material', dataIndex: 'material', key: 'material' },
-    { title: 'print_type', dataIndex: 'print_type', key: 'print_type' },
+    { title: 'Print Type', dataIndex: 'print_type', key: 'print_type' },
     { title: 'Sleeve', dataIndex: 'sleeve_case', key: 'sleeve_case' },
     { title: 'Size', dataIndex: 'size', key: 'size' },
-    {title:'Unit Cost', dataIndex:'unit_cost', key:'unit_cost'},
+    { title: 'Unit Cost', dataIndex: 'unit_cost', key: 'unit_cost' },
     { title: 'Qty', dataIndex: 'qty', key: 'qty' },
     { title: 'Sub-total', dataIndex: 'total_item_cost', key: 'total_item_cost' },
   ];
@@ -151,11 +160,11 @@ export default function CustomerDetailsPage() {
 
   const invoiceItemCols: ColumnsType<InvoiceItem> = [
     { title: 'Model', dataIndex: 'model', key: 'model' },
-    { title: 'material', dataIndex: 'material', key: 'material' },
+    { title: 'Material', dataIndex: 'material', key: 'material' },
     { title: 'Print Type', dataIndex: 'print_type', key: 'print_type' },
     { title: 'Sleeve', dataIndex: 'sleeve_case', key: 'sleeve_case' },
     { title: 'Size', dataIndex: 'size', key: 'size' },
-    {title:'Unit Cost', dataIndex:'unit_cost', key:'unit_cost'},
+    { title: 'Unit Cost', dataIndex: 'unit_cost', key: 'unit_cost' },
     { title: 'Qty', dataIndex: 'qty', key: 'qty' },
     { title: 'Sub-total', dataIndex: 'total_item_cost', key: 'total_item_cost' },
   ];
@@ -165,12 +174,12 @@ export default function CustomerDetailsPage() {
       <Card
         title={`Customer – ${data.business_name}`}
         className="shadow-lg"
-        bodyStyle={{ padding: 24 }}
+        styles={{ body: { padding: 24 } }}
       >
         <Collapse defaultActiveKey={['orders', 'invoices']} ghost>
           <Panel header={`Orders (${data.orders.length})`} key="orders">
-            <Table<Order>
-              rowKey="id"
+            <Table
+              rowKey={(order) => `order-${order.id}`}
               columns={orderCols}
               dataSource={data.orders}
               pagination={false}
@@ -178,8 +187,8 @@ export default function CustomerDetailsPage() {
                 expandedRowRender: (order) => (
                   <>
                     <strong>Items</strong>
-                    <Table<Item>
-                      rowKey="id"
+                    <Table
+                      rowKey={(item) => `order-${order.id}-item-${item.id}`}
                       columns={itemCols}
                       dataSource={order.items}
                       pagination={false}
@@ -187,8 +196,8 @@ export default function CustomerDetailsPage() {
                       className="mb-4"
                     />
                     <strong>Payments</strong>
-                    <Table<Payment>
-                      rowKey={(r) => r.created_at}
+                    <Table
+                      rowKey={(p) => `order-${order.id}-pay-${p.created_at}`}
                       columns={payCols}
                       dataSource={order.payment_details}
                       pagination={false}
@@ -202,8 +211,8 @@ export default function CustomerDetailsPage() {
           </Panel>
 
           <Panel header={`Invoices (${data.invoices.length})`} key="invoices">
-            <Table<Invoice>
-              rowKey="id"
+            <Table
+              rowKey={(invoice) => `invoice-${invoice.id}`}
               columns={invoiceCols}
               dataSource={data.invoices}
               pagination={false}
@@ -211,8 +220,10 @@ export default function CustomerDetailsPage() {
                 expandedRowRender: (invoice) => (
                   <>
                     <strong>Items</strong>
-                    <Table<InvoiceItem>
-                      rowKey="id"
+                    <Table
+                      rowKey={(item) =>
+                        `invoice-${invoice.id}-item-${item.id}`
+                      }
                       columns={invoiceItemCols}
                       dataSource={invoice.invoice_items}
                       pagination={false}
