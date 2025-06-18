@@ -17,7 +17,7 @@ import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { Link } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { orderById, orders, payment } from './api';
 import { fetchDeliveryOrders } from '../dashboard/api'; 
 const Orders: React.FC = () => {

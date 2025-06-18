@@ -6,7 +6,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const handleCardClick = (type: 'today' | 'tomorrow') => {
-    navigate(`/admin/orders?date=${type}`);
+   navigate(`/admin/orders?date=${type}`);
   };
 
   return (
