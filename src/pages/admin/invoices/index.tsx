@@ -125,7 +125,7 @@ const Invoices: React.FC = () => {
     key: i,
     slNo: i + 1,
     OrderId: invoice?.orderID,
-    customerName: invoice?.customer?.name,
+    customerName: invoice?.customer?.business_name,
     invoiceNumber: invoice?.invoice_id,
     // orderDate: dayjs(invoice?.order_date).format('DD-MM-YYYY'),
     deliveryDate: invoice?.delivery_date,
