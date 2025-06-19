@@ -17,12 +17,14 @@ import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { Link } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
-
+import { useSearchParams } from 'react-router';
+import { fetchDeliveryOrders } from '../dashboard/api'; 
 import { orderById, orders, payment } from './api';
 
 const Orders: React.FC = () => {
   const { get, post } = useApiJSON();
-
+  const [searchParams] = useSearchParams();
+  const [dateType, setDateType] = useState<'today' | 'tomorrow' | null | undefined>(undefined);
   const [ordersList, setOrdersList] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -68,6 +70,8 @@ const Orders: React.FC = () => {
       title: 'Total Cost',
       dataIndex: 'total_cost',
       key: 'total_cost',
+      align: 'right',
+      render: (value: any) => parseFloat(value).toFixed(2),
     },
     {
       title: 'Action',
@@ -190,13 +194,72 @@ const Orders: React.FC = () => {
     setPageNumber(current);
   }, []);
 
-  useEffect(() => {
-    getOrders();
-  }, [getOrders]);
+  // useEffect(() => {
+  //   getOrders();
+  // }, [getOrders]);
 
   useEffect(() => {
     getOrderById();
   }, [getOrderById]);
+
+  // 1️⃣ Sync date from URL
+// Sync from URL
+useEffect(() => {
+  const urlDate = searchParams.get('date');
+  if (urlDate === 'today' || urlDate === 'tomorrow') {
+    setDateType(urlDate);
+  } else {
+    setDateType(null);
+  }
+}, [searchParams]);
+
+// Fetch based on dateType
+useEffect(() => {
+  if (dateType === undefined) return; // 
+
+  if (dateType === 'today' || dateType === 'tomorrow') {
+    fetchOrdersByDate(dateType);
+  } else {
+    fetchPaginatedOrders(pageNumber, pageSize);
+  }
+}, [dateType, pageNumber]);
+
+// 3️⃣ Fetch orders for today/tomorrow
+const fetchOrdersByDate = async (date: 'today' | 'tomorrow') => {
+  try {
+    const response = await fetchDeliveryOrders(get, date);
+    const data = response.data as { date: string; orders: any[] };
+
+    setOrdersList(data.orders);
+    setPaginationData({
+      count: data.orders.length,
+      hasPreviousPage: false,
+      hasNextPage: false,
+      pageNumber: 1,
+      pageSize: data.orders.length,
+    });
+  } catch (error) {
+    console.error('Error fetching orders by date', error);
+  }
+};
+
+// 4️⃣ Fetch all orders paginated
+const fetchPaginatedOrders = async (page: number, size: number) => {
+  try {
+    const response = await orders(get, page, size);
+    setOrdersList(response.data.results || []);
+    setPaginationData({
+      count: response.data.count,
+      hasPreviousPage: response.data.previous !== null,
+      hasNextPage: response.data.next !== null,
+      pageNumber: page,
+      pageSize: size,
+    });
+  } catch (error) {
+    console.error('Error fetching paginated orders', error);
+  }
+};
+  
 
   return (
     <>
