@@ -421,7 +421,7 @@ const ModalDetails: React.FC<any> = ({
           <div ref={contentRef}>
             {' '}
             <Invoice
-              type={printForOfficeInvoice ? 'INVOICE' : 'ORDER' }
+              type={(printForOfficeInvoice || downloadClicked) ? 'INVOICE' : 'ORDER'}
               data={orderDetails}
               printForOffice={printForOffice}
               downloadForOffice={downloadForOffice}

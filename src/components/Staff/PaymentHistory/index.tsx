@@ -202,7 +202,9 @@ const PaymentHistory: React.FC<any> = ({
               Balance Amount:
             </span>
             <span className="font-bold text-red-600 dark:text-red-400">
-              {currentBalance.toFixed(2)}
+                {/* {currentBalance.toFixed(2)} */}
+                {(parseFloat(total_cost) - totalPaid).toFixed(2)}
+
             </span>
             </div>
             <div className="flex justify-between pt-2 border-t">
