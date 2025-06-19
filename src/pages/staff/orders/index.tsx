@@ -70,7 +70,7 @@ const Orders: React.FC = () => {
       title: 'Total Cost',
       dataIndex: 'total_cost',
       key: 'total_cost',
-      align: 'right',
+      align: 'right' as const, // ✅ FIXED: Add comma here
       render: (value: any) => parseFloat(value).toFixed(2),
     },
     {
