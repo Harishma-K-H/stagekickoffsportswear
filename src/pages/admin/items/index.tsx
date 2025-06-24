@@ -40,6 +40,7 @@ interface Item {
   slNo: number;
   model_name: string;
   is_active: boolean;
+  HSN: string;
 }
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
@@ -501,6 +502,14 @@ const Items: React.FC = () => {
       width: '14%',
     },
     {
+      title: 'HSN',
+      dataIndex: 'HSN',
+      dataName: 'HSN',
+      key: 'HSN',
+      width: '14%',
+      editable: false,
+    },
+    {
       title: 'Price',
       dataIndex: 'price',
       dataName: 'price',
@@ -679,6 +688,7 @@ const Items: React.FC = () => {
     printType_name: item?.print_type_name,
     printType: item?.print_type,
     sleevecase: item?.sleevecase,
+    HSN:item?.HSN,
     price: item?.item_cost,
     itemCode: item?.item_code,
     id: item?.id,

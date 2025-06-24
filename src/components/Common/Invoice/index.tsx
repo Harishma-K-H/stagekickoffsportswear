@@ -312,6 +312,9 @@ const Invoice: React.FC<{
               <th className="px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
                 Size
               </th>
+              <th className="px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70">
+                HSN
+              </th>
               <th
                 className={`px-3 py-2 text-[13px] text-left dark:text-white border-r border-black/70 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
               >
@@ -348,8 +351,12 @@ const Invoice: React.FC<{
                 <td className="px-4 py-2 border dark:text-white border-black/70">
                   {item.sleeve_case}
                 </td>
+                
                 <td className="px-4 py-2 border dark:text-white border-black/70">
                   {item.size}
+                </td>
+                <td className="px-4 py-2 border dark:text-white border-black/70">
+                  {item.HSN}
                 </td>
                 <td
                   className={`px-4 py-2 dark:text-white border border-black/70 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
