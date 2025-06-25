@@ -43,8 +43,8 @@ const AdminLayout: React.FC<{}> = () => {
     },
     {
       title: 'Customers',
-      link: Paths.Admin.customers,
-      route: Paths.Admin.customers,
+      link: Paths.Admin.customers.index,
+      route: Paths.Admin.customers.index,
       Icon: <FaUsers className="w-[22px] h-auto" />,
     },
   ]);

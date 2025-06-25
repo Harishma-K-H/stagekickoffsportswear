@@ -163,7 +163,7 @@ const Orders: React.FC = () => {
 
   const tableDataSource = ordersList?.map((order: any, i: number) => ({
     key: i,
-    slNo: i + 1,
+    slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: order?.orderID,
     customerName: capitalizeFirstLetterOfEachWord(order?.customer?.business_name),
     orderDate: dayjs(order?.order_date).format('DD-MM-YYYY - h:mm A'),
@@ -202,7 +202,7 @@ useEffect(() => {
   } else {
     fetchPaginatedOrders(pageNumber, pageSize);
   }
-}, [dateType, pageNumber]);
+}, [dateType, pageNumber,pageSize]);
 
 // 3️⃣ Fetch orders for today/tomorrow
 const fetchOrdersByDate = async (date: 'today' | 'tomorrow') => {
@@ -269,13 +269,13 @@ const fetchPaginatedOrders = async (page: number, size: number) => {
             scroll={{ x: '700' }}
           />
           <Pagination
-            current={paginationData.pageNumber}
-            total={paginationData.count}
-            pageSize={paginationData.pageSize}
-            showSizeChanger
-            onShowSizeChange={onShowSizeChange}
-            onChange={handlePageChange}
-            rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
+        current={paginationData.pageNumber}
+        total={paginationData.count}
+        pageSize={paginationData.pageSize}
+        showSizeChanger
+        onShowSizeChange={onShowSizeChange}
+        onChange={handlePageChange}
+        rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
           />
         </div>
       </div>

@@ -6,7 +6,7 @@ import Items from '@pages/admin/items/Loadable';
 import Orders from '@pages/admin/orders/Loadable';
 import Paths from '@routes/paths';
 import { Route } from 'react-router';
-
+import CustomerDetailsPage from '@pages/admin/customers/Details/Loadable'; 
 import { ProtectedRoute } from '../ProtectedRoute';
 import UserRoles from '../roles';
 
@@ -24,6 +24,7 @@ export const AdminRoutes = (
     <Route path={Paths.Admin.items} element={<Items />} />
     <Route path={Paths.Admin.orders} element={<Orders />} />
     <Route path={Paths.Admin.invoices} element={<Invoices />} />
-    <Route path={Paths.Admin.customers} element={<Customers />} />
+    <Route path={Paths.Admin.customers.index} element={<Customers />} />
+    <Route path={Paths.Admin.customers.details()} element={<CustomerDetailsPage />} />
   </Route>
 );

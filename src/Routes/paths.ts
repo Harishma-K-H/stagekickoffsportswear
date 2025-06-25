@@ -3,7 +3,10 @@ interface PathsType {
   Admin: {
     dashboard: string;
     items: string;
-    customers: string;
+    customers: {
+      index: string;
+      details: (id?: string | number) => string;
+    };
     invoices: string;
     orders: string;
   };
@@ -31,7 +34,10 @@ const Paths: PathsType = {
   Admin: {
     dashboard: '/admin/dashboard',
     items: '/admin/items',
-    customers: '/admin/customers',
+    customers: {
+      index: '/admin/customers',
+      details: (id = ':id') => `/admin/customers/${id}/details`,
+    },
     invoices: '/admin/invoices',
     orders: '/admin/orders',
   },

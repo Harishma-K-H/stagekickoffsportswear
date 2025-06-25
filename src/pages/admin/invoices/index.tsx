@@ -21,7 +21,7 @@ const Invoices: React.FC = () => {
 
   const [invoicesList, setInvoicesList] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
@@ -33,12 +33,11 @@ const Invoices: React.FC = () => {
   const [invoiceId, setInvoiceId] = useState<number | null>(null);
   const [invoiceDetails, setInvoiceDetails] = useState<any>({});
 
-  // Configure react-to-print with a custom document title
   const reactToPrintFn = useReactToPrint({
     contentRef,
     documentTitle: invoiceDetails?.invoice_id
       ? `Invoice_${invoiceDetails.invoice_id}_${dayjs().format('YYYYMMDD')}`
-      : 'Order_Invoice', // Fallback if invoiceDetails is not yet set
+      : 'Order_Invoice',
   });
 
   const columns = [
@@ -71,16 +70,14 @@ const Invoices: React.FC = () => {
       title: 'Action',
       dataIndex: 'action',
       key: 'action',
-      render: (_: any, record: any) => {
-        return (
-          <Button
-            handleClick={() => showModal(invoicesList[record?.key]?.id)}
-            title="View"
-            type="button"
-            className="text-white bg-gray-500 rounded-md !py-2 w-full"
-          />
-        );
-      },
+      render: (_: any, record: any) => (
+        <Button
+          handleClick={() => showModal(invoicesList[record?.key]?.id)}
+          title="View"
+          type="button"
+          className="text-white bg-gray-500 rounded-md !py-2 w-full"
+        />
+      ),
     },
   ];
 
@@ -100,9 +97,8 @@ const Invoices: React.FC = () => {
     }
   }, [get, pageNumber, pageSize]);
 
-  // Memoized function to fetch invoice by ID
   const getInvoiceById = useCallback(async () => {
-    if (invoiceId === null || invoiceId === undefined) return; // Skip if invoice id is null
+    if (invoiceId === null) return;
     try {
       const { data } = await invoiceById(get, encodeURIComponent(invoiceId));
       setInvoiceDetails(data);
@@ -111,23 +107,26 @@ const Invoices: React.FC = () => {
     }
   }, [get, invoiceId]);
 
-  // Memoized function to show modal
   const showModal = useCallback((invId: number) => {
-    setInvoiceId(invId); // Set invoiceId to trigger getInvoiceById
+    setInvoiceId(invId);
     setIsModalOpen(true);
+  }, []);
+
+  const onShowSizeChange = useCallback((_current: number, size: number) => {
+    setPageSize(size);
+    setPageNumber(1);
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
     setPageNumber(page);
   }, []);
 
-  const tableDataSource = invoicesList?.map((invoice: any, i: number) => ({
+  const tableDataSource = invoicesList.map((invoice: any, i: number) => ({
     key: i,
-    slNo: i + 1,
+    slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: invoice?.orderID,
     customerName: invoice?.customer?.business_name,
     invoiceNumber: invoice?.invoice_id,
-    // orderDate: dayjs(invoice?.order_date).format('DD-MM-YYYY'),
     deliveryDate: invoice?.delivery_date,
   }));
 
@@ -146,9 +145,7 @@ const Invoices: React.FC = () => {
       </Helmet>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
-          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-            Invoice List
-          </h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">Invoice List</h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
           <Table
@@ -159,9 +156,11 @@ const Invoices: React.FC = () => {
             scroll={{ x: '700' }}
           />
           <Pagination
-            current={paginationData.pageNumber}
+            current={pageNumber}
             total={paginationData.count}
-            pageSize={paginationData.pageSize}
+            pageSize={pageSize}
+            showSizeChanger
+            onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
           />
@@ -189,15 +188,13 @@ const ModalDetails: React.FC<any> = ({
 }) => {
   const handleCancel = useCallback(() => {
     setIsModalOpen(false);
-    setInvoiceId(null); // Reset invoiceId when closing modal
+    setInvoiceId(null);
   }, [setIsModalOpen, setInvoiceId]);
 
-  // Office Print: printForOffice = true
   const handleOfficePrint = useCallback(() => {
-    reactToPrintFn(); // Trigger print
+    reactToPrintFn();
   }, [reactToPrintFn]);
 
-  // Add this new function for download
   const handleDownload = useCallback(async () => {
     const fileName = invoiceDetails?.invoice_id
       ? `Invoice_${invoiceDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
@@ -218,7 +215,7 @@ const ModalDetails: React.FC<any> = ({
       footer={null}
     >
       <div ref={contentRef}>
-        <Invoice type={'INVOICE'} data={invoiceDetails} paid={true} />
+        <Invoice type="INVOICE" data={invoiceDetails} paid />
       </div>
       <div className="flex justify-end gap-3">
         <Button
@@ -226,14 +223,14 @@ const ModalDetails: React.FC<any> = ({
           title="Print"
           type="button"
           icon={<FaPrint />}
-          className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+          className="text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2"
         />
         <Button
           handleClick={handleDownload}
           title="Download"
           type="button"
           icon={<FaDownload />}
-          className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+          className="text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2"
         />
       </div>
     </Modal>

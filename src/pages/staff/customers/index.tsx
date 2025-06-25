@@ -16,7 +16,7 @@ const Customers: React.FC = () => {
 
   const [customers, setCustomers] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
@@ -112,10 +112,14 @@ const Customers: React.FC = () => {
     },
     [get, pageNumber, pageSize],
   );
+  const onShowSizeChange = useCallback((_current: number, size: number) => {
+    setPageSize(size);
+    setPageNumber(1);
+  }, [fetchCustomers]);
 
-  const tableDataSource = customers?.map((customer: any, i: number) => ({
+  const tableDataSource = customers?.map((customer: any, index: number) => ({
     key: customer.id,
-    slNo: i + 1,
+    slNo: (pageNumber - 1) * pageSize + index + 1,
     // name: capitalizeFirstLetterOfEachWord(customer.name),
     businessName: customer?.business_name.toUpperCase(),
     mobile: `${customer?.mobile_number1}${customer?.mobile_number2 ? `, ${customer?.mobile_number2}` : ''}`,
@@ -177,9 +181,10 @@ const Customers: React.FC = () => {
             scroll={{ x: '700' }}
           />
           <Pagination
-            current={paginationData.pageNumber}
+            current={pageNumber}
             total={paginationData.count}
-            pageSize={paginationData.pageSize}
+            pageSize={pageSize}
+            onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
           />

@@ -14,14 +14,14 @@ const Customers: React.FC = () => {
 
   const [customers, setCustomers] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize] = useState<number>(10);
-  const [paginationData, setPaginationData] = useState({
-    count: 0,
-    hasPreviousPage: false,
-    hasNextPage: false,
-    pageNumber: 1,
-    pageSize: 20,
-  });
+    const [pageSize, setPageSize] = useState<number>(10);
+    const [paginationData, setPaginationData] = useState({
+      count: 0,
+      hasPreviousPage: false,
+      hasNextPage: false,
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+    });
 
   const handleSubmit = (values: any) => {
     if (values?.customerName != '') {
@@ -50,6 +50,14 @@ const Customers: React.FC = () => {
       title: 'Business Name',
       dataIndex: 'businessName',
       key: 'businessName',
+      render: (_: any, record: any) => (
+        <a
+          href={`/admin/customers/${record.key}/details`}
+          className="text-blue-600 hover:underline"
+        >
+          {record.businessName}
+        </a>
+      )
     },
     {
       title: 'Mobile',
@@ -98,16 +106,24 @@ const Customers: React.FC = () => {
     [get, pageNumber, pageSize],
   );
 
-  const tableDataSource = customers?.map((customer: any, i: number) => ({
-    key: customer.id,
-    slNo: i + 1,
-    name: capitalizeFirstLetterOfEachWord(customer.name),
-    businessName: capitalizeFirstLetterOfEachWord(customer.business_name),
-    mobile: `${customer?.mobile_number1}${customer?.mobile_number2 ? `, ${customer?.mobile_number2}` : ''}`,
-    address: `${customer?.address1} ${customer?.address2}`,
-    email: customer?.email ? customer?.email : '-',
-    gstn: customer?.gstn ? customer?.gstn : '-',
-  }));
+  const onShowSizeChange = useCallback((_current: number, size: number) => {
+    setPageSize(size);
+    setPageNumber(1);
+  }, [fetchCustomers]);
+
+  const tableDataSource =
+  customers?.map((customer: any, index: number) => {
+    return {
+      key: customer.id,
+      slNo: (pageNumber - 1) * pageSize + index + 1,
+      name: capitalizeFirstLetterOfEachWord(customer.name),
+      businessName: capitalizeFirstLetterOfEachWord(customer.business_name),
+      mobile: `${customer?.mobile_number1}${customer?.mobile_number2 ? `, ${customer?.mobile_number2}` : ''}`,
+      address: `${customer?.address1 || ''} ${customer?.address2 || ''}`,
+      email: customer?.email || '-',
+      gstn: customer?.gstn || '-',
+    };
+  });
 
   const handlePageChange = useCallback((page: number) => {
     setPageNumber(page);
@@ -160,13 +176,14 @@ const Customers: React.FC = () => {
             pagination={false}
             scroll={{ x: '700' }}
           />
-          <Pagination
-            current={paginationData.pageNumber}
-            total={paginationData.count}
-            pageSize={paginationData.pageSize}
-            onChange={handlePageChange}
-            rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-          />
+         <Pagination
+  current={pageNumber}
+  total={paginationData.count}
+  pageSize={pageSize}
+  onShowSizeChange={onShowSizeChange}
+  onChange={handlePageChange}
+  rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
+/>
         </div>
       </div>
     </>

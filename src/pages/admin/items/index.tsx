@@ -680,7 +680,7 @@ const Items: React.FC = () => {
 
   const tableDataSource = itemsList?.map((item: any, i: number) => ({
     key: i,
-    slNo: i + 1,
+    slNo: (pageNumber - 1) * pageSize + i + 1,
     model_name: item?.model_name,
     model: item?.model,
     material_name: item?.material_name,

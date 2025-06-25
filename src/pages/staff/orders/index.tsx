@@ -150,7 +150,7 @@ const Orders: React.FC = () => {
     } catch (error: any) {
       notify('Failed to fetch order details', 'error');
     }
-  }, [get, orderId]);
+  }, [get, pageNumber, pageSize,orderId]);
 
   // Memoized function to create new payment
   const CreteNewPayment = useCallback(
@@ -180,7 +180,7 @@ const Orders: React.FC = () => {
 
   const tableDataSource = ordersList?.map((order: any, i: number) => ({
     key: i,
-    slNo: i + 1,
+    slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: order?.orderID,
     customerName: capitalizeFirstLetterOfEachWord(order?.customer?.business_name),
     orderDate: dayjs(order?.order_date).format('DD-MM-YYYY - h:mm A'),
@@ -189,10 +189,10 @@ const Orders: React.FC = () => {
     total_cost: order?.total_cost, // Pass total_cost to the record
   }));
 
-  const onShowSizeChange = useCallback((current: number, pageSize: number) => {
-    setPageSize(pageSize);
-    setPageNumber(current);
-  }, []);
+   const onShowSizeChange = useCallback((_current: number, size: number) => {
+      setPageSize(size);
+      setPageNumber(1);
+    }, []);
 
   // useEffect(() => {
   //   getOrders();
@@ -289,14 +289,14 @@ const fetchPaginatedOrders = async (page: number, size: number) => {
             scroll={{ x: '700' }}
           />
           <Pagination
-            current={paginationData.pageNumber}
+            current={pageNumber}
             total={paginationData.count}
-            pageSize={paginationData.pageSize}
+            pageSize={pageSize}
             showSizeChanger
             onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-          />
+            />
         </div>
       </div>
       <ModalDetails

@@ -20,7 +20,7 @@ const Invoices: React.FC = () => {
 
   const [invoicesList, setInvoicesList] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
@@ -128,10 +128,13 @@ const Invoices: React.FC = () => {
   const handlePageChange = useCallback((page: number) => {
     setPageNumber(page);
   }, []);
-
+  const onShowSizeChange = useCallback((_current: number, size: number) => {
+    setPageSize(size);
+    setPageNumber(1);
+  }, []);
   const tableDataSource = invoicesList?.map((invoice: any, i: number) => ({
     key: i,
-    slNo: i + 1,
+    slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: invoice?.orderID,
     customerName: invoice?.customer?.business_name,
     invoiceNumber: invoice?.invoice_id,
@@ -167,13 +170,15 @@ const Invoices: React.FC = () => {
             pagination={false}
             scroll={{ x: '700' }}
           />
-          <Pagination
-            current={paginationData.pageNumber}
-            total={paginationData.count}
-            pageSize={paginationData.pageSize}
-            onChange={handlePageChange}
-            rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-          />
+           <Pagination
+                      current={pageNumber}
+                      total={paginationData.count}
+                      pageSize={pageSize}
+                      showSizeChanger
+                      onShowSizeChange={onShowSizeChange}
+                      onChange={handlePageChange}
+                      rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
+                    />
         </div>
       </div>
       <ModalDetails
