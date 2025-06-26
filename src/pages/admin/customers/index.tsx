@@ -2,36 +2,107 @@ import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
-import { Form, Input, Pagination, Table } from 'antd';
+import { Form, Input, Modal, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
+import { FaRegEdit } from 'react-icons/fa';
 
-import { getCustomers } from './api';
+import { getCustomers, updateCustomer } from './api';
 
 const Customers: React.FC = () => {
-  const { get } = useApiJSON();
+  const { get, put } = useApiJSON();
 
-  const [customers, setCustomers] = useState<any>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-    const [pageSize, setPageSize] = useState<number>(10);
-    const [paginationData, setPaginationData] = useState({
-      count: 0,
-      hasPreviousPage: false,
-      hasNextPage: false,
-      pageNumber: pageNumber,
-      pageSize: pageSize,
-    });
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [paginationData, setPaginationData] = useState({
+    count: 0,
+    hasPreviousPage: false,
+    hasNextPage: false,
+    pageNumber,
+    pageSize,
+  });
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [form] = Form.useForm();
+
+  const fetchCustomers = useCallback(
+    async (searchText: string = '') => {
+      try {
+        const { data } = await getCustomers(get, searchText, pageNumber, pageSize);
+        setCustomers(data.results);
+        setPaginationData({
+          count: data?.count,
+          hasPreviousPage: data?.hasPreviousPage,
+          hasNextPage: data?.hasNextPage,
+          pageNumber: data?.pageNumber,
+          pageSize: data?.pageSize,
+        });
+      } catch (error: any) {
+        notify('Failed to fetch data', 'error');
+      }
+    },
+    [get, pageNumber, pageSize]
+  );
 
   const handleSubmit = (values: any) => {
-    if (values?.customerName != '') {
-      fetchCustomers(values?.customerName);
-    }
+    fetchCustomers(values?.customerName);
   };
 
   const handleClickClear = () => {
     fetchCustomers();
   };
+
+  const handleEditCustomer = (customerId: number) => {
+    const customer = customers.find((c) => c.id === customerId);
+    if (!customer) return;
+    setSelectedCustomer(customer);
+    form.setFieldsValue({
+      // name: customer.name,
+      business_name: customer.business_name,
+      mobile_number1: customer.mobile_number1,
+      mobile_number2: customer.mobile_number2,
+      address1: customer.address1,
+      address2: customer.address2,
+      email: customer.email,
+      state_name:customer.state_name,
+      gst_no: customer.gst_no,
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateCustomer = async (values: any) => {
+    try {
+      await updateCustomer(put, selectedCustomer.id, values);
+      notify('Customer updated successfully', 'success');
+      fetchCustomers();
+      setEditModalOpen(false);
+    } catch (error) {
+      notify('Failed to update customer', 'error');
+    }
+  };
+
+  const handlePageChange = useCallback((page: number) => {
+    setPageNumber(page);
+  }, []);
+
+  const onShowSizeChange = useCallback((_current: number, size: number) => {
+    setPageSize(size);
+    setPageNumber(1);
+  }, []);
+
+  const tableDataSource = customers?.map((customer: any, index: number) => ({
+    key: customer.id,
+    slNo: (pageNumber - 1) * pageSize + index + 1,
+    name: capitalizeFirstLetterOfEachWord(customer.name),
+    businessName: capitalizeFirstLetterOfEachWord(customer.business_name),
+    mobile: `${customer?.mobile_number1}${customer?.mobile_number2 ? `, ${customer?.mobile_number2}` : ''}`,
+    address: `${customer?.address1 || ''} ${customer?.address2 || ''}`,
+    email: customer?.email || '-',
+    gstn: customer?.gst_no || '-',
+  }));
 
   const columns = [
     {
@@ -39,13 +110,6 @@ const Customers: React.FC = () => {
       dataIndex: 'slNo',
       key: 'slNo',
     },
-    // {
-    //   title: 'Name',
-    //   dataIndex: 'name',
-    //   key: 'name',
-    //   // ...getColumnSearchProps('name'),
-    //   width: '15%',
-    // },
     {
       title: 'Business Name',
       dataIndex: 'businessName',
@@ -57,7 +121,7 @@ const Customers: React.FC = () => {
         >
           {record.businessName}
         </a>
-      )
+      ),
     },
     {
       title: 'Mobile',
@@ -80,56 +144,23 @@ const Customers: React.FC = () => {
       dataIndex: 'gstn',
       key: 'gstn',
     },
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      render: (_: any, record: any) => (
+        <div className="flex gap-3 items-center">
+          <button
+            onClick={() => handleEditCustomer(record.key)}
+            className="text-blue-600 hover:text-blue-800 text-xl"
+          >
+            <FaRegEdit />
+          </button>
+        </div>
+      ),
+    },
   ];
 
-  const fetchCustomers = useCallback(
-    async (searchText: string = '') => {
-      try {
-        const { data } = await getCustomers(
-          get,
-          searchText,
-          pageNumber,
-          pageSize,
-        );
-        setCustomers(data.results);
-        setPaginationData({
-          count: data?.count,
-          hasPreviousPage: data?.hasPreviousPage,
-          hasNextPage: data?.hasNextPage,
-          pageNumber: data?.pageNumber,
-          pageSize: data?.pageSize,
-        });
-      } catch (error: any) {
-        notify('Failed to fetch data', 'error');
-      }
-    },
-    [get, pageNumber, pageSize],
-  );
-
-  const onShowSizeChange = useCallback((_current: number, size: number) => {
-    setPageSize(size);
-    setPageNumber(1);
-  }, [fetchCustomers]);
-
-  const tableDataSource =
-  customers?.map((customer: any, index: number) => {
-    return {
-      key: customer.id,
-      slNo: (pageNumber - 1) * pageSize + index + 1,
-      name: capitalizeFirstLetterOfEachWord(customer.name),
-      businessName: capitalizeFirstLetterOfEachWord(customer.business_name),
-      mobile: `${customer?.mobile_number1}${customer?.mobile_number2 ? `, ${customer?.mobile_number2}` : ''}`,
-      address: `${customer?.address1 || ''} ${customer?.address2 || ''}`,
-      email: customer?.email || '-',
-      gstn: customer?.gstn || '-',
-    };
-  });
-
-  const handlePageChange = useCallback((page: number) => {
-    setPageNumber(page);
-  }, []);
-
-  // Initial data fetching on component mount
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
@@ -137,31 +168,22 @@ const Customers: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>KICKOFF SPORTS WEAR - Customers </title>
+        <title>KICKOFF SPORTS WEAR - Customers</title>
       </Helmet>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
-          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-            Customers List
-          </h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">Customers List</h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
           <Form className="flex gap-2 pb-3" onFinish={handleSubmit}>
-            <Form.Item
-              className="!mb-0 w-full"
-              name="customerName"
-              rules={[
-                { required: false, message: 'Please enter the Customer Name' },
-              ]}
-            >
+            <Form.Item className="!mb-0 w-full" name="customerName">
               <Input
-                placeholder={`Search customer Name`}
+                placeholder="Search customer name"
                 allowClear
                 onClear={handleClickClear}
                 className="w-full py-2 h-9 placeholder:text-gray-400"
               />
             </Form.Item>
-
             <Button
               type="submit"
               title=""
@@ -176,16 +198,66 @@ const Customers: React.FC = () => {
             pagination={false}
             scroll={{ x: '700' }}
           />
-         <Pagination
-  current={pageNumber}
-  total={paginationData.count}
-  pageSize={pageSize}
-  onShowSizeChange={onShowSizeChange}
-  onChange={handlePageChange}
-  rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-/>
+          <Pagination
+            current={pageNumber}
+            total={paginationData.count}
+            pageSize={pageSize}
+            showSizeChanger
+            onShowSizeChange={onShowSizeChange}
+            onChange={handlePageChange}
+            rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
+          />
         </div>
       </div>
+
+      {/* Edit Modal */}
+      <Modal
+        title={<h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>Edit Customer</h2>}
+        open={editModalOpen}
+        onCancel={() => setEditModalOpen(false)}
+        footer={null}
+        width={700} 
+      >
+        <Form form={form} layout="vertical" onFinish={handleUpdateCustomer}>
+  <Form.Item name="business_name" label={<span style={{ fontWeight: 'bold' }}>Business Name</span>}>
+    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+          </Form.Item>
+          <Form.Item name="address1" label={<span style={{ fontWeight: 'bold' }}>Address 1</span>}>
+    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+  </Form.Item>
+  <Form.Item name="address2" label={<span style={{ fontWeight: 'bold' }}>Address 2</span>}>
+    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+  </Form.Item>
+    <Form.Item name="address3" label={<span style={{ fontWeight: 'bold' }}>Address 3</span>}>
+    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+          </Form.Item>
+          <Form.Item name="state_name" label={<span style={{ fontWeight: 'bold' }}>State</span>}>
+    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+          </Form.Item>
+          <Form.Item name="pincode" label={<span style={{ fontWeight: 'bold' }}>Pincode</span>}>
+    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+  </Form.Item>
+  <Form.Item name="mobile_number1" label={<span style={{ fontWeight: 'bold' }}>Mobile Number 1</span>}>
+    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+  </Form.Item>
+  <Form.Item name="mobile_number2" label={<span style={{ fontWeight: 'bold' }}>Mobile Number 2</span>}>
+    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+  </Form.Item>
+  <Form.Item name="email" label={<span style={{ fontWeight: 'bold' }}>Email</span>}>
+    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+  </Form.Item>
+  
+  <Form.Item name="gstn" label={<span style={{ fontWeight: 'bold' }}>GSTN</span>}>
+    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+  </Form.Item>
+
+  <Button
+    title="Update Customer"
+    type="submit"
+    className="text-white bg-green-600 mt-3"
+  />
+</Form>
+      </Modal>
     </>
   );
 };
