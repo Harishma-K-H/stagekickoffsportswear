@@ -189,10 +189,10 @@ const Orders: React.FC = () => {
     total_cost: order?.total_cost, // Pass total_cost to the record
   }));
 
-   const onShowSizeChange = useCallback((_current: number, size: number) => {
-      setPageSize(size);
-      setPageNumber(1);
-    }, []);
+    const onShowSizeChange = useCallback((current: number, pageSize: number) => {
+       setPageSize(pageSize);
+       setPageNumber(current);
+     }, []);
 
   // useEffect(() => {
   //   getOrders();

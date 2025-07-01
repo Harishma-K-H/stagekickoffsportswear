@@ -38,6 +38,7 @@ const Invoice: React.FC<{
     items,
     payment_details,
     created_by,
+    created_at,
     remarks,
     discount,
   } = data;
@@ -244,20 +245,26 @@ const Invoice: React.FC<{
         },
         {
           heading: `${type} DATE`,
-          value: `${dayjs(order_date).format('DD-MM-YYYY')}`,
+          value: dayjs(
+            type === 'INVOICE'
+              ? (printForOfficeInvoice ? new Date() : created_at)
+              : order_date
+          ).format('DD-MM-YYYY'),
           visibility: true,
           rowClassName: 'px-3',
           valueColumnClassName: '!text-left',
           labelColumnClassName: '!text-left bg-black/70 text-white',
         },
         {
-          heading: 'DELIVERY DATE',
-          value: `${dayjs(delivery_date).format('DD-MM-YYYY')}`,
+          heading: `DELIVERY DATE`,
+          value: delivery_date && dayjs(delivery_date, ['DD-MM-YYYY', 'YYYY-MM-DD', 'YYYY-MM-DDTHH:mm:ssZ']).isValid()
+            ? dayjs(delivery_date, ['DD-MM-YYYY', 'YYYY-MM-DD', 'YYYY-MM-DDTHH:mm:ssZ']).format('DD-MM-YYYY')
+            : 'NA',
           visibility: true,
           rowClassName: 'px-3',
           valueColumnClassName: '!text-left',
           labelColumnClassName: '!text-left bg-black/70 text-white',
-        },
+        }
       ]}
     />
   </div>
