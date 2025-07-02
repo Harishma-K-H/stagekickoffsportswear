@@ -2,11 +2,11 @@ import './style.css';
 
 import { numberToWords } from '@utils/common/numberToWords';
 import { paidAmount } from '@utils/staff/paidAmount';
-import dayjs from 'dayjs';
+// import dayjs from 'dayjs';
 import React, { useEffect } from 'react';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
-
+import dayjs from '@utils/dayjs';
 const Invoice: React.FC<{
   type: 'ORDER' | 'INVOICE';
   data: any;
@@ -42,7 +42,11 @@ const Invoice: React.FC<{
     remarks,
     discount,
   } = data;
-
+  useEffect(() => {
+    console.log("🔍 delivery_date raw:", delivery_date);
+    console.log("🧪 typeof delivery_date:", typeof delivery_date);
+    console.log("✅ isValid:", dayjs(delivery_date).isValid());
+  }, [delivery_date]);
   const totalPaid = paidAmount(payment_details);
   const currentBalance = parseInt(total_cost) - totalPaid;
   const taxRows =
@@ -257,14 +261,16 @@ const Invoice: React.FC<{
         },
         {
           heading: `DELIVERY DATE`,
-          value: delivery_date && dayjs(delivery_date, ['DD-MM-YYYY', 'YYYY-MM-DD', 'YYYY-MM-DDTHH:mm:ssZ']).isValid()
-            ? dayjs(delivery_date, ['DD-MM-YYYY', 'YYYY-MM-DD', 'YYYY-MM-DDTHH:mm:ssZ']).format('DD-MM-YYYY')
-            : 'NA',
+          value: (dayjs(delivery_date, 'DD-MM-YYYY', true).isValid()
+            ? dayjs(delivery_date, 'DD-MM-YYYY')
+            : dayjs(delivery_date)
+          ).format('DD-MM-YYYY'),
           visibility: true,
           rowClassName: 'px-3',
           valueColumnClassName: '!text-left',
           labelColumnClassName: '!text-left bg-black/70 text-white',
         }
+        
       ]}
     />
   </div>

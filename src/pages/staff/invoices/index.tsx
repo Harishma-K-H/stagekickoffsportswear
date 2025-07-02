@@ -13,9 +13,11 @@ import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
 import { invoiceById, invoices } from './api';
-
+import { API_CONFIG } from '@services/ApiService/Api.config';
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();
+  console.log("✅ LIVE BASE URL:", API_CONFIG.baseURL);
+
   const contentRef = useRef<HTMLDivElement>(null);
 
   const [invoicesList, setInvoicesList] = useState<any>([]);
