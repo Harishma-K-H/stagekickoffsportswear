@@ -141,17 +141,51 @@ const Orders: React.FC = () => {
   }, [get, pageNumber, pageSize]);
 
   // Memoized function to fetch order by ID
-  const getOrderById = useCallback(async () => {
-    if (orderId === null) return; // Skip if orderId is null
+//  Fetch order by ID
+const getOrderById = useCallback(async () => {
+  if (orderId === null) return;
+  try {
+    const { data } = await orderById(get, orderId);
+    setOrderDetails(data);
+  } catch (error: any) {
+    notify('Failed to fetch order details', 'error');
+  }
+}, [get, orderId]);
+//  Fetch orders by date
+const fetchOrdersByDate = useCallback(async (date: 'today' | 'tomorrow') => {
+  try {
+    const response = await fetchDeliveryOrders(get, date);
+    const data = response.data as { date: string; orders: any[] };
 
-    try {
-      const { data } = await orderById(get, orderId);
-      setOrderDetails(data);
-    } catch (error: any) {
-      notify('Failed to fetch order details', 'error');
-    }
-  }, [get, pageNumber, pageSize,orderId]);
+    setOrdersList(data.orders);
+    setPaginationData({
+      count: data.orders.length,
+      hasPreviousPage: false,
+      hasNextPage: false,
+      pageNumber: 1,
+      pageSize: data.orders.length,
+    });
+  } catch (error) {
+    console.error('Error fetching orders by date', error);
+  }
+}, [get]);
 
+//  Fetch all orders paginated
+const fetchPaginatedOrders = useCallback(async (page: number, size: number) => {
+  try {
+    const response = await orders(get, page, size);
+    setOrdersList(response.data.results || []);
+    setPaginationData({
+      count: response.data.count,
+      hasPreviousPage: response.data.previous !== null,
+      hasNextPage: response.data.next !== null,
+      pageNumber: page,
+      pageSize: size,
+    });
+  } catch (error) {
+    console.error('Error fetching paginated orders', error);
+  }
+}, [get]);
   // Memoized function to create new payment
   const CreteNewPayment = useCallback(
     async (payload: any) => {
@@ -182,7 +216,7 @@ const Orders: React.FC = () => {
     key: i,
     slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: order?.orderID,
-    customerName: capitalizeFirstLetterOfEachWord(order?.customer?.business_name),
+    customerName: capitalizeFirstLetterOfEachWord(order?.customer?.business_name).toUpperCase(),
     orderDate: dayjs(order?.order_date).format('DD-MM-YYYY - h:mm A'),
     deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
     payment_details: order?.payment_details, // Pass payment_details to the record
@@ -202,7 +236,7 @@ const Orders: React.FC = () => {
     getOrderById();
   }, [getOrderById]);
 
-  // 1️⃣ Sync date from URL
+  //  Sync date from URL
 // Sync from URL
 useEffect(() => {
   const urlDate = searchParams.get('date');
@@ -213,54 +247,23 @@ useEffect(() => {
   }
 }, [searchParams]);
 
-// Fetch based on dateType
+//  Fetch data on dateType, page change or size change
 useEffect(() => {
-  if (dateType === undefined) return; // 
+  if (dateType === undefined) return;
 
   if (dateType === 'today' || dateType === 'tomorrow') {
     fetchOrdersByDate(dateType);
   } else {
     fetchPaginatedOrders(pageNumber, pageSize);
   }
-}, [dateType, pageNumber]);
+}, [dateType, pageNumber, pageSize, fetchOrdersByDate, fetchPaginatedOrders]);
 
-// 3️⃣ Fetch orders for today/tomorrow
-const fetchOrdersByDate = async (date: 'today' | 'tomorrow') => {
-  try {
-    const response = await fetchDeliveryOrders(get, date);
-    const data = response.data as { date: string; orders: any[] };
 
-    setOrdersList(data.orders);
-    setPaginationData({
-      count: data.orders.length,
-      hasPreviousPage: false,
-      hasNextPage: false,
-      pageNumber: 1,
-      pageSize: data.orders.length,
-    });
-  } catch (error) {
-    console.error('Error fetching orders by date', error);
-  }
-};
-
-// 4️⃣ Fetch all orders paginated
-const fetchPaginatedOrders = async (page: number, size: number) => {
-  try {
-    const response = await orders(get, page, size);
-    setOrdersList(response.data.results || []);
-    setPaginationData({
-      count: response.data.count,
-      hasPreviousPage: response.data.previous !== null,
-      hasNextPage: response.data.next !== null,
-      pageNumber: page,
-      pageSize: size,
-    });
-  } catch (error) {
-    console.error('Error fetching paginated orders', error);
-  }
-};
   
-
+//  Fetch order details when modal is opened
+useEffect(() => {
+  getOrderById();
+}, [getOrderById]);
   return (
     <>
       <Helmet>

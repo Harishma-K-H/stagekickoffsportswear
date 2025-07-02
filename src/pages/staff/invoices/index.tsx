@@ -13,6 +13,7 @@ import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
 import { invoiceById, invoices } from './api';
+import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { API_CONFIG } from '@services/ApiService/Api.config';
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();
@@ -138,7 +139,7 @@ const Invoices: React.FC = () => {
     key: i,
     slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: invoice?.orderID,
-    customerName: invoice?.customer?.business_name,
+    customerName:capitalizeFirstLetterOfEachWord(invoice?.customer?.business_name).toUpperCase(),
     invoiceNumber: invoice?.invoice_id,
     totalAmount:invoice?.order_amount,
     orderDate: dayjs(invoice?.order_date).format('DD-MM-YYYY'),
