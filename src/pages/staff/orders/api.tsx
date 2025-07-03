@@ -30,3 +30,15 @@ export const payment = async (
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
+// Update invoice status to "Generated"
+export const updateInvoiceStatus = async (
+  put: (url: string, body: any) => Promise<any>,
+  orderID: number,
+): Promise<any> => {
+  const response = await put('/update-order-item/?data=generated', {
+    order_invoice: true,
+    orderID,
+  });
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};

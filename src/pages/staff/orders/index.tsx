@@ -19,8 +19,8 @@ import { Link } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 import { useSearchParams } from 'react-router';
 import { fetchDeliveryOrders } from '../dashboard/api'; 
-import { orderById, orders, payment } from './api';
-import axios from 'axios';
+import { orderById, orders, payment,updateInvoiceStatus } from './api';
+// import axios from 'axios';
 
 
 const Orders: React.FC = () => {
@@ -355,7 +355,7 @@ const ModalDetails: React.FC<any> = ({
   const [downloadForOffice, setDownloadForOffice] = useState<boolean>(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [invoiceActionType, setInvoiceActionType] = useState<'print' | 'download' | null>(null);
-
+  const { put } = useApiJSON();
   const handleDownload = useCallback(
     async (filesName?: string) => {
       const fileName = filesName
@@ -447,10 +447,7 @@ const ModalDetails: React.FC<any> = ({
   const onConfirmInvoiceAction = async () => {
     try {
       // ✅ 1. Call your backend API
-      await axios.put('http://127.0.0.1:8000/api/update-order-item/?data=generated', {
-        order_invoice: true,
-        orderID: orderDetails?.id,
-      });
+      await updateInvoiceStatus(put, orderDetails?.id);
   
       // ✅ 2. Handle Print or Download after confirmation
       if (invoiceActionType === 'print') {
