@@ -9,7 +9,7 @@ import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { generatePDF } from '@utils/staff/downloadPdf';
 import { paidAmount } from '@utils/staff/paidAmount';
-import { Modal, Pagination, Table } from 'antd';
+import { Modal, Pagination, Table, Badge } from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
@@ -20,6 +20,8 @@ import { useReactToPrint } from 'react-to-print';
 import { useSearchParams } from 'react-router';
 import { fetchDeliveryOrders } from '../dashboard/api'; 
 import { orderById, orders, payment } from './api';
+import axios from 'axios';
+
 
 const Orders: React.FC = () => {
   const { get, post } = useApiJSON();
@@ -39,6 +41,8 @@ const Orders: React.FC = () => {
   const [modalId, setModalId] = useState<number>(1);
   const [orderId, setOrderId] = useState<number | null>(null);
   const [orderDetails, setOrderDetails] = useState<any>({});
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [invoiceActionType, setInvoiceActionType] = useState<'print' | 'download' | null>(null);
 
   const columns = [
     {
@@ -72,6 +76,24 @@ const Orders: React.FC = () => {
       key: 'total_cost',
       align: 'right' as const, // ✅ FIXED: Add comma here
       render: (value: any) => parseFloat(value).toFixed(2),
+    },
+    {
+      title: 'Invoice Status',
+      dataIndex: 'order_invoice',
+      key: 'order_invoice',
+      render: (order_invoice: boolean) => (
+        <span style={{
+          display: 'inline-block',
+          padding: '4px 12px',
+          borderRadius: '999px',
+          fontWeight: 'bold',
+          fontSize: '12px',
+          color: '#fff',
+          backgroundColor: order_invoice ? '#2e7d32' : '#d32f2f'
+        }}>
+          {order_invoice ? 'Invoice Sent' : 'Awaiting Invoice'}
+        </span>
+      ),
     },
     {
       title: 'Action',
@@ -221,6 +243,7 @@ const fetchPaginatedOrders = useCallback(async (page: number, size: number) => {
     deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
     payment_details: order?.payment_details, // Pass payment_details to the record
     total_cost: order?.total_cost, // Pass total_cost to the record
+    order_invoice:order?.order_invoice
   }));
 
     const onShowSizeChange = useCallback((current: number, pageSize: number) => {
@@ -264,6 +287,7 @@ useEffect(() => {
 useEffect(() => {
   getOrderById();
 }, [getOrderById]);
+
   return (
     <>
       <Helmet>
@@ -329,6 +353,8 @@ const ModalDetails: React.FC<any> = ({
   const [printForOfficeInvoice, setPrintForOfficeInvoice] =
     useState<boolean>(false);
   const [downloadForOffice, setDownloadForOffice] = useState<boolean>(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [invoiceActionType, setInvoiceActionType] = useState<'print' | 'download' | null>(null);
 
   const handleDownload = useCallback(
     async (filesName?: string) => {
@@ -377,13 +403,18 @@ const ModalDetails: React.FC<any> = ({
     }, 100);
   }, []);
 
+  // const handleOfficeInvoicePrint = useCallback(() => {
+  //   setPrintForOfficeInvoice(true);
+  //   setTimeout(() => {
+  //     reactToPrintFn();
+  //     setPrintForOfficeInvoice(false);
+  //   }, 100);
+  // }, []);
   const handleOfficeInvoicePrint = useCallback(() => {
-    setPrintForOfficeInvoice(true);
-    setTimeout(() => {
-      reactToPrintFn();
-      setPrintForOfficeInvoice(false);
-    }, 100);
+    setInvoiceActionType('print');
+    setIsConfirmModalOpen(true);
   }, []);
+  
 
   // const handleOfficeInvoiceDownload = useCallback(() => {
   //   setPrintForOfficeInvoice(true);
@@ -394,21 +425,54 @@ const ModalDetails: React.FC<any> = ({
   //     setPrintForOfficeInvoice(false);
   //   }, 100);
   // }, [orderDetails]);
-    const handleOfficeInvoiceDownload = () => {
-      setDownloadClicked(true);             // triggers the effect above
-    };
-    useEffect(() => {
-      if (!downloadClicked) return;
+    // const handleOfficeInvoiceDownload = () => {
+    //   setDownloadClicked(true);             // triggers the effect above
+    // };
+    // useEffect(() => {
+    //   if (!downloadClicked) return;
   
-      (async () => {
+    //   (async () => {
+    //     const fileName = orderDetails?.invoice_id
+    //       ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
+    //       : 'Order_Invoice.pdf';
+  
+    //     await generatePDF({ contentRef, fileName });
+    //     setDownloadClicked(false);          // hide signature again
+    //   })();
+  // }, [downloadClicked, contentRef, orderDetails]);
+  const handleOfficeInvoiceDownload = useCallback(() => {
+    setInvoiceActionType('download');
+    setIsConfirmModalOpen(true);
+  }, []);
+  const onConfirmInvoiceAction = async () => {
+    try {
+      // ✅ 1. Call your backend API
+      await axios.put('http://127.0.0.1:8000/api/update-order-item/?data=generated', {
+        order_invoice: true,
+        orderID: orderDetails?.id,
+      });
+  
+      // ✅ 2. Handle Print or Download after confirmation
+      if (invoiceActionType === 'print') {
+        setPrintForOfficeInvoice(true);
+        setTimeout(() => {
+          reactToPrintFn();
+          setPrintForOfficeInvoice(false);
+        }, 100);
+      } else if (invoiceActionType === 'download') {
         const fileName = orderDetails?.invoice_id
           ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
           : 'Order_Invoice.pdf';
-  
         await generatePDF({ contentRef, fileName });
-        setDownloadClicked(false);          // hide signature again
-      })();
-    }, [downloadClicked, contentRef, orderDetails]);
+      }
+  
+      setIsConfirmModalOpen(false);
+      setInvoiceActionType(null);
+    } catch (err) {
+      console.error("API Error during invoice print/download:", err);
+    }
+  };
+  
 
   return (
     <Modal
@@ -432,55 +496,71 @@ const ModalDetails: React.FC<any> = ({
               downloadClicked={downloadClicked}
             />
           </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              handleClick={reactToPrintFn}
-              title="Customer Print"
-              type="button"
-              icon={<FaPrint />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-            <Button
-              handleClick={() =>
-                handleDownload(
-                  `Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}.pdf`,
-                )
-              }
-              title=""
-              type="button"
-              icon={<FaDownload />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-            <Button
-              handleClick={handleOfficePrint}
-              title="Office Print"
-              type="button"
-              icon={<FaPrint />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-            <Button
-              handleClick={handleOfficeDownload}
-              title=""
-              type="button"
-              icon={<FaDownload />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-
-            <Button
-              handleClick={handleOfficeInvoicePrint}
-              title="Invoice Print"
-              type="button"
-              icon={<FaPrint />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-            <Button
-              handleClick={handleOfficeInvoiceDownload}
-              title=""
-              type="button"
-              icon={<FaDownload />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-          </div>
+          <div className="flex justify-end gap-2 flex-wrap">
+          {/* Customer Print */}
+          <Button
+            handleClick={reactToPrintFn}
+            title="Customer Print"
+            type="button"
+            icon={<FaPrint />}
+            className={`text-white bg-blue-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+          />
+          {/* Customer Download */}
+          <Button
+            handleClick={() =>
+              handleDownload(`Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}.pdf`)
+            }
+            title=""
+            type="button"
+            icon={<FaDownload />}
+            className={`text-white bg-blue-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+          />
+          {/* Office Print */}
+          <Button
+            handleClick={handleOfficePrint}
+            title="Office Print"
+            type="button"
+            icon={<FaPrint />}
+            className={`text-white  bg-emerald-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+          />
+          {/* Office Download */}
+          <Button
+            handleClick={handleOfficeDownload}
+            title=""
+            type="button"
+            icon={<FaDownload />}
+            className={`text-white 	 bg-emerald-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+          />
+          {/* Invoice Print */}
+          <Button
+            handleClick={handleOfficeInvoicePrint}
+            title="Invoice Print"
+            type="button"
+            icon={<FaPrint />}
+            className={`text-white bg-gray-900 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+          />
+          {/* Invoice Download */}
+          <Button
+            handleClick={handleOfficeInvoiceDownload}
+            title=""
+            type="button"
+            icon={<FaDownload />}
+            className={`text-white bg-gray-900 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+          />
+        </div>
+        <Modal
+        title="Confirm Invoice Action"
+        open={isConfirmModalOpen}
+        onOk={onConfirmInvoiceAction}
+        onCancel={() => {
+          setIsConfirmModalOpen(false);
+          setInvoiceActionType(null);
+        }}
+        okText={`Yes, ${invoiceActionType === 'print' ? 'Print' : 'Download'}`}
+        cancelText="Cancel"
+      >
+        <p>Are you sure you want to {invoiceActionType} the invoice?</p>
+      </Modal>
         </>
       )}
 
