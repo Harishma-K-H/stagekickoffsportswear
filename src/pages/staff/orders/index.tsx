@@ -347,7 +347,7 @@ const ModalDetails: React.FC<any> = ({
   setOrderId,
 }) =>
 {
-  const [downloadClicked, setDownloadClicked] = useState(false);
+  const [downloadClicked] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [printForOffice, setPrintForOffice] = useState<boolean>(false);
   const [printForOfficeInvoice, setPrintForOfficeInvoice] =
