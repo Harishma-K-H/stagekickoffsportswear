@@ -9,7 +9,7 @@ import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { generatePDF } from '@utils/staff/downloadPdf';
 import { paidAmount } from '@utils/staff/paidAmount';
-import { Modal, Pagination, Table, Badge } from 'antd';
+import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
@@ -41,8 +41,8 @@ const Orders: React.FC = () => {
   const [modalId, setModalId] = useState<number>(1);
   const [orderId, setOrderId] = useState<number | null>(null);
   const [orderDetails, setOrderDetails] = useState<any>({});
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [invoiceActionType, setInvoiceActionType] = useState<'print' | 'download' | null>(null);
+  // const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  // const [invoiceActionType, setInvoiceActionType] = useState<'print' | 'download' | null>(null);
 
   const columns = [
     {
