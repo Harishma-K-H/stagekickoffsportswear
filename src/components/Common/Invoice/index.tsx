@@ -29,6 +29,7 @@ const Invoice: React.FC<{
     orderID,
     order_date,
     delivery_date,
+    order_invoice_sent_date,
     net_cost,
     items_total_cost,
     gst,
@@ -251,7 +252,9 @@ const Invoice: React.FC<{
           heading: `${type} DATE`,
           value: dayjs(
             type === 'INVOICE'
-              ? (printForOfficeInvoice ? new Date() : created_at)
+              ? (printForOfficeInvoice
+                  ? (order_invoice_sent_date ? order_invoice_sent_date : new Date())
+                  : created_at)
               : order_date
           ).format('DD-MM-YYYY'),
           visibility: true,

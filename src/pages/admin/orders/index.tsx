@@ -51,6 +51,11 @@ const Orders: React.FC = () => {
       key: 'OrderId',
     },
     {
+      title: 'Invoice ID',
+      dataIndex: 'invoice_id', // Make sure this matches your key in dataSource
+      key: 'invoice_id',
+    },
+    {
       title: 'Customer Name',
       dataIndex: 'customerName',
       key: 'name',
@@ -165,13 +170,14 @@ const Orders: React.FC = () => {
     key: i,
     slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: order?.orderID,
+    invoice_id: order?.invoice_id,
     customerName: capitalizeFirstLetterOfEachWord(order?.customer?.business_name),
     orderDate: dayjs(order?.order_date).format('DD-MM-YYYY - h:mm A'),
     deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
     payment_details: order?.payment_details, // Pass payment_details to the record
     total_cost: order?.total_cost, // Pass total_cost to the record
   }));
-
+  console.log('🧾 Table Data:', tableDataSource);
   const onShowSizeChange = useCallback((current: number, pageSize: number) => {
     setPageSize(pageSize);
     setPageNumber(current);
@@ -239,7 +245,8 @@ const fetchPaginatedOrders = async (page: number, size: number) => {
     console.error('Error fetching paginated orders', error);
   }
 };
-  
+console.log("📦 ordersList:", ordersList);
+
 
   return (
     <>

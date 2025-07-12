@@ -19,7 +19,9 @@ import { Link } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 import { useSearchParams } from 'react-router';
 import { fetchDeliveryOrders } from '../dashboard/api'; 
-import { orderById, orders, payment,updateInvoiceStatus } from './api';
+import { orderById, orders, payment, updateInvoiceStatus } from './api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {   faFileInvoice,faCreditCard,faFilePen, } from '@fortawesome/free-solid-svg-icons';
 // import axios from 'axios';
 
 
@@ -56,6 +58,12 @@ const Orders: React.FC = () => {
       key: 'OrderId',
     },
     {
+      title: 'Invoice ID',
+      dataIndex: 'InvoiceId',
+      key: 'invoice_id',
+      render: (text: string) => <span className="font-bold">{text}</span>,
+    },
+    {
       title: 'Customer',
       dataIndex: 'customerName',
       key: 'name',
@@ -81,69 +89,90 @@ const Orders: React.FC = () => {
       title: 'Invoice Status',
       dataIndex: 'order_invoice',
       key: 'order_invoice',
-      render: (order_invoice: boolean) => (
-        <span style={{
-          display: 'inline-block',
-          padding: '4px 12px',
-          borderRadius: '999px',
-          fontWeight: 'bold',
-          fontSize: '12px',
-          color: '#fff',
-          backgroundColor: order_invoice ? '#2e7d32' : '#d32f2f'
-        }}>
-          {order_invoice ? 'Invoice Sent' : 'Awaiting Invoice'}
-        </span>
-      ),
-    },
-    {
-      title: 'Action',
-      dataIndex: 'action',
-      key: 'action',
-      width: 170,
-      render: (_: any, record: any) => {
-        const totalPaid = paidAmount(record.payment_details);
-        const balanceAmount =
-          record.payment_details?.length > 0 &&
-          record.payment_details[record.payment_details?.length - 1]
-            ?.balance_amount;
-        const currentBalance = balanceAmount
-          ? parseFloat(balanceAmount)
-          : Math.round(parseFloat(record.total_cost || '0') - totalPaid);
-
+      render: (value: string) => {
+        let bgColor = '#d32f2f'; // Red (default: Awaiting Invoice)
+    
+        if (value === 'PAID') {
+          bgColor = '#2e7d32'; // Blue
+        } else if (value === 'GENERATED') {
+          bgColor = '#1976d2'; // Green
+        }
+    
         return (
-          <div className="flex gap-2">
-            <Button
-              handleClick={() => showModal(ordersList[record?.key]?.id, 1)}
-              title="View"
-              type="button"
-              className="!bg-gray-500 !text-white rounded-md !py-2"
-            />
-            <Button
-              handleClick={() => showModal(ordersList[record?.key]?.id, 2)}
-              title={currentBalance <= 0 ? 'Paid' : 'Pay'}
-              type="button"
-              className={`text-white ${currentBalance <= 0 ? 'bg-gray-500' : 'bg-green-700'}  rounded-md !py-2`}
-            />
-           {currentBalance <= 0 ? (
-            <Button
-              title="Edit"
-              type="button"
-              disabled
-              className="text-white bg-gray-400 rounded-md !py-2 cursor-not-allowed"
-            />
-          ) : (
-            <Link to={Paths.Staff.orders.edit(ordersList[record?.key]?.id)}>
-              <Button
-                title="Edit"
-                type="button"
-                className="text-white bg-gray-500 rounded-md !py-2"
-              />
-            </Link>
-          )}
-          </div>
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '4px 12px',
+              borderRadius: '999px',
+              fontSize: '12px',
+              color: '#fff',
+              backgroundColor: bgColor,
+            }}
+          >
+            {value || 'Awaiting Invoice'}
+          </span>
         );
       },
     },
+{
+  title: 'Action',
+  dataIndex: 'action',
+  key: 'action',
+  width: 200,
+  render: (_: any, record: any) => {
+    const totalPaid = paidAmount(record.payment_details);
+    const balanceAmount =
+      record.payment_details?.length > 0 &&
+      record.payment_details[record.payment_details.length - 1]?.balance_amount;
+
+    const currentBalance = balanceAmount
+      ? parseFloat(balanceAmount)
+      : Math.round(parseFloat(record.total_cost || '0') - totalPaid);
+
+    return (
+      <div className="flex items-center justify-center space-x-[10px] text-[22px]">
+        {/* View Invoice Icon */}
+        <FontAwesomeIcon
+          icon={faFileInvoice}
+          className="text-blue-600 hover:text-blue-800 cursor-pointer"
+          title="View Invoice"
+          onClick={() => showModal(ordersList[record?.key]?.id, 1)}
+        />
+
+        {/* Pay / Paid Icon */}
+        <FontAwesomeIcon
+          icon={faCreditCard}
+          className={`cursor-pointer ${
+            currentBalance <= 0
+              ? 'text-gray-400 cursor-not-allowed'
+              : 'text-green-600 hover:text-green-800'
+          }`}
+          title={currentBalance <= 0 ? 'Paid' : 'Pay Now'}
+          onClick={() =>
+            currentBalance > 0 && showModal(ordersList[record?.key]?.id, 2)
+          }
+        />
+
+        {/* Edit Icon */}
+        {currentBalance <= 0 ? (
+          <FontAwesomeIcon
+            icon={faFilePen}
+            className="text-gray-400 cursor-not-allowed"
+            title="Edit Disabled"
+          />
+        ) : (
+          <Link to={Paths.Staff.orders.edit(ordersList[record?.key]?.id)}>
+            <FontAwesomeIcon
+              icon={faFilePen}
+              className="text-gray-600 hover:text-gray-800 cursor-pointer"
+              title="Edit Order"
+            />
+          </Link>
+        )}
+      </div>
+    );
+  },
+},
   ];
 
   const getOrders = useCallback(async () => {
@@ -238,6 +267,7 @@ const fetchPaginatedOrders = useCallback(async (page: number, size: number) => {
     key: i,
     slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: order?.orderID,
+    InvoiceId:order?.invoice_id,
     customerName: capitalizeFirstLetterOfEachWord(order?.customer?.business_name).toUpperCase(),
     orderDate: dayjs(order?.order_date).format('DD-MM-YYYY - h:mm A'),
     deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
@@ -333,6 +363,7 @@ useEffect(() => {
         setIsModalOpen={setIsModalOpen}
         modalId={modalId}
         setOrderId={setOrderId}
+        getOrderById={getOrderById} 
       />
     </>
   );
@@ -345,6 +376,7 @@ const ModalDetails: React.FC<any> = ({
   setIsModalOpen,
   modalId,
   setOrderId,
+  getOrderById,
 }) =>
 {
   const [downloadClicked] = useState(false);
@@ -446,29 +478,42 @@ const ModalDetails: React.FC<any> = ({
   }, []);
   const onConfirmInvoiceAction = async () => {
     try {
-      // ✅ 1. Call your backend API
-      await updateInvoiceStatus(put, orderDetails?.id);
+      // ✅ Skip API if already generated
+      if (orderDetails?.order_invoice !== 'GENERATED') {
+        // ✅ 1. Determine status to set
+        const statusToSet =
+          invoiceActionType === 'print' || invoiceActionType === 'download'
+            ? 'GENERATED'
+            : 'PENDING'; // fallback just in case
   
-      // ✅ 2. Handle Print or Download after confirmation
+        // ✅ 2. Call API to update invoice status
+        await updateInvoiceStatus(put, orderDetails?.id, statusToSet);
+        await getOrderById()
+      }
+  
+      // ✅ 3. Handle Print or Download
       if (invoiceActionType === 'print') {
         setPrintForOfficeInvoice(true);
         setTimeout(() => {
-          reactToPrintFn();
+          reactToPrintFn(); // trigger print
           setPrintForOfficeInvoice(false);
         }, 100);
       } else if (invoiceActionType === 'download') {
         const fileName = orderDetails?.invoice_id
           ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
           : 'Order_Invoice.pdf';
-        await generatePDF({ contentRef, fileName });
+        await generatePDF({ contentRef, fileName }); // trigger download
       }
   
+      // ✅ 4. Close modal and reset
       setIsConfirmModalOpen(false);
       setInvoiceActionType(null);
     } catch (err) {
       console.error("API Error during invoice print/download:", err);
     }
   };
+  
+  
   
 
   return (

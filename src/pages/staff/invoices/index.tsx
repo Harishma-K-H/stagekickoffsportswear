@@ -15,6 +15,8 @@ import { useReactToPrint } from 'react-to-print';
 import { invoiceById, invoices } from './api';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { API_CONFIG } from '@services/ApiService/Api.config';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {   faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();
   console.log("✅ LIVE BASE URL:", API_CONFIG.baseURL);
@@ -50,11 +52,10 @@ const Invoices: React.FC = () => {
       key: 'slNo',
     },
     {
-      title: 'Invoice number',
+      title: 'Invoice Number',
       dataIndex: 'invoiceNumber',
       key: 'invoiceNumber',
     },
-    
     {
       title: 'Customer',
       dataIndex: 'customerName',
@@ -71,28 +72,32 @@ const Invoices: React.FC = () => {
       key: 'OrderId',
     },
     {
-      title: 'Delivery Date',
-      dataIndex: 'deliveryDate',
-      key: 'deliveryDate',
+      title: 'Invoice Date',
+      dataIndex: 'invoiceDate',
+      key:'invoiceDate',
     },
-    {
-      title: 'Action',
-      dataIndex: 'action',
-      key: 'action',
-      width: 170,
-      render: (_: any, record: any) => {
-        return (
-          <div className="flex gap-2">
-            <Button
-              handleClick={() => showModal(invoicesList[record?.key]?.id)}
-              title="View"
-              type="button"
-              className="text-white bg-gray-500 rounded-md !py-2 w-full"
-            />
-          </div>
-        );
-      },
-    },
+{
+  title: 'Action',
+  dataIndex: 'action',
+  key: 'action',
+  width: 170,
+  render: (_: any, record: any) => {
+    const isGenerated = record.invoice_generated;
+
+    return (
+      <div className="flex justify-center">
+        <FontAwesomeIcon
+          icon={faFileInvoice}
+          onClick={() => showModal(invoicesList[record?.key]?.id)}
+          className={`cursor-pointer text-white text-lg p-2 rounded-md ${
+            isGenerated ? 'bg-green-600' : 'bg-blue-800'
+          }`}
+          title="View Invoice"
+        />
+      </div>
+    );
+  },
+},
   ];
 
   const getInvoices = useCallback(async () => {
@@ -139,11 +144,12 @@ const Invoices: React.FC = () => {
     key: i,
     slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: invoice?.orderID,
+    invoice_generated: invoice?.invoice_generated,
     customerName:capitalizeFirstLetterOfEachWord(invoice?.customer?.business_name).toUpperCase(),
     invoiceNumber: invoice?.invoice_id,
     totalAmount:invoice?.order_amount,
     orderDate: dayjs(invoice?.order_date).format('DD-MM-YYYY'),
-    deliveryDate: invoice?.delivery_date,
+    invoiceDate: dayjs(invoice?.created_at).format('DD-MM-YYYY'),
   }));
 
   useEffect(() => {
