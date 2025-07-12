@@ -59,8 +59,12 @@ const NewOrders: React.FC = () => {
   const [materialOptions, setMaterialOptions] = useState<Record<string, any[]>>(
     {},
   );
-  const [priceOverrides, setPriceOverrides] = useState<{ [key: string]: string }>({});
-  const [disabledFields, setDisabledFields] = useState<{ [key: string]: boolean }>({});
+  const [priceOverrides, setPriceOverrides] = useState<{
+    [key: string]: string;
+  }>({});
+  const [disabledFields, setDisabledFields] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const [printType, setPrintType] = useState<Record<string, any[]>>({});
   const [size] = useState<any[]>([
@@ -166,28 +170,28 @@ const NewOrders: React.FC = () => {
       try {
         const { data } = await fetchItemCost(get, payload);
         const cost = data.cost || 0;
-  
+
         if (cost === 0) {
           notify(`Item is not valid`, 'warning');
         }
-  
+
         // ✅ Re-enable price/quantity on success
         setDisabledFields((prev) => ({
           ...prev,
           [rowKey]: false,
         }));
-  
+
         // 1. Update baseCosts
         setBaseCosts((prev) => ({
           ...prev,
           [rowKey]: cost,
         }));
-  
+
         // 2. Update form field only if no override
         if (!priceOverrides[rowKey]) {
           itemForm.setFieldValue(['data', rowKey, 'price'], cost.toFixed(2));
         }
-  
+
         // 3. Recalculate total cost
         const quantity = itemForm.getFieldValue(['data', rowKey, 'quantity']);
         if (quantity) {
@@ -197,18 +201,21 @@ const NewOrders: React.FC = () => {
             [rowKey]: newTotalCost,
           }));
         }
-  
       } catch (error: any) {
         console.error('Failed to fetch item cost:', error);
-        const errorMsg = error?.response?.data?.error || 'Failed to fetch item cost';
+        const errorMsg =
+          error?.response?.data?.error || 'Failed to fetch item cost';
         notify(errorMsg, 'error');
-  
+
         // Reset price and total cost
         setBaseCosts((prev) => ({ ...prev, [rowKey]: 0 }));
         setTotalCosts((prev) => ({ ...prev, [rowKey]: 0 }));
         itemForm.setFieldValue(['data', rowKey, 'price'], '0.00');
-  
-        if (errorMsg === 'Model not match' || errorMsg === 'Material not found in database') {
+
+        if (
+          errorMsg === 'Model not match' ||
+          errorMsg === 'Material not found in database'
+        ) {
           // ✅ Disable price/quantity only if this error
           setDisabledFields((prev) => ({
             ...prev,
@@ -224,10 +231,8 @@ const NewOrders: React.FC = () => {
         }
       }
     },
-    [fetchItemCost, get, itemForm, priceOverrides]
+    [fetchItemCost, get, itemForm, priceOverrides],
   );
-  
-  
 
   // Calculate row total cost based on base cost and quantity
   const calculateRowTotalCost = (
@@ -333,11 +338,11 @@ const NewOrders: React.FC = () => {
   // Handle form field changes
   const handleFieldChange = (changedFields: any, allFields: any) => {
     const rowData = allFields.data || {};
-  
+
     Object.keys(rowData).forEach(async (rowKey) => {
       const row = rowData[rowKey];
       const changedField = Object.keys(changedFields.data?.[rowKey] || {})[0];
-  
+
       if (
         ['model', 'material', 'print_type', 'sleevecase', 'size'].includes(
           changedField,
@@ -346,24 +351,25 @@ const NewOrders: React.FC = () => {
         const modelOption = models.find((m: any) => m.id === row?.model);
         const currentConfig = getSleeveCaseConfig(
           modelOption?.name,
-          materialOptions[rowKey]?.find((m: any) => m.id === row?.material)?.name,
+          materialOptions[rowKey]?.find((m: any) => m.id === row?.material)
+            ?.name,
         );
-  
+
         const isModelValid = !!row?.model;
         const isSizeValid = !!row?.size;
-  
+
         const isMaterialValid =
           materialOptions[rowKey]?.length === 0 ||
           (!!row?.material &&
             materialOptions[rowKey]?.some((m: any) => m.id === row.material));
-  
+
         const isPrintTypeValid =
           printType[rowKey]?.length === 0 ||
           (!!row?.print_type &&
             printType[rowKey]?.some((p: any) => p.id === row.print_type));
-  
+
         const isSleeveCaseValid = currentConfig.isDisabled || !!row?.sleevecase;
-  
+
         if (
           isModelValid &&
           isSizeValid &&
@@ -377,7 +383,7 @@ const NewOrders: React.FC = () => {
             printId: row.print_type || null,
             sleeveCase: currentConfig.isDisabled ? null : row.sleevecase,
           };
-  
+
           // Only fetch price if no override
           if (!priceOverrides[rowKey]) {
             setTimeout(() => {
@@ -387,9 +393,11 @@ const NewOrders: React.FC = () => {
         }
       } else if (changedField === 'quantity') {
         const quantity = row.quantity;
-        const price = parseFloat(itemForm.getFieldValue(['data', rowKey, 'price']) || 0);
+        const price = parseFloat(
+          itemForm.getFieldValue(['data', rowKey, 'price']) || 0,
+        );
         const newTotalCost = quantity * price;
-  
+
         setTotalCosts((prev) => ({
           ...prev,
           [rowKey]: newTotalCost,
@@ -397,14 +405,14 @@ const NewOrders: React.FC = () => {
       } else if (changedField === 'price') {
         const price = row.price;
         const quantity = row.quantity || 0;
-  
+
         setPriceOverrides((prev) => ({
           ...prev,
           [rowKey]: price,
         }));
-  
+
         const newTotalCost = parseFloat(price || 0) * quantity;
-  
+
         setTotalCosts((prev) => ({
           ...prev,
           [rowKey]: newTotalCost,
@@ -412,8 +420,6 @@ const NewOrders: React.FC = () => {
       }
     });
   };
-  
-
 
   // Handle subtotal discount change
   // const handleDiscountChange = (value: string) => {
@@ -426,7 +432,7 @@ const NewOrders: React.FC = () => {
     const rowData = itemForm.getFieldsValue().data || {};
     let subTotal = 0;
     let rawSubTotal = 0;
-  
+
     Object.keys(rowData).forEach((rowKey) => {
       const row = rowData[rowKey];
       if (row?.quantity) {
@@ -437,13 +443,13 @@ const NewOrders: React.FC = () => {
     console.log('rawSubTotal:', rawSubTotal);
     // Apply subtotal discount
     const discountedSubtotal = Math.max(0, subTotal - subtotalDiscount);
-    console.log("discountedSubtotal",discountedSubtotal)
+    console.log('discountedSubtotal', discountedSubtotal);
     // const discountAmount1 = ((rawSubTotal-(rawSubTotal * 0.025+discountedSubtotal * 0.025))*0.05);
     const discountAmount = subtotalDiscount || 0;
     const cgst = discountedSubtotal * 0.025; // 2.5%
     const sgst = discountedSubtotal * 0.025; // 2.5%
     const grandTotal = discountedSubtotal + cgst + sgst;
-  
+
     return {
       rawSubTotal: subTotal,
       subTotal: discountedSubtotal,
@@ -451,17 +457,14 @@ const NewOrders: React.FC = () => {
       sgst,
       grandTotal,
       discount: discountAmount,
-      discount1:discountedSubtotal
+      discount1: discountedSubtotal,
     };
-    
   };
-  
+
   // Handle full submission
   const handleSubmit = async () => {
-    let customerValues: any,
-      itemValues: any,
-      remarksValues: any;
-      // shippedValues: any;
+    let customerValues: any, itemValues: any, remarksValues: any;
+    // shippedValues: any;
     console.log({ customerForm });
 
     try {
@@ -615,7 +618,10 @@ const NewOrders: React.FC = () => {
       notify('Order created successfully!', 'success');
     } catch (error: any) {
       // Check if error response has the mobile number exists message
-      if (error.response && error.response.data?.error === 'Mobile number already exists') {
+      if (
+        error.response &&
+        error.response.data?.error === 'Mobile number already exists'
+      ) {
         notify('Mobile number already exists', 'error');
       } else {
         notify('Failed to create order. Please try again.', 'error');
@@ -636,23 +642,24 @@ const NewOrders: React.FC = () => {
     getModels();
   }, [getModels]);
 
-  const { rawSubTotal, subTotal, cgst, sgst, grandTotal , discount,  discount1 } = calculateTotals();
-  console.log("=== Debug Start ===");
-console.log("rawSubTotal:", rawSubTotal);
-console.log("discount1:", discount1);
+  const { rawSubTotal, subTotal, cgst, sgst, grandTotal, discount, discount1 } =
+    calculateTotals();
+  console.log('=== Debug Start ===');
+  console.log('rawSubTotal:', rawSubTotal);
+  console.log('discount1:', discount1);
 
-const step1 = discount1 * 0.025;
-console.log("Step 1 (discount1 * 0.025):", step1);
+  const step1 = discount1 * 0.025;
+  console.log('Step 1 (discount1 * 0.025):', step1);
 
-const step2 = discount1 * 0.025;
-console.log("Step 2 (discount1 * 0.025):", step2);
+  const step2 = discount1 * 0.025;
+  console.log('Step 2 (discount1 * 0.025):', step2);
 
-const step3 = rawSubTotal - (step1 + step2);
-console.log("Step 3 (rawSubTotal - (step1 + step2)):", step3);
+  const step3 = rawSubTotal - (step1 + step2);
+  console.log('Step 3 (rawSubTotal - (step1 + step2)):', step3);
 
-const finalDiscount = (step3 * 0.05).toFixed(2);
-console.log("Final Discount (step3 * 0.05):", finalDiscount);
-console.log("=== Debug End ===");
+  const finalDiscount = (step3 * 0.05).toFixed(2);
+  console.log('Final Discount (step3 * 0.05):', finalDiscount);
+  console.log('=== Debug End ===');
   // Columns definition
   const defaultColumns: (ColumnTypes[number] & {
     editable?: boolean;
@@ -878,11 +885,11 @@ console.log("=== Debug End ===");
     //     const sizeSelected = itemForm.getFieldValue(['data', rowKey, 'size']);
     //     const isOverridden = priceOverrides[rowKey];
     //     const basePrice = baseCosts[rowKey];
-    
+
     //     if (!sizeSelected) {
     //       return <span>-</span>;
     //     }
-    
+
     //     return (
     //       <Form.Item
     //         name={['data', rowKey, 'price']}
@@ -919,71 +926,75 @@ console.log("=== Debug End ===");
     //       </Form.Item>
     //     );
     //   },
-      // },
-      {
-        title: 'Price',
-        dataIndex: 'price',
-        align: 'center',
-        width: '8%',
-        render: (_, record) => {
-          const rowKey = record.key;
-          const sizeSelected = itemForm.getFieldValue(['data', rowKey, 'size']);
-          const formValue = itemForm.getFieldValue(['data', rowKey, 'price']);
-          const basePrice = baseCosts[rowKey];
-      
-          if (!sizeSelected) return <span>-</span>;
-      
-          return (
-            <Form.Item
-              name={['data', rowKey, 'price']}
-              className="!mb-0"
-              initialValue={formValue ?? basePrice?.toFixed(2)}
-              rules={[
-                {
-                  validator: (_, value) => {
-                    if (value && isNaN(parseFloat(value))) {
-                      return Promise.reject('Must be a valid number');
-                    }
-                    return Promise.resolve();
-                  },
+    // },
+    {
+      title: 'Price',
+      dataIndex: 'price',
+      align: 'center',
+      width: '8%',
+      render: (_, record) => {
+        const rowKey = record.key;
+        const sizeSelected = itemForm.getFieldValue(['data', rowKey, 'size']);
+        const formValue = itemForm.getFieldValue(['data', rowKey, 'price']);
+        const basePrice = baseCosts[rowKey];
+
+        if (!sizeSelected) return <span>-</span>;
+
+        return (
+          <Form.Item
+            name={['data', rowKey, 'price']}
+            className="!mb-0"
+            initialValue={formValue ?? basePrice?.toFixed(2)}
+            rules={[
+              {
+                validator: (_, value) => {
+                  if (value && isNaN(parseFloat(value))) {
+                    return Promise.reject('Must be a valid number');
+                  }
+                  return Promise.resolve();
                 },
-              ]}
-            >
-              <Input
-                placeholder="Enter Price"
-                className="w-full h-9"
-                disabled={!!disabledFields[rowKey]}
-                value={formValue ?? basePrice?.toFixed(2) ?? ''}
-                onChange={(e) => {
-                  const input = e.target.value;
-      
-                  // Allow numbers with optional one decimal point
-                  if (/^\d*\.?\d{0,2}$/.test(input)) {
-                    setPriceOverrides((prev) => ({
-                      ...prev,
-                      [rowKey]: input,
-                    }));
-                    itemForm.setFieldValue(['data', rowKey, 'price'], input);
-                  }
-                }}
-                onBlur={() => {
-                  const currentValue = itemForm.getFieldValue(['data', rowKey, 'price']);
-                  const formatted = parseFloat(currentValue);
-                  if (!isNaN(formatted)) {
-                    const finalValue = formatted.toFixed(2);
-                    setPriceOverrides((prev) => ({
-                      ...prev,
-                      [rowKey]: finalValue,
-                    }));
-                    itemForm.setFieldValue(['data', rowKey, 'price'], finalValue);
-                  }
-                }}
-              />
-            </Form.Item>
-          );
-        },
+              },
+            ]}
+          >
+            <Input
+              placeholder="Enter Price"
+              className="w-full h-9"
+              disabled={!!disabledFields[rowKey]}
+              value={formValue ?? basePrice?.toFixed(2) ?? ''}
+              onChange={(e) => {
+                const input = e.target.value;
+
+                // Allow numbers with optional one decimal point
+                if (/^\d*\.?\d{0,2}$/.test(input)) {
+                  setPriceOverrides((prev) => ({
+                    ...prev,
+                    [rowKey]: input,
+                  }));
+                  itemForm.setFieldValue(['data', rowKey, 'price'], input);
+                }
+              }}
+              onBlur={() => {
+                const currentValue = itemForm.getFieldValue([
+                  'data',
+                  rowKey,
+                  'price',
+                ]);
+                const formatted = parseFloat(currentValue);
+                if (!isNaN(formatted)) {
+                  const finalValue = formatted.toFixed(2);
+                  setPriceOverrides((prev) => ({
+                    ...prev,
+                    [rowKey]: finalValue,
+                  }));
+                  itemForm.setFieldValue(['data', rowKey, 'price'], finalValue);
+                }
+              }}
+            />
+          </Form.Item>
+        );
       },
-      
+    },
+
     {
       title: 'Quantity',
       dataIndex: 'quantity',
@@ -1096,53 +1107,51 @@ console.log("=== Debug End ===");
                 <span className="font-medium">Raw Subtotal:</span>
                 <span>{discount.toFixed(2)}</span>
               </div> */}
- 
-               <div className="flex items-center justify-between w-64">
-               <span className="font-medium">
+
+              <div className="flex items-center justify-between w-64">
+                <span className="font-medium">
                   {/* Discount: {((rawSubTotal - (rawSubTotal * 0.025 + discount1 * 0.025)) * 0.05).toFixed(2)} */}
-                  Discount: { finalDiscount }
+                  Discount: {finalDiscount}
                 </span>
-                 <Form.Item
-                   name="discount"
-                   className="!mb-0"
-                   rules={[
-                     {
-                       validator: (_, value) =>
-                         value && parseFloat(value) < 0
-                           ? Promise.reject(new Error('Cannot be negative'))
-                           : Promise.resolve(),
-                     },
-                     {
-                       validator: (_, value) =>
-                         value && isNaN(parseFloat(value))
-                           ? Promise.reject(new Error('Must be a valid number'))
-                           : Promise.resolve(),
-                     },
-                     {
-                       validator: (_, value) =>
-                         value && parseFloat(value) > rawSubTotal
-                           ? Promise.reject(new Error('Cannot exceed total'))
-                           : Promise.resolve(),
-                     },
-                   ]}
-               >
-                 <Input
-                     placeholder="0.00"
-                     className="w-32 text-right h-9"
-                     value={subtotalDiscount.toString()}
-                     onChange={(e) => {
+                <Form.Item
+                  name="discount"
+                  className="!mb-0"
+                  rules={[
+                    {
+                      validator: (_, value) =>
+                        value && parseFloat(value) < 0
+                          ? Promise.reject(new Error('Cannot be negative'))
+                          : Promise.resolve(),
+                    },
+                    {
+                      validator: (_, value) =>
+                        value && isNaN(parseFloat(value))
+                          ? Promise.reject(new Error('Must be a valid number'))
+                          : Promise.resolve(),
+                    },
+                    {
+                      validator: (_, value) =>
+                        value && parseFloat(value) > rawSubTotal
+                          ? Promise.reject(new Error('Cannot exceed total'))
+                          : Promise.resolve(),
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder="0.00"
+                    className="w-32 text-right h-9"
+                    value={subtotalDiscount.toString()}
+                    onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9.]/g, '');
                       setSubtotalDiscount(parseFloat(val || '0')); // Convert input string to number
                     }}
-                   />
-                 </Form.Item>
-              </div> 
+                  />
+                </Form.Item>
+              </div>
 
               <div className="flex justify-between w-64">
-              <span className="font-medium">Subtotal:</span>
-              <span>
-              {subTotal.toFixed(2)}
-        </span>
+                <span className="font-medium">Subtotal:</span>
+                <span>{subTotal.toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between w-64">
@@ -1232,21 +1241,21 @@ console.log("=== Debug End ===");
         </div>
 
         <div className="flex w-full gap-4">
-        <Button
-          title="Cancel"
-          type="button"
-          loading={false}
-          handleClick={() => navigate('/branch/orders')}
-          className="bg-gray-400 rounded-md w-1/2 text-white h-12 font-medium hover:bg-blue-400"
-        />
-        <Button
-          title="Submit"
-          type="submit"
-          loading={loading}
-          handleClick={handleSubmit}
-          className="bg-primary rounded-md w-1/2 text-white h-12 font-medium hover:bg-primary/95"
-        />
-      </div>
+          <Button
+            title="Cancel"
+            type="button"
+            loading={false}
+            handleClick={() => navigate('/branch/orders')}
+            className="bg-gray-400 rounded-md w-1/2 text-white h-12 font-medium hover:bg-blue-400"
+          />
+          <Button
+            title="Submit"
+            type="submit"
+            loading={loading}
+            handleClick={handleSubmit}
+            className="bg-primary rounded-md w-1/2 text-white h-12 font-medium hover:bg-primary/95"
+          />
+        </div>
       </div>
     </>
   );
@@ -1290,9 +1299,8 @@ const CustomerDetails: React.FC<any> = ({
   // Fetch existing customers with search
   const fetchCustomers = useCallback(
     async (searchTerm: string = '') => {
-      try
-      {
-        console.log("Searching customers with term:", searchTerm);
+      try {
+        console.log('Searching customers with term:', searchTerm);
         const { data } = await getCustomers(get, searchTerm);
         setCustomers(data);
       } catch (error: any) {
@@ -1355,7 +1363,7 @@ const CustomerDetails: React.FC<any> = ({
     // } else {
     //   setShowPincodeField(false);
     // }
-  
+
     if (value && GST_PATTERN.test(value)) {
       debouncedGSTVerification(value); // existing verification
     }
@@ -1440,9 +1448,6 @@ const CustomerDetails: React.FC<any> = ({
               disabled={isBusinessNameDisabled}
             />
           </Form.Item>
-         
-
-        
 
           <Form.Item
             className="!mb-0"
@@ -1469,38 +1474,35 @@ const CustomerDetails: React.FC<any> = ({
             />
           </Form.Item>
           <Form.Item label="State" name="state" rules={[{ required: true }]}>
-  <Select
-    placeholder="Select a State"
-    showSearch
-    labelInValue
-    className="w-full"
-    optionFilterProp="children"
-  >
-    {states.map((state) => (
-      <Select.Option key={state.id} value={JSON.stringify(state)}>
-        {state.name}
-      </Select.Option>
-    ))}
-            </Select>
-            
-          </Form.Item>
-        
-          <Form.Item
-              label="Pincode"
-              name="pincode"
-              
-              rules={[
-                {message: 'Please enter a valid Pincode' },
-                {
-                  pattern: /^\d{6}$/,
-                  message: 'Pincode must be a 6-digit number',
-                },
-              ]}
+            <Select
+              placeholder="Select a State"
+              showSearch
+              labelInValue
+              className="w-full"
+              optionFilterProp="children"
             >
-              <Input placeholder="Enter Pincode" />
-                      </Form.Item>
-                      
-                  
+              {states.map((state) => (
+                <Select.Option key={state.id} value={JSON.stringify(state)}>
+                  {state.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Pincode"
+            name="pincode"
+            rules={[
+              { message: 'Please enter a valid Pincode' },
+              {
+                pattern: /^\d{6}$/,
+                message: 'Pincode must be a 6-digit number',
+              },
+            ]}
+          >
+            <Input placeholder="Enter Pincode" />
+          </Form.Item>
+
           <Form.Item
             className="!mb-0"
             label="Mobile"
@@ -1553,7 +1555,7 @@ const CustomerDetails: React.FC<any> = ({
               className="w-full py-2 h-9 placeholder:text-gray-400"
             />
           </Form.Item> */}
-            <Form.Item
+          <Form.Item
             className="!mb-0"
             label="Email"
             name="email"
@@ -1586,8 +1588,6 @@ const CustomerDetails: React.FC<any> = ({
               onChange={(e) => handleGSTChange(e.target.value)}
             />
           </Form.Item>
-           
-                  
         </div>
       )}
 
@@ -1612,8 +1612,7 @@ const CustomerDetails: React.FC<any> = ({
               filterOption={false}
               options={customers?.map((customer) => ({
                 value: customer.id,
-                label: customer.business_name
-                ,
+                label: customer.business_name,
                 data: customer,
               }))}
             />
@@ -1740,37 +1739,36 @@ const CustomerDetails: React.FC<any> = ({
 //     }
 //   };
 
-  // useEffect(() => {
-  //   if (sameAsCustomer) {
-  //     const customerValues = shippedForm.getFieldsValue();
-  //     shippedForm.setFieldsValue({
-  //       customerName: customerValues.customerName,
-  //       businessName: customerValues.businessName,
-  //       email: customerValues.email,
-  //       address1: customerValues.address1,
-  //       address2: customerValues.address2,
-  //       mobile_number1: customerValues.mobile_number1,
-  //       mobile_number2: customerValues.mobile_number2,
-  //       state: customerValues.state,
-  //       gstn: customerValues.gstn,
-  //     });
-  //     setIsBusinessNameDisabled(true);
-  //   } else {
-  //     shippedForm.setFieldsValue({
-  //       customerName: '',
-  //       businessName: '',
-  //       email: '',
-  //       address1: '',
-  //       address2: '',
-  //       mobile_number1: '',
-  //       mobile_number2: '',
-  //       state: undefined,
-  //       gstn: '',
-  //     });
-  //     setIsBusinessNameDisabled(false);
-  //   }
-  // }, [sameAsCustomer, shippedForm]);
-
+// useEffect(() => {
+//   if (sameAsCustomer) {
+//     const customerValues = shippedForm.getFieldsValue();
+//     shippedForm.setFieldsValue({
+//       customerName: customerValues.customerName,
+//       businessName: customerValues.businessName,
+//       email: customerValues.email,
+//       address1: customerValues.address1,
+//       address2: customerValues.address2,
+//       mobile_number1: customerValues.mobile_number1,
+//       mobile_number2: customerValues.mobile_number2,
+//       state: customerValues.state,
+//       gstn: customerValues.gstn,
+//     });
+//     setIsBusinessNameDisabled(true);
+//   } else {
+//     shippedForm.setFieldsValue({
+//       customerName: '',
+//       businessName: '',
+//       email: '',
+//       address1: '',
+//       address2: '',
+//       mobile_number1: '',
+//       mobile_number2: '',
+//       state: undefined,
+//       gstn: '',
+//     });
+//     setIsBusinessNameDisabled(false);
+//   }
+// }, [sameAsCustomer, shippedForm]);
 
 // };
 

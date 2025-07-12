@@ -4,6 +4,12 @@ import Button from '@components/Common/Button';
 import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
 import PaymentHistory from '@components/Staff/PaymentHistory';
+import {
+  faCreditCard,
+  faFileInvoice,
+  faFilePen,
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Paths from '@routes/paths';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
@@ -15,20 +21,19 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
-import { useSearchParams } from 'react-router';
-import { fetchDeliveryOrders } from '../dashboard/api'; 
-import { orderById, orders, payment, updateInvoiceStatus } from './api';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {   faFileInvoice,faCreditCard,faFilePen, } from '@fortawesome/free-solid-svg-icons';
-// import axios from 'axios';
 
+import { fetchDeliveryOrders } from '../dashboard/api';
+import { orderById, orders, payment, updateInvoiceStatus } from './api';
+// import axios from 'axios';
 
 const Orders: React.FC = () => {
   const { get, post } = useApiJSON();
   const [searchParams] = useSearchParams();
-  const [dateType, setDateType] = useState<'today' | 'tomorrow' | null | undefined>(undefined);
+  const [dateType, setDateType] = useState<
+    'today' | 'tomorrow' | null | undefined
+  >(undefined);
   const [ordersList, setOrdersList] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -91,13 +96,13 @@ const Orders: React.FC = () => {
       key: 'order_invoice',
       render: (value: string) => {
         let bgColor = '#d32f2f'; // Red (default: Awaiting Invoice)
-    
+
         if (value === 'PAID') {
           bgColor = '#2e7d32'; // Blue
         } else if (value === 'GENERATED') {
           bgColor = '#1976d2'; // Green
         }
-    
+
         return (
           <span
             style={{
@@ -114,65 +119,66 @@ const Orders: React.FC = () => {
         );
       },
     },
-{
-  title: 'Action',
-  dataIndex: 'action',
-  key: 'action',
-  width: 200,
-  render: (_: any, record: any) => {
-    const totalPaid = paidAmount(record.payment_details);
-    const balanceAmount =
-      record.payment_details?.length > 0 &&
-      record.payment_details[record.payment_details.length - 1]?.balance_amount;
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      width: 200,
+      render: (_: any, record: any) => {
+        const totalPaid = paidAmount(record.payment_details);
+        const balanceAmount =
+          record.payment_details?.length > 0 &&
+          record.payment_details[record.payment_details.length - 1]
+            ?.balance_amount;
 
-    const currentBalance = balanceAmount
-      ? parseFloat(balanceAmount)
-      : Math.round(parseFloat(record.total_cost || '0') - totalPaid);
+        const currentBalance = balanceAmount
+          ? parseFloat(balanceAmount)
+          : Math.round(parseFloat(record.total_cost || '0') - totalPaid);
 
-    return (
-      <div className="flex items-center justify-center space-x-[10px] text-[22px]">
-        {/* View Invoice Icon */}
-        <FontAwesomeIcon
-          icon={faFileInvoice}
-          className="text-blue-600 hover:text-blue-800 cursor-pointer"
-          title="View Invoice"
-          onClick={() => showModal(ordersList[record?.key]?.id, 1)}
-        />
-
-        {/* Pay / Paid Icon */}
-        <FontAwesomeIcon
-          icon={faCreditCard}
-          className={`cursor-pointer ${
-            currentBalance <= 0
-              ? 'text-gray-400 cursor-not-allowed'
-              : 'text-green-600 hover:text-green-800'
-          }`}
-          title={currentBalance <= 0 ? 'Paid' : 'Pay Now'}
-          onClick={() =>
-            currentBalance > 0 && showModal(ordersList[record?.key]?.id, 2)
-          }
-        />
-
-        {/* Edit Icon */}
-        {currentBalance <= 0 ? (
-          <FontAwesomeIcon
-            icon={faFilePen}
-            className="text-gray-400 cursor-not-allowed"
-            title="Edit Disabled"
-          />
-        ) : (
-          <Link to={Paths.Staff.orders.edit(ordersList[record?.key]?.id)}>
+        return (
+          <div className="flex items-center justify-center space-x-[10px] text-[22px]">
+            {/* View Invoice Icon */}
             <FontAwesomeIcon
-              icon={faFilePen}
-              className="text-gray-600 hover:text-gray-800 cursor-pointer"
-              title="Edit Order"
+              icon={faFileInvoice}
+              className="text-blue-600 hover:text-blue-800 cursor-pointer"
+              title="View Invoice"
+              onClick={() => showModal(ordersList[record?.key]?.id, 1)}
             />
-          </Link>
-        )}
-      </div>
-    );
-  },
-},
+
+            {/* Pay / Paid Icon */}
+            <FontAwesomeIcon
+              icon={faCreditCard}
+              className={`cursor-pointer ${
+                currentBalance <= 0
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'text-green-600 hover:text-green-800'
+              }`}
+              title={currentBalance <= 0 ? 'Paid' : 'Pay Now'}
+              onClick={() =>
+                currentBalance > 0 && showModal(ordersList[record?.key]?.id, 2)
+              }
+            />
+
+            {/* Edit Icon */}
+            {currentBalance <= 0 ? (
+              <FontAwesomeIcon
+                icon={faFilePen}
+                className="text-gray-400 cursor-not-allowed"
+                title="Edit Disabled"
+              />
+            ) : (
+              <Link to={Paths.Staff.orders.edit(ordersList[record?.key]?.id)}>
+                <FontAwesomeIcon
+                  icon={faFilePen}
+                  className="text-gray-600 hover:text-gray-800 cursor-pointer"
+                  title="Edit Order"
+                />
+              </Link>
+            )}
+          </div>
+        );
+      },
+    },
   ];
 
   const getOrders = useCallback(async () => {
@@ -192,51 +198,57 @@ const Orders: React.FC = () => {
   }, [get, pageNumber, pageSize]);
 
   // Memoized function to fetch order by ID
-//  Fetch order by ID
-const getOrderById = useCallback(async () => {
-  if (orderId === null) return;
-  try {
-    const { data } = await orderById(get, orderId);
-    setOrderDetails(data);
-  } catch (error: any) {
-    notify('Failed to fetch order details', 'error');
-  }
-}, [get, orderId]);
-//  Fetch orders by date
-const fetchOrdersByDate = useCallback(async (date: 'today' | 'tomorrow') => {
-  try {
-    const response = await fetchDeliveryOrders(get, date);
-    const data = response.data as { date: string; orders: any[] };
+  //  Fetch order by ID
+  const getOrderById = useCallback(async () => {
+    if (orderId === null) return;
+    try {
+      const { data } = await orderById(get, orderId);
+      setOrderDetails(data);
+    } catch (error: any) {
+      notify('Failed to fetch order details', 'error');
+    }
+  }, [get, orderId]);
+  //  Fetch orders by date
+  const fetchOrdersByDate = useCallback(
+    async (date: 'today' | 'tomorrow') => {
+      try {
+        const response = await fetchDeliveryOrders(get, date);
+        const data = response.data as { date: string; orders: any[] };
 
-    setOrdersList(data.orders);
-    setPaginationData({
-      count: data.orders.length,
-      hasPreviousPage: false,
-      hasNextPage: false,
-      pageNumber: 1,
-      pageSize: data.orders.length,
-    });
-  } catch (error) {
-    console.error('Error fetching orders by date', error);
-  }
-}, [get]);
+        setOrdersList(data.orders);
+        setPaginationData({
+          count: data.orders.length,
+          hasPreviousPage: false,
+          hasNextPage: false,
+          pageNumber: 1,
+          pageSize: data.orders.length,
+        });
+      } catch (error) {
+        console.error('Error fetching orders by date', error);
+      }
+    },
+    [get],
+  );
 
-//  Fetch all orders paginated
-const fetchPaginatedOrders = useCallback(async (page: number, size: number) => {
-  try {
-    const response = await orders(get, page, size);
-    setOrdersList(response.data.results || []);
-    setPaginationData({
-      count: response.data.count,
-      hasPreviousPage: response.data.previous !== null,
-      hasNextPage: response.data.next !== null,
-      pageNumber: page,
-      pageSize: size,
-    });
-  } catch (error) {
-    console.error('Error fetching paginated orders', error);
-  }
-}, [get]);
+  //  Fetch all orders paginated
+  const fetchPaginatedOrders = useCallback(
+    async (page: number, size: number) => {
+      try {
+        const response = await orders(get, page, size);
+        setOrdersList(response.data.results || []);
+        setPaginationData({
+          count: response.data.count,
+          hasPreviousPage: response.data.previous !== null,
+          hasNextPage: response.data.next !== null,
+          pageNumber: page,
+          pageSize: size,
+        });
+      } catch (error) {
+        console.error('Error fetching paginated orders', error);
+      }
+    },
+    [get],
+  );
   // Memoized function to create new payment
   const CreteNewPayment = useCallback(
     async (payload: any) => {
@@ -267,19 +279,21 @@ const fetchPaginatedOrders = useCallback(async (page: number, size: number) => {
     key: i,
     slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: order?.orderID,
-    InvoiceId:order?.invoice_id,
-    customerName: capitalizeFirstLetterOfEachWord(order?.customer?.business_name).toUpperCase(),
+    InvoiceId: order?.invoice_id,
+    customerName: capitalizeFirstLetterOfEachWord(
+      order?.customer?.business_name,
+    ).toUpperCase(),
     orderDate: dayjs(order?.order_date).format('DD-MM-YYYY - h:mm A'),
     deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
     payment_details: order?.payment_details, // Pass payment_details to the record
     total_cost: order?.total_cost, // Pass total_cost to the record
-    order_invoice:order?.order_invoice
+    order_invoice: order?.order_invoice,
   }));
 
-    const onShowSizeChange = useCallback((current: number, pageSize: number) => {
-       setPageSize(pageSize);
-       setPageNumber(current);
-     }, []);
+  const onShowSizeChange = useCallback((current: number, pageSize: number) => {
+    setPageSize(pageSize);
+    setPageNumber(current);
+  }, []);
 
   // useEffect(() => {
   //   getOrders();
@@ -290,33 +304,31 @@ const fetchPaginatedOrders = useCallback(async (page: number, size: number) => {
   }, [getOrderById]);
 
   //  Sync date from URL
-// Sync from URL
-useEffect(() => {
-  const urlDate = searchParams.get('date');
-  if (urlDate === 'today' || urlDate === 'tomorrow') {
-    setDateType(urlDate);
-  } else {
-    setDateType(null);
-  }
-}, [searchParams]);
+  // Sync from URL
+  useEffect(() => {
+    const urlDate = searchParams.get('date');
+    if (urlDate === 'today' || urlDate === 'tomorrow') {
+      setDateType(urlDate);
+    } else {
+      setDateType(null);
+    }
+  }, [searchParams]);
 
-//  Fetch data on dateType, page change or size change
-useEffect(() => {
-  if (dateType === undefined) return;
+  //  Fetch data on dateType, page change or size change
+  useEffect(() => {
+    if (dateType === undefined) return;
 
-  if (dateType === 'today' || dateType === 'tomorrow') {
-    fetchOrdersByDate(dateType);
-  } else {
-    fetchPaginatedOrders(pageNumber, pageSize);
-  }
-}, [dateType, pageNumber, pageSize, fetchOrdersByDate, fetchPaginatedOrders]);
+    if (dateType === 'today' || dateType === 'tomorrow') {
+      fetchOrdersByDate(dateType);
+    } else {
+      fetchPaginatedOrders(pageNumber, pageSize);
+    }
+  }, [dateType, pageNumber, pageSize, fetchOrdersByDate, fetchPaginatedOrders]);
 
-
-  
-//  Fetch order details when modal is opened
-useEffect(() => {
-  getOrderById();
-}, [getOrderById]);
+  //  Fetch order details when modal is opened
+  useEffect(() => {
+    getOrderById();
+  }, [getOrderById]);
 
   return (
     <>
@@ -353,7 +365,7 @@ useEffect(() => {
             onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-            />
+          />
         </div>
       </div>
       <ModalDetails
@@ -363,7 +375,7 @@ useEffect(() => {
         setIsModalOpen={setIsModalOpen}
         modalId={modalId}
         setOrderId={setOrderId}
-        getOrderById={getOrderById} 
+        getOrderById={getOrderById}
       />
     </>
   );
@@ -377,8 +389,7 @@ const ModalDetails: React.FC<any> = ({
   modalId,
   setOrderId,
   getOrderById,
-}) =>
-{
+}) => {
   const [downloadClicked] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [printForOffice, setPrintForOffice] = useState<boolean>(false);
@@ -386,7 +397,9 @@ const ModalDetails: React.FC<any> = ({
     useState<boolean>(false);
   const [downloadForOffice, setDownloadForOffice] = useState<boolean>(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [invoiceActionType, setInvoiceActionType] = useState<'print' | 'download' | null>(null);
+  const [invoiceActionType, setInvoiceActionType] = useState<
+    'print' | 'download' | null
+  >(null);
   const { put } = useApiJSON();
   const handleDownload = useCallback(
     async (filesName?: string) => {
@@ -446,7 +459,6 @@ const ModalDetails: React.FC<any> = ({
     setInvoiceActionType('print');
     setIsConfirmModalOpen(true);
   }, []);
-  
 
   // const handleOfficeInvoiceDownload = useCallback(() => {
   //   setPrintForOfficeInvoice(true);
@@ -457,20 +469,20 @@ const ModalDetails: React.FC<any> = ({
   //     setPrintForOfficeInvoice(false);
   //   }, 100);
   // }, [orderDetails]);
-    // const handleOfficeInvoiceDownload = () => {
-    //   setDownloadClicked(true);             // triggers the effect above
-    // };
-    // useEffect(() => {
-    //   if (!downloadClicked) return;
-  
-    //   (async () => {
-    //     const fileName = orderDetails?.invoice_id
-    //       ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
-    //       : 'Order_Invoice.pdf';
-  
-    //     await generatePDF({ contentRef, fileName });
-    //     setDownloadClicked(false);          // hide signature again
-    //   })();
+  // const handleOfficeInvoiceDownload = () => {
+  //   setDownloadClicked(true);             // triggers the effect above
+  // };
+  // useEffect(() => {
+  //   if (!downloadClicked) return;
+
+  //   (async () => {
+  //     const fileName = orderDetails?.invoice_id
+  //       ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
+  //       : 'Order_Invoice.pdf';
+
+  //     await generatePDF({ contentRef, fileName });
+  //     setDownloadClicked(false);          // hide signature again
+  //   })();
   // }, [downloadClicked, contentRef, orderDetails]);
   const handleOfficeInvoiceDownload = useCallback(() => {
     setInvoiceActionType('download');
@@ -485,12 +497,12 @@ const ModalDetails: React.FC<any> = ({
           invoiceActionType === 'print' || invoiceActionType === 'download'
             ? 'GENERATED'
             : 'PENDING'; // fallback just in case
-  
+
         // ✅ 2. Call API to update invoice status
         await updateInvoiceStatus(put, orderDetails?.id, statusToSet);
-        await getOrderById()
+        await getOrderById();
       }
-  
+
       // ✅ 3. Handle Print or Download
       if (invoiceActionType === 'print') {
         setPrintForOfficeInvoice(true);
@@ -504,17 +516,14 @@ const ModalDetails: React.FC<any> = ({
           : 'Order_Invoice.pdf';
         await generatePDF({ contentRef, fileName }); // trigger download
       }
-  
+
       // ✅ 4. Close modal and reset
       setIsConfirmModalOpen(false);
       setInvoiceActionType(null);
     } catch (err) {
-      console.error("API Error during invoice print/download:", err);
+      console.error('API Error during invoice print/download:', err);
     }
   };
-  
-  
-  
 
   return (
     <Modal
@@ -530,7 +539,9 @@ const ModalDetails: React.FC<any> = ({
           <div ref={contentRef}>
             {' '}
             <Invoice
-              type={(printForOfficeInvoice || downloadClicked) ? 'INVOICE' : 'ORDER'}
+              type={
+                printForOfficeInvoice || downloadClicked ? 'INVOICE' : 'ORDER'
+              }
               data={orderDetails}
               printForOffice={printForOffice}
               downloadForOffice={downloadForOffice}
@@ -539,70 +550,72 @@ const ModalDetails: React.FC<any> = ({
             />
           </div>
           <div className="flex justify-end gap-2 flex-wrap">
-          {/* Customer Print */}
-          <Button
-            handleClick={reactToPrintFn}
-            title="Customer Print"
-            type="button"
-            icon={<FaPrint />}
-            className={`text-white bg-blue-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-          />
-          {/* Customer Download */}
-          <Button
-            handleClick={() =>
-              handleDownload(`Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}.pdf`)
-            }
-            title=""
-            type="button"
-            icon={<FaDownload />}
-            className={`text-white bg-blue-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-          />
-          {/* Office Print */}
-          <Button
-            handleClick={handleOfficePrint}
-            title="Office Print"
-            type="button"
-            icon={<FaPrint />}
-            className={`text-white  bg-emerald-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-          />
-          {/* Office Download */}
-          <Button
-            handleClick={handleOfficeDownload}
-            title=""
-            type="button"
-            icon={<FaDownload />}
-            className={`text-white 	 bg-emerald-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-          />
-          {/* Invoice Print */}
-          <Button
-            handleClick={handleOfficeInvoicePrint}
-            title="Invoice Print"
-            type="button"
-            icon={<FaPrint />}
-            className={`text-white bg-gray-900 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-          />
-          {/* Invoice Download */}
-          <Button
-            handleClick={handleOfficeInvoiceDownload}
-            title=""
-            type="button"
-            icon={<FaDownload />}
-            className={`text-white bg-gray-900 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-          />
-        </div>
-        <Modal
-        title="Confirm Invoice Action"
-        open={isConfirmModalOpen}
-        onOk={onConfirmInvoiceAction}
-        onCancel={() => {
-          setIsConfirmModalOpen(false);
-          setInvoiceActionType(null);
-        }}
-        okText={`Yes, ${invoiceActionType === 'print' ? 'Print' : 'Download'}`}
-        cancelText="Cancel"
-      >
-        <p>Are you sure you want to {invoiceActionType} the invoice?</p>
-      </Modal>
+            {/* Customer Print */}
+            <Button
+              handleClick={reactToPrintFn}
+              title="Customer Print"
+              type="button"
+              icon={<FaPrint />}
+              className={`text-white bg-blue-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+            {/* Customer Download */}
+            <Button
+              handleClick={() =>
+                handleDownload(
+                  `Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}.pdf`,
+                )
+              }
+              title=""
+              type="button"
+              icon={<FaDownload />}
+              className={`text-white bg-blue-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+            {/* Office Print */}
+            <Button
+              handleClick={handleOfficePrint}
+              title="Office Print"
+              type="button"
+              icon={<FaPrint />}
+              className={`text-white  bg-emerald-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+            {/* Office Download */}
+            <Button
+              handleClick={handleOfficeDownload}
+              title=""
+              type="button"
+              icon={<FaDownload />}
+              className={`text-white 	 bg-emerald-600 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+            {/* Invoice Print */}
+            <Button
+              handleClick={handleOfficeInvoicePrint}
+              title="Invoice Print"
+              type="button"
+              icon={<FaPrint />}
+              className={`text-white bg-gray-900 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+            {/* Invoice Download */}
+            <Button
+              handleClick={handleOfficeInvoiceDownload}
+              title=""
+              type="button"
+              icon={<FaDownload />}
+              className={`text-white bg-gray-900 rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
+            />
+          </div>
+          <Modal
+            title="Confirm Invoice Action"
+            open={isConfirmModalOpen}
+            onOk={onConfirmInvoiceAction}
+            onCancel={() => {
+              setIsConfirmModalOpen(false);
+              setInvoiceActionType(null);
+            }}
+            okText={`Yes, ${invoiceActionType === 'print' ? 'Print' : 'Download'}`}
+            cancelText="Cancel"
+          >
+            <p>Are you sure you want to {invoiceActionType} the invoice?</p>
+          </Modal>
         </>
       )}
 
@@ -623,17 +636,21 @@ const ModalDetails: React.FC<any> = ({
                 </span>{' '}
                 {orderDetails?.customer?.business_name}
               </div>
-              
+
               <div>
                 <span className="font-semibold text-gray-950">Mobile:</span>{' '}
                 {orderDetails?.customer?.mobile_number1}
               </div>
               <div>
-              <span className="font-semibold text-gray-950">Address:</span>{' '}
-              {[orderDetails?.customer?.address1, orderDetails?.customer?.address2, orderDetails?.customer?.address3]
-                .filter(Boolean) // filters out undefined, null, or empty string
-                .join(', ')}
-            </div>
+                <span className="font-semibold text-gray-950">Address:</span>{' '}
+                {[
+                  orderDetails?.customer?.address1,
+                  orderDetails?.customer?.address2,
+                  orderDetails?.customer?.address3,
+                ]
+                  .filter(Boolean) // filters out undefined, null, or empty string
+                  .join(', ')}
+              </div>
             </div>
           </div>
           <PaymentHistory

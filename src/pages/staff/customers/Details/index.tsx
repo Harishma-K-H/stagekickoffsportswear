@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import Button from '@components/Common/Button';
+import { notify } from '@components/Common/Toastify';
+import { useApiJSON } from '@services/ApiService/Api.service';
 import { Card, Collapse, Spin, Table } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
 
-import { useApiJSON } from '@services/ApiService/Api.service';
 import { getCustomerDetails } from './api';
-import { notify } from '@components/Common/Toastify';
-import Button from '@components/Common/Button';
 
 const { Panel } = Collapse;
 
@@ -130,7 +130,11 @@ export default function CustomerDetailsPage() {
     { title: 'Size', dataIndex: 'size', key: 'size' },
     { title: 'Unit Cost', dataIndex: 'unit_cost', key: 'unit_cost' },
     { title: 'Qty', dataIndex: 'qty', key: 'qty' },
-    { title: 'Sub-total', dataIndex: 'total_item_cost', key: 'total_item_cost' },
+    {
+      title: 'Sub-total',
+      dataIndex: 'total_item_cost',
+      key: 'total_item_cost',
+    },
   ];
 
   const payCols: ColumnsType<Payment> = [
@@ -166,7 +170,11 @@ export default function CustomerDetailsPage() {
     { title: 'Size', dataIndex: 'size', key: 'size' },
     { title: 'Unit Cost', dataIndex: 'unit_cost', key: 'unit_cost' },
     { title: 'Qty', dataIndex: 'qty', key: 'qty' },
-    { title: 'Sub-total', dataIndex: 'total_item_cost', key: 'total_item_cost' },
+    {
+      title: 'Sub-total',
+      dataIndex: 'total_item_cost',
+      key: 'total_item_cost',
+    },
   ];
 
   return (
@@ -221,9 +229,7 @@ export default function CustomerDetailsPage() {
                   <>
                     <strong>Items</strong>
                     <Table
-                      rowKey={(item) =>
-                        `invoice-${invoice.id}-item-${item.id}`
-                      }
+                      rowKey={(item) => `invoice-${invoice.id}-item-${item.id}`}
                       columns={invoiceItemCols}
                       dataSource={invoice.invoice_items}
                       pagination={false}

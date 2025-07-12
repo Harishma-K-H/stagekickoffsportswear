@@ -6,7 +6,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const handleCardClick = (type: 'today' | 'tomorrow') => {
-   navigate(`/admin/orders?date=${type}`);
+    navigate(`/admin/orders?date=${type}`);
   };
 
   return (
@@ -19,16 +19,24 @@ const Dashboard: React.FC = () => {
           className="bg-blue-100 hover:bg-blue-200 cursor-pointer rounded-2xl shadow-md p-6"
           onClick={() => handleCardClick('today')}
         >
-          <h2 className="text-xl font-bold text-blue-900">Today's Deliveries</h2>
-          <p className="text-gray-700">View all orders scheduled for delivery today.</p>
+          <h2 className="text-xl font-bold text-blue-900">
+            Today's Deliveries
+          </h2>
+          <p className="text-gray-700">
+            View all orders scheduled for delivery today.
+          </p>
         </div>
 
         <div
           className="bg-green-100 hover:bg-green-200 cursor-pointer rounded-2xl shadow-md p-6"
           onClick={() => handleCardClick('tomorrow')}
         >
-          <h2 className="text-xl font-bold text-green-900">Tomorrow's Deliveries</h2>
-          <p className="text-gray-700">View all orders scheduled for delivery tomorrow.</p>
+          <h2 className="text-xl font-bold text-green-900">
+            Tomorrow's Deliveries
+          </h2>
+          <p className="text-gray-700">
+            View all orders scheduled for delivery tomorrow.
+          </p>
         </div>
       </div>
     </>

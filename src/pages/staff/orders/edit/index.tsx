@@ -51,7 +51,9 @@ const NewOrders: React.FC = () => {
   const [materialOptions, setMaterialOptions] = useState<Record<string, any[]>>(
     {},
   );
-  const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>({});
+  const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>(
+    {},
+  );
   const [printType, setPrintType] = useState<Record<string, any[]>>({});
   const [size] = useState<any[]>([
     { value: '20', label: '20' },
@@ -83,7 +85,9 @@ const NewOrders: React.FC = () => {
   const [subtotalDiscount, setSubtotalDiscount] = useState<number>(0);
   const [sleeveConfigs, setSleeveConfigs] = useState<Record<string, any>>({});
   const [deletedItemIds, setDeletedItemIds] = useState<number[]>([]);
-  const [disabledFields, setDisabledFields] = useState<{ [key: string]: boolean }>({});
+  const [disabledFields, setDisabledFields] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   // function to fetch order by ID
   const getOrderById = useCallback(async () => {
@@ -116,7 +120,6 @@ const NewOrders: React.FC = () => {
         setModelName((prev: any) => ({ ...prev, [rowKey]: modelName }));
         const { data } = await fetchMaterial(get, modelId);
         setMaterialOptions((prev) => ({ ...prev, [rowKey]: data }));
-        
       } catch (error: any) {
         setMaterialOptions((prev) => ({ ...prev, [rowKey]: [] }));
         notify(error?.response?.data?.error, 'error');
@@ -124,7 +127,7 @@ const NewOrders: React.FC = () => {
     },
     [get],
   );
-  
+
   // Fetch print types
   const getPrintTypes = useCallback(
     async (modelId: string | number, rowKey: string) => {
@@ -192,12 +195,12 @@ const NewOrders: React.FC = () => {
   const calculateRowTotalCost = (
     rowKey: string,
     quantity: number,
-    baseCostValue?: number
+    baseCostValue?: number,
   ): number => {
     const baseCost = baseCostValue ?? baseCosts[rowKey] ?? 0;
     return baseCost * quantity;
   };
-  
+
   // Handle adding a new row
   const handleAdd = async () => {
     try {
@@ -250,8 +253,6 @@ const NewOrders: React.FC = () => {
     const newData = dataSource.filter((item) => item.key !== key);
     setDataSource(newData);
 
-
-    
     // Clean up states for the deleted row
     setBaseCosts((prev) => {
       const { [key as string]: _, ...rest } = prev;
@@ -277,7 +278,7 @@ const NewOrders: React.FC = () => {
   // Handle form field changes
   const handleFieldChange = (changedFields: any, allFields: any) => {
     const rowData = allFields.data || {};
-    
+
     Object.keys(rowData).forEach(async (rowKey) => {
       const row = rowData[rowKey];
       const changedField = Object.keys(changedFields.data?.[rowKey] || {})[0];
@@ -287,13 +288,13 @@ const NewOrders: React.FC = () => {
         ['model', 'material', 'print_type', 'sleevecase', 'size'].includes(
           changedField,
         )
-      )
-      {
+      ) {
         // Get current model configuration
         const modelOption = models.find((m: any) => m.id === row?.model);
         const currentConfig = getSleeveCaseConfig(
           modelOption?.name,
-          materialOptions[rowKey]?.find((m: any) => m.id === row?.material)?.name,
+          materialOptions[rowKey]?.find((m: any) => m.id === row?.material)
+            ?.name,
         );
 
         // Build validation conditions
@@ -322,8 +323,7 @@ const NewOrders: React.FC = () => {
           isMaterialValid &&
           isPrintTypeValid &&
           isSleeveCaseValid
-        )
-        {
+        ) {
           const payload = {
             modelId: row.model,
             materialId: row.material || null,
@@ -332,39 +332,41 @@ const NewOrders: React.FC = () => {
           };
 
           // Add a small delay to ensure all state updates are processed
-          setTimeout(() =>
-          {
+          setTimeout(() => {
             getItemCost(rowKey, payload);
           }, 100);
         }
       } else if (changedField === 'quantity') {
         const quantity = Number(row.quantity || 0); // ✅ number
-        const currentBaseCost = priceOverrides[rowKey] ?? baseCosts[rowKey] ?? 0;
-      
-        const newTotalCost = calculateRowTotalCost(rowKey, quantity, currentBaseCost);
-      
+        const currentBaseCost =
+          priceOverrides[rowKey] ?? baseCosts[rowKey] ?? 0;
+
+        const newTotalCost = calculateRowTotalCost(
+          rowKey,
+          quantity,
+          currentBaseCost,
+        );
+
         setTotalCosts((prev) => ({
           ...prev,
           [rowKey]: newTotalCost,
         }));
       } else if (changedField === 'price') {
-        const price = Number(row.price || 0);       // ✅ number
+        const price = Number(row.price || 0); // ✅ number
         const quantity = Number(row.quantity || 0); // ✅ number
-      
+
         setPriceOverrides((prev) => ({
           ...prev,
           [rowKey]: price, // ✅ number
         }));
-      
+
         const newTotalCost = calculateRowTotalCost(rowKey, quantity, price);
-      
+
         setTotalCosts((prev) => ({
           ...prev,
           [rowKey]: newTotalCost,
         }));
       }
-      
-      
     });
   };
 
@@ -401,7 +403,7 @@ const NewOrders: React.FC = () => {
       sgst,
       grandTotal,
       discount: discountAmount,
-      discount1:discountedSubtotal
+      discount1: discountedSubtotal,
     };
   };
 
@@ -411,7 +413,7 @@ const NewOrders: React.FC = () => {
     try {
       if (orderId === null || orderId === undefined) return; // Skip if orderId is null
       const itemValues = await itemForm.validateFields();
-      console.log("item values...",itemValues)
+      console.log('item values...', itemValues);
       const remarksValues = await remarksForm.validateFields();
 
       if (!itemValues || !remarksValues) {
@@ -446,11 +448,11 @@ const NewOrders: React.FC = () => {
 
       const items = Object.keys(itemValues.data || {}).map((key) => {
         const row = itemValues.data[key];
-        const item_id = dataSource.find((ds) => ds.key === key)?.item_id || null;
+        const item_id =
+          dataSource.find((ds) => ds.key === key)?.item_id || null;
 
-        
-        console.log("Item ITEMIDROW3333:", row.id);
-        console.log("row data for key", key, row);
+        console.log('Item ITEMIDROW3333:', row.id);
+        console.log('row data for key', key, row);
         const item: any = {
           name: modelName[key],
           model: row.model,
@@ -458,13 +460,13 @@ const NewOrders: React.FC = () => {
           print_type_id: row.print_type,
           size: parseInt(row.size, 10),
           qty: parseInt(row.quantity, 10),
-          item_id: item_id || null, 
-         
+          item_id: item_id || null,
+
           // discount: 0, // No per-product discount anymore
           total_item_cost: totalCosts[key],
         };
-        console.log("Item ITEMIDROW:", row.id);
-        console.log("Row data for key", key, row);
+        console.log('Item ITEMIDROW:', row.id);
+        console.log('Row data for key', key, row);
         if (
           modelName[key] !== 'SHORTS' &&
           modelName[key] !== 'LOWER' &&
@@ -475,22 +477,21 @@ const NewOrders: React.FC = () => {
 
         return item;
       });
-      
 
       items.forEach((item, index) => {
         formData.append(`items[${index}][name]`, item.name);
-        formData.append(`items[${ index }][model]`, item.model.toString());
-        console.log("Item Material:", item.material);
+        formData.append(`items[${index}][model]`, item.model.toString());
+        console.log('Item Material:', item.material);
         formData.append(`items[${index}][item_id]`, item.item_id || null);
-        console.log("Item ITEMID:", item.id);
-        console.log("Item ITEMMMMMMM:", item.item_id);
+        console.log('Item ITEMID:', item.id);
+        console.log('Item ITEMMMMMMM:', item.item_id);
         formData.append(
           `items[${index}][material]`,
-          item?.material || null,  // Ensure you're appending the material's ID
+          item?.material || null, // Ensure you're appending the material's ID
         );
         formData.append(
           `items[${index}][print_type]`,
-          item.print_type_id || null, 
+          item.print_type_id || null,
         );
         formData.append(`items[${index}][size]`, item.size.toString());
         formData.append(`items[${index}][qty]`, item.qty.toString());
@@ -544,7 +545,7 @@ const NewOrders: React.FC = () => {
         const newDataSource = orderDetails.items.map(
           (_item: any, index: number) => ({
             key: String(index),
-            item_id: _item.order_item_id, 
+            item_id: _item.order_item_id,
           }),
         );
         setDataSource(newDataSource);
@@ -556,19 +557,16 @@ const NewOrders: React.FC = () => {
         };
 
         // Initialize form values for each item
-        orderDetails.items.forEach((item: any, index: number) =>
-        {
+        orderDetails.items.forEach((item: any, index: number) => {
           // Correctly assign itemId before using it in the object
           const itemId = item.id || null;
           itemFormValues.data[String(index)] = {
-          
-  
             model: models.find((m) => m.name === item.model)?.id,
             material: item.material_id,
             // material_id: item.material ?.id,
             print_type: item.print_type_id,
             sleevecase: item.sleeve_case,
-            item_id:itemId,
+            item_id: itemId,
             size: item.size,
             quantity: item.qty,
           };
@@ -621,24 +619,25 @@ const NewOrders: React.FC = () => {
     remarksForm,
   ]);
 
-  const { rawSubTotal, subTotal, cgst, sgst, grandTotal, discount, discount1 } = calculateTotals();
-  console.log("=== Debug Start ===");
-  console.log("rawSubTotal:", rawSubTotal);
-  console.log("discount1:", discount1);
-  
+  const { rawSubTotal, subTotal, cgst, sgst, grandTotal, discount, discount1 } =
+    calculateTotals();
+  console.log('=== Debug Start ===');
+  console.log('rawSubTotal:', rawSubTotal);
+  console.log('discount1:', discount1);
+
   const step1 = discount1 * 0.025;
-  console.log("Step 1 (discount1 * 0.025):", step1);
-  
+  console.log('Step 1 (discount1 * 0.025):', step1);
+
   const step2 = discount1 * 0.025;
-  console.log("Step 2 (discount1 * 0.025):", step2);
-  
+  console.log('Step 2 (discount1 * 0.025):', step2);
+
   const step3 = rawSubTotal - (step1 + step2);
-  console.log("Step 3 (rawSubTotal - (step1 + step2)):", step3);
-  
+  console.log('Step 3 (rawSubTotal - (step1 + step2)):', step3);
+
   const finalDiscount = (step3 * 0.05).toFixed(2);
-  console.log("Final Discount (step3 * 0.05):", finalDiscount);
-  console.log("=== Debug End ===");
-  console.log("abcddddddddddd",discount)
+  console.log('Final Discount (step3 * 0.05):', finalDiscount);
+  console.log('=== Debug End ===');
+  console.log('abcddddddddddd', discount);
   // Columns definition
   const defaultColumns: (ColumnTypes[number] & {
     editable?: boolean;
@@ -777,9 +776,9 @@ const NewOrders: React.FC = () => {
             placeholder="Select Print Type"
             value={record.printType}
             onChange={(value) => {
-    console.log('Selected Print Type ID:', value); // You can now access the selected ID
-    // Update form state or perform any necessary logic with the selected print type ID
-  }}
+              console.log('Selected Print Type ID:', value); // You can now access the selected ID
+              // Update form state or perform any necessary logic with the selected print type ID
+            }}
             options={
               printType[record.key]?.map((type: any) => ({
                 value: type.id,
@@ -858,93 +857,101 @@ const NewOrders: React.FC = () => {
           <Select size="middle" placeholder="Select size" options={size} />
         </Form.Item>
       ),
-      },
-      // {
-      //   title: 'Price',
-      //   dataIndex: 'price',
-      //   align: 'center',
-      //   width: '8%',
-      //   render: (_, record) => {
-      //     const sizeSelected = itemForm.getFieldValue([
-      //       'data',
-      //       record.key,
-      //       'size',
-      //     ]);
-  
-      //     return sizeSelected && baseCosts[record.key]
-      //       ? baseCosts[record.key].toFixed(2)
-      //       : '-';
-      //   },
-      // },
-      {
-        title: 'Price',
-        dataIndex: 'price',
-        align: 'center',
-        width: '8%',
-        render: (_, record) => {
-          const rowKey = record.order_item_id || record.key;
-          const sizeSelected = itemForm.getFieldValue(['data', rowKey, 'size']);
-          const isOverridden = priceOverrides[rowKey];
-          const basePrice = baseCosts[rowKey];
-      
-          if (!sizeSelected) {
-            return <span>-</span>;
-          }
-      
-          // Determine the value to show: overridden price or base price
-          const displayedPrice = isOverridden !== undefined ? isOverridden : (basePrice ? basePrice.toFixed(2) : '');
-      
-          // Set the initial value of the Form.Item
-          // IMPORTANT: Use 'initialValue' here, so when form initializes, it shows this price
-          return (
-            <Form.Item
-              name={['data', rowKey, 'price']}
-              initialValue={displayedPrice}
-              className="!mb-0"
-              rules={[
-                {
-                  validator: (_, value) => {
-                    if (value && isNaN(parseFloat(value))) {
-                      return Promise.reject('Must be a valid number');
-                    }
-                    return Promise.resolve();
-                  },
+    },
+    // {
+    //   title: 'Price',
+    //   dataIndex: 'price',
+    //   align: 'center',
+    //   width: '8%',
+    //   render: (_, record) => {
+    //     const sizeSelected = itemForm.getFieldValue([
+    //       'data',
+    //       record.key,
+    //       'size',
+    //     ]);
+
+    //     return sizeSelected && baseCosts[record.key]
+    //       ? baseCosts[record.key].toFixed(2)
+    //       : '-';
+    //   },
+    // },
+    {
+      title: 'Price',
+      dataIndex: 'price',
+      align: 'center',
+      width: '8%',
+      render: (_, record) => {
+        const rowKey = record.order_item_id || record.key;
+        const sizeSelected = itemForm.getFieldValue(['data', rowKey, 'size']);
+        const isOverridden = priceOverrides[rowKey];
+        const basePrice = baseCosts[rowKey];
+
+        if (!sizeSelected) {
+          return <span>-</span>;
+        }
+
+        // Determine the value to show: overridden price or base price
+        const displayedPrice =
+          isOverridden !== undefined
+            ? isOverridden
+            : basePrice
+              ? basePrice.toFixed(2)
+              : '';
+
+        // Set the initial value of the Form.Item
+        // IMPORTANT: Use 'initialValue' here, so when form initializes, it shows this price
+        return (
+          <Form.Item
+            name={['data', rowKey, 'price']}
+            initialValue={displayedPrice}
+            className="!mb-0"
+            rules={[
+              {
+                validator: (_, value) => {
+                  if (value && isNaN(parseFloat(value))) {
+                    return Promise.reject('Must be a valid number');
+                  }
+                  return Promise.resolve();
                 },
-              ]}
-            >
-              <Input
-                placeholder="Enter Price"
-                className="w-full h-9"
-                disabled={!!disabledFields[rowKey]}
-                onChange={(e) => {
-                  const newPrice = e.target.value;
-                  if (/^\d*\.?\d*$/.test(newPrice)) {
-                    setPriceOverrides((prev) => ({
-                      ...prev,
-                      [rowKey]: newPrice,
-                    }));
-                    itemForm.setFieldValue(['data', rowKey, 'price'], newPrice);
-                  }
-                }}
-                onBlur={() => {
-                  const current = itemForm.getFieldValue(['data', rowKey, 'price']);
-                  const formatted = parseFloat(current);
-                  if (!isNaN(formatted)) {
-                    const finalVal = formatted.toFixed(2);
-                    setPriceOverrides((prev) => ({
-                      ...prev,
-                      [rowKey]: finalVal,
-                    }));
-                    itemForm.setFieldValue(['data', rowKey, 'price'], finalVal);
-                  }
-                }}
-              />
-            </Form.Item>
-          );
-        },
+              },
+            ]}
+          >
+            <Input
+              placeholder="Enter Price"
+              className="w-full h-9"
+              disabled={!!disabledFields[rowKey]}
+              onChange={(e) => {
+                const newPrice = e.target.value;
+                if (/^\d*\.?\d*$/.test(newPrice)) {
+                  setPriceOverrides((prev) => ({
+                    ...prev,
+                    [rowKey]: newPrice,
+                  }));
+                  itemForm.setFieldValue(['data', rowKey, 'price'], newPrice);
+                }
+              }}
+              onBlur={() => {
+                const current = itemForm.getFieldValue([
+                  'data',
+                  rowKey,
+                  'price',
+                ]);
+                const formatted = parseFloat(current);
+                if (!isNaN(formatted)) {
+                  const finalVal = formatted.toFixed(2);
+                  setPriceOverrides((prev) => ({
+                    ...prev,
+                    [rowKey]: finalVal,
+                  }));
+                  itemForm.setFieldValue(['data', rowKey, 'price'], finalVal);
+                }
+              }}
+            />
+          </Form.Item>
+        );
       },
-      
-    
+    },
+
     {
       title: 'Quantity',
       dataIndex: 'quantity',
@@ -1050,7 +1057,7 @@ const NewOrders: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between w-64">
-              <span className="font-medium">Discount: { finalDiscount } </span>
+                <span className="font-medium">Discount: {finalDiscount} </span>
                 <Form.Item
                   name="discount"
                   className="!mb-0"
@@ -1137,26 +1144,25 @@ const NewOrders: React.FC = () => {
         </div>
 
         <div className="flex w-full gap-4">
-                <Button
-                  title="Cancel"
-                  type="button"
-                  loading={false}
-                  handleClick={() => navigate('/branch/orders')}
-                  className="bg-gray-400 rounded-md w-1/2 text-white h-12 font-medium hover:bg-blue-400"
-                />
-                <Button
-                  title="Submit"
-                  type="submit"
-                  loading={loading}
-                  handleClick={handleSubmit}
-                  className="bg-primary rounded-md w-1/2 text-white h-12 font-medium hover:bg-primary/95"
-                />
-              </div>
+          <Button
+            title="Cancel"
+            type="button"
+            loading={false}
+            handleClick={() => navigate('/branch/orders')}
+            className="bg-gray-400 rounded-md w-1/2 text-white h-12 font-medium hover:bg-blue-400"
+          />
+          <Button
+            title="Submit"
+            type="submit"
+            loading={loading}
+            handleClick={handleSubmit}
+            className="bg-primary rounded-md w-1/2 text-white h-12 font-medium hover:bg-primary/95"
+          />
+        </div>
       </div>
     </>
   );
 };
-
 
 const CustomerDetails: React.FC<any> = ({ customerData }) => {
   return (
@@ -1165,7 +1171,7 @@ const CustomerDetails: React.FC<any> = ({ customerData }) => {
       {customerData && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="grid grid-cols-1 gap-x-2 gap-y-0">
-          {/* <div className="flex flex-col">
+            {/* <div className="flex flex-col">
               <span className="text-sm text-gray-500">Business Name</span>
               <span className="font-medium">{customerData.business_name}</span>
             </div> */}

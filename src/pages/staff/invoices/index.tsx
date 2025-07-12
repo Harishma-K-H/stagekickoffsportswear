@@ -3,7 +3,11 @@ import './style.css';
 import Button from '@components/Common/Button';
 import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
+import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { API_CONFIG } from '@services/ApiService/Api.config';
 import { useApiJSON } from '@services/ApiService/Api.service';
+import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { generatePDF } from '@utils/staff/downloadPdf';
 import { Modal, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
@@ -12,14 +16,12 @@ import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
+
 import { invoiceById, invoices } from './api';
-import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
-import { API_CONFIG } from '@services/ApiService/Api.config';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {   faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();
-  console.log("✅ LIVE BASE URL:", API_CONFIG.baseURL);
+  console.log('✅ LIVE BASE URL:', API_CONFIG.baseURL);
 
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -74,30 +76,30 @@ const Invoices: React.FC = () => {
     {
       title: 'Invoice Date',
       dataIndex: 'invoiceDate',
-      key:'invoiceDate',
+      key: 'invoiceDate',
     },
-{
-  title: 'Action',
-  dataIndex: 'action',
-  key: 'action',
-  width: 170,
-  render: (_: any, record: any) => {
-    const isGenerated = record.invoice_generated;
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      width: 170,
+      render: (_: any, record: any) => {
+        const isGenerated = record.invoice_generated;
 
-    return (
-      <div className="flex justify-center">
-        <FontAwesomeIcon
-          icon={faFileInvoice}
-          onClick={() => showModal(invoicesList[record?.key]?.id)}
-          className={`cursor-pointer text-white text-lg p-2 rounded-md ${
-            isGenerated ? 'bg-green-600' : 'bg-blue-800'
-          }`}
-          title="View Invoice"
-        />
-      </div>
-    );
-  },
-},
+        return (
+          <div className="flex justify-center">
+            <FontAwesomeIcon
+              icon={faFileInvoice}
+              onClick={() => showModal(invoicesList[record?.key]?.id)}
+              className={`cursor-pointer text-white text-lg p-2 rounded-md ${
+                isGenerated ? 'bg-green-600' : 'bg-blue-800'
+              }`}
+              title="View Invoice"
+            />
+          </div>
+        );
+      },
+    },
   ];
 
   const getInvoices = useCallback(async () => {
@@ -145,9 +147,11 @@ const Invoices: React.FC = () => {
     slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: invoice?.orderID,
     invoice_generated: invoice?.invoice_generated,
-    customerName:capitalizeFirstLetterOfEachWord(invoice?.customer?.business_name).toUpperCase(),
+    customerName: capitalizeFirstLetterOfEachWord(
+      invoice?.customer?.business_name,
+    ).toUpperCase(),
     invoiceNumber: invoice?.invoice_id,
-    totalAmount:invoice?.order_amount,
+    totalAmount: invoice?.order_amount,
     orderDate: dayjs(invoice?.order_date).format('DD-MM-YYYY'),
     invoiceDate: dayjs(invoice?.created_at).format('DD-MM-YYYY'),
   }));
@@ -179,15 +183,15 @@ const Invoices: React.FC = () => {
             pagination={false}
             scroll={{ x: '700' }}
           />
-           <Pagination
-                      current={pageNumber}
-                      total={paginationData.count}
-                      pageSize={pageSize}
-                      showSizeChanger
-                      onShowSizeChange={onShowSizeChange}
-                      onChange={handlePageChange}
-                      rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-                    />
+          <Pagination
+            current={pageNumber}
+            total={paginationData.count}
+            pageSize={pageSize}
+            showSizeChanger
+            onShowSizeChange={onShowSizeChange}
+            onChange={handlePageChange}
+            rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
+          />
         </div>
       </div>
       <ModalDetails
@@ -210,8 +214,7 @@ const ModalDetails: React.FC<any> = ({
   setInvoiceId,
   contentRef,
   reactToPrintFn,
-}) =>
-{
+}) => {
   const [downloadClicked, setDownloadClicked] = useState(false);
   const handleCancel = useCallback(() => {
     setIsModalOpen(false);
@@ -237,9 +240,9 @@ const ModalDetails: React.FC<any> = ({
   //   });
   //   // setDownloadClicked(false);
   // }, [contentRef, invoiceDetails,setDownloadClicked]);
-  
+
   const handleDownload = () => {
-    setDownloadClicked(true);             // triggers the effect above
+    setDownloadClicked(true); // triggers the effect above
   };
   useEffect(() => {
     if (!downloadClicked) return;
@@ -250,11 +253,11 @@ const ModalDetails: React.FC<any> = ({
         : 'Order_Invoice.pdf';
 
       await generatePDF({ contentRef, fileName });
-      setDownloadClicked(false);          // hide signature again
+      setDownloadClicked(false); // hide signature again
     })();
   }, [downloadClicked, contentRef, invoiceDetails]);
 
-console.log("setDownloadClicked",setDownloadClicked)
+  console.log('setDownloadClicked', setDownloadClicked);
   return (
     <Modal
       open={isModalOpen}
@@ -264,7 +267,12 @@ console.log("setDownloadClicked",setDownloadClicked)
       footer={null}
     >
       <div ref={contentRef}>
-        <Invoice type={'INVOICE'} data={invoiceDetails} paid={true} downloadClicked={downloadClicked} />
+        <Invoice
+          type={'INVOICE'}
+          data={invoiceDetails}
+          paid={true}
+          downloadClicked={downloadClicked}
+        />
       </div>
       <div className="flex justify-end gap-3">
         <Button

@@ -103,32 +103,34 @@ const Items: React.FC = () => {
     console.log('Current Status:', currentStatus); // ✅ should be true or false
     const newStatus = !currentStatus;
     console.log('Toggled New Status:', newStatus); // ✅ opposite of current
-  
+
     const payload = { is_active: newStatus };
-  
+
     try {
       const res = await DeactivateItem(put, payload, id);
-  
+
       if (res && res.ok) {
         message.success(
-          newStatus ? "Item activated successfully" : "Item deactivated successfully"
+          newStatus
+            ? 'Item activated successfully'
+            : 'Item deactivated successfully',
         );
-  
+
         // Update local state
         setItemsList((prev: Item[]) =>
           prev.map((item) =>
-            item.id === id ? { ...item, is_active: newStatus } : item
-          )
+            item.id === id ? { ...item, is_active: newStatus } : item,
+          ),
         );
       } else {
-        message.error("Failed to update item status");
+        message.error('Failed to update item status');
       }
     } catch (error) {
-      console.error("Error toggling status:", error);
-      message.error("An error occurred while updating status");
+      console.error('Error toggling status:', error);
+      message.error('An error occurred while updating status');
     }
   };
-  
+
   // const toBoolean = (val: any) => {
   //   if (typeof val === 'boolean') return val;
   //   if (typeof val === 'string') return val.toLowerCase() === 'true';
@@ -221,7 +223,6 @@ const Items: React.FC = () => {
         sleevecase: record.sleevecase,
         price: record.price,
         branch: record.branch, // ID
-        
       });
 
       setEditingKey(record.id);
@@ -525,7 +526,7 @@ const Items: React.FC = () => {
       render: (_: any, record: any) => {
         const editable = isEditing(record);
         // const isActive = record.is_active === true;
-    
+
         return editable ? (
           <span className="flex gap-2">
             <Popconfirm title="Sure to Save?" onConfirm={() => save(record.id)}>
@@ -552,27 +553,27 @@ const Items: React.FC = () => {
               onClick={() => edit(record)}
               title="Edit"
             />
-          <Popconfirm
-          title="Are you sure you want to change the status of this item?"
-          onConfirm={() => {
-            console.log("Clicked record:", record);
-            handleToggleStatus(record.id, record.is_active);
-          }}
-          okText="Yes"
-          cancelText="No"
-        >
-          {record.is_active === true ? (
-            <FaToggleOn
-              className="w-8 h-8 cursor-pointer text-green-600 hover:text-green-800"
-              title="Click to deactivate"
-            />
-          ) : (
-            <FaToggleOff
-              className="w-8 h-8 cursor-pointer text-red-600 hover:text-red-800"
-              title="Click to activate"
-            />
-          )}
-        </Popconfirm>
+            <Popconfirm
+              title="Are you sure you want to change the status of this item?"
+              onConfirm={() => {
+                console.log('Clicked record:', record);
+                handleToggleStatus(record.id, record.is_active);
+              }}
+              okText="Yes"
+              cancelText="No"
+            >
+              {record.is_active === true ? (
+                <FaToggleOn
+                  className="w-8 h-8 cursor-pointer text-green-600 hover:text-green-800"
+                  title="Click to deactivate"
+                />
+              ) : (
+                <FaToggleOff
+                  className="w-8 h-8 cursor-pointer text-red-600 hover:text-red-800"
+                  title="Click to activate"
+                />
+              )}
+            </Popconfirm>
 
             {/* <Popconfirm
               title={`Are you sure you want to ${isActive ? 'deactivate' : 'activate'} this item?`}
@@ -688,13 +689,13 @@ const Items: React.FC = () => {
     printType_name: item?.print_type_name,
     printType: item?.print_type,
     sleevecase: item?.sleevecase,
-    HSN:item?.HSN,
+    HSN: item?.HSN,
     price: item?.item_cost,
     itemCode: item?.item_code,
     id: item?.id,
     branch_name: item?.branch?.name,
     branch: item?.branch?.id,
-    is_active:item?.is_active
+    is_active: item?.is_active,
   }));
 
   // Initial data fetching on component mount
@@ -719,17 +720,17 @@ const Items: React.FC = () => {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
           <div>
-          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-            Items List
-            {selectedBranch?.label || selectedModel?.label ? (
-              <span className="ml-2 text-xl text-gray-600">
-                {selectedBranch?.label ?? '(branchname)'} 
-                {selectedBranch?.label && selectedModel?.label ? ' - ' : ''}
-                {selectedModel?.label ?? ''}
-              </span>
-            ) : null}
+            <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
+              Items List
+              {selectedBranch?.label || selectedModel?.label ? (
+                <span className="ml-2 text-xl text-gray-600">
+                  {selectedBranch?.label ?? '(branchname)'}
+                  {selectedBranch?.label && selectedModel?.label ? ' - ' : ''}
+                  {selectedModel?.label ?? ''}
+                </span>
+              ) : null}
             </h3>
-{/*             
+            {/*             
             <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
           Items List
           {(selectedBranch?.label || selectedModel?.label) && (

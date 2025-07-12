@@ -34,7 +34,7 @@ export const payment = async (
 export const updateInvoiceStatus = async (
   put: (url: string, body: any) => Promise<any>,
   orderID: number,
-  status: 'GENERATED' | 'PAID' | 'PENDING'
+  status: 'GENERATED' | 'PAID' | 'PENDING',
 ): Promise<any> => {
   const response = await put('/update-order-item/?data=generated', {
     order_invoice: status,

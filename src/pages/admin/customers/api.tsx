@@ -11,6 +11,10 @@ export const getCustomers = async (
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
-export const updateCustomer = async (put: any, customerId: number, payload: any) => {
+export const updateCustomer = async (
+  put: any,
+  customerId: number,
+  payload: any,
+) => {
   return await put(`/customers/${customerId}/`, payload);
 };

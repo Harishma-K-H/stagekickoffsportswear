@@ -5,8 +5,8 @@ import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLe
 import { Form, Input, Modal, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { IoSearch } from 'react-icons/io5';
 import { FaRegEdit } from 'react-icons/fa';
+import { IoSearch } from 'react-icons/io5';
 
 import { getCustomers, updateCustomer } from './api';
 
@@ -31,7 +31,12 @@ const Customers: React.FC = () => {
   const fetchCustomers = useCallback(
     async (searchText: string = '') => {
       try {
-        const { data } = await getCustomers(get, searchText, pageNumber, pageSize);
+        const { data } = await getCustomers(
+          get,
+          searchText,
+          pageNumber,
+          pageSize,
+        );
         setCustomers(data.results);
         setPaginationData({
           count: data?.count,
@@ -44,7 +49,7 @@ const Customers: React.FC = () => {
         notify('Failed to fetch data', 'error');
       }
     },
-    [get, pageNumber, pageSize]
+    [get, pageNumber, pageSize],
   );
 
   const handleSubmit = (values: any) => {
@@ -67,7 +72,7 @@ const Customers: React.FC = () => {
       address1: customer.address1,
       address2: customer.address2,
       email: customer.email,
-      state_name:customer.state_name,
+      state_name: customer.state_name,
       gst_no: customer.gst_no,
     });
     setEditModalOpen(true);
@@ -172,7 +177,9 @@ const Customers: React.FC = () => {
       </Helmet>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
-          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">Customers List</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
+            Customers List
+          </h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
           <Form className="flex gap-2 pb-3" onFinish={handleSubmit}>
@@ -212,51 +219,105 @@ const Customers: React.FC = () => {
 
       {/* Edit Modal */}
       <Modal
-        title={<h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>Edit Customer</h2>}
+        title={
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
+            Edit Customer
+          </h2>
+        }
         open={editModalOpen}
         onCancel={() => setEditModalOpen(false)}
         footer={null}
-        width={700} 
+        width={700}
       >
         <Form form={form} layout="vertical" onFinish={handleUpdateCustomer}>
-  <Form.Item name="business_name" label={<span style={{ fontWeight: 'bold' }}>Business Name</span>}>
-    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+          <Form.Item
+            name="business_name"
+            label={<span style={{ fontWeight: 'bold' }}>Business Name</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
           </Form.Item>
-          <Form.Item name="address1" label={<span style={{ fontWeight: 'bold' }}>Address 1</span>}>
-    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-  </Form.Item>
-  <Form.Item name="address2" label={<span style={{ fontWeight: 'bold' }}>Address 2</span>}>
-    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-  </Form.Item>
-    <Form.Item name="address3" label={<span style={{ fontWeight: 'bold' }}>Address 3</span>}>
-    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+          <Form.Item
+            name="address1"
+            label={<span style={{ fontWeight: 'bold' }}>Address 1</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
           </Form.Item>
-          <Form.Item name="state_name" label={<span style={{ fontWeight: 'bold' }}>State</span>}>
-    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
+          <Form.Item
+            name="address2"
+            label={<span style={{ fontWeight: 'bold' }}>Address 2</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
           </Form.Item>
-          <Form.Item name="pincode" label={<span style={{ fontWeight: 'bold' }}>Pincode</span>}>
-    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-  </Form.Item>
-  <Form.Item name="mobile_number1" label={<span style={{ fontWeight: 'bold' }}>Mobile Number 1</span>}>
-    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-  </Form.Item>
-  <Form.Item name="mobile_number2" label={<span style={{ fontWeight: 'bold' }}>Mobile Number 2</span>}>
-    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-  </Form.Item>
-  <Form.Item name="email" label={<span style={{ fontWeight: 'bold' }}>Email</span>}>
-    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-  </Form.Item>
-  
-  <Form.Item name="gstn" label={<span style={{ fontWeight: 'bold' }}>GSTN</span>}>
-    <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-  </Form.Item>
+          <Form.Item
+            name="address3"
+            label={<span style={{ fontWeight: 'bold' }}>Address 3</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="state_name"
+            label={<span style={{ fontWeight: 'bold' }}>State</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="pincode"
+            label={<span style={{ fontWeight: 'bold' }}>Pincode</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="mobile_number1"
+            label={<span style={{ fontWeight: 'bold' }}>Mobile Number 1</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="mobile_number2"
+            label={<span style={{ fontWeight: 'bold' }}>Mobile Number 2</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label={<span style={{ fontWeight: 'bold' }}>Email</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
 
-  <Button
-    title="Update Customer"
-    type="submit"
-    className="text-white bg-green-600 mt-3"
-  />
-</Form>
+          <Form.Item
+            name="gstn"
+            label={<span style={{ fontWeight: 'bold' }}>GSTN</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+
+          <Button
+            title="Update Customer"
+            type="submit"
+            className="text-white bg-green-600 mt-3"
+          />
+        </Form>
       </Modal>
     </>
   );

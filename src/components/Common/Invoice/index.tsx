@@ -1,12 +1,13 @@
 import './style.css';
 
 import { numberToWords } from '@utils/common/numberToWords';
+import dayjs from '@utils/dayjs';
 import { paidAmount } from '@utils/staff/paidAmount';
 // import dayjs from 'dayjs';
 import React, { useEffect } from 'react';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
-import dayjs from '@utils/dayjs';
+
 const Invoice: React.FC<{
   type: 'ORDER' | 'INVOICE';
   data: any;
@@ -21,7 +22,7 @@ const Invoice: React.FC<{
   printForOffice = false,
   downloadForOffice = false,
   printForOfficeInvoice = false,
-  downloadClicked=false,
+  downloadClicked = false,
   paid = false,
 }) => {
   const {
@@ -44,9 +45,9 @@ const Invoice: React.FC<{
     discount,
   } = data;
   useEffect(() => {
-    console.log("🔍 delivery_date raw:", delivery_date);
-    console.log("🧪 typeof delivery_date:", typeof delivery_date);
-    console.log("✅ isValid:", dayjs(delivery_date).isValid());
+    console.log('🔍 delivery_date raw:', delivery_date);
+    console.log('🧪 typeof delivery_date:', typeof delivery_date);
+    console.log('✅ isValid:', dayjs(delivery_date).isValid());
   }, [delivery_date]);
   const totalPaid = paidAmount(payment_details);
   const currentBalance = parseInt(total_cost) - totalPaid;
@@ -121,10 +122,10 @@ const Invoice: React.FC<{
   console.log('Logo URL:', created_by?.logo);
   console.log('dhgdhgdhgdh', import.meta.env.VITE_MEDIA_BASE_PATH);
   console.log('Logo Path:', created_by?.logo);
-  console.log("printForOfficeInvoice", printForOfficeInvoice)
-  console.log("downloadClicked",downloadClicked)
+  console.log('printForOfficeInvoice', printForOfficeInvoice);
+  console.log('downloadClicked', downloadClicked);
   return (
-    <div 
+    <div
       id="invoice-print"
       className="p-1 bg-white rounded-lg dark:bg-gray-800 
           print:p-0 
@@ -135,47 +136,47 @@ const Invoice: React.FC<{
           print:relative
           [@page{margin:15mm_15mm_15mm_15mm}]"
     >
-     {/* Header */}
+      {/* Header */}
       <div className="flex justify-between items-center gap-4">
-  {created_by?.logo ? (
-    <img
-      src={`${import.meta.env.VITE_MEDIA_BASE_PATH}${created_by.logo}`}
-      className="max-w-[200px]"
-      alt="Logo"
-    />
-  ) : null}
+        {created_by?.logo ? (
+          <img
+            src={`${import.meta.env.VITE_MEDIA_BASE_PATH}${created_by.logo}`}
+            className="max-w-[200px]"
+            alt="Logo"
+          />
+        ) : null}
 
-  <div className="text-right mb-[10px]">
-    <h5 className="text-lg font-extrabold leading-5">
-      KICKOFF SPORTS WEAR
-      <br />
-      <span className="text-sm font-semibold uppercase">
-        {created_by?.branch}
-      </span>
-    </h5>
+        <div className="text-right mb-[10px]">
+          <h5 className="text-lg font-extrabold leading-5">
+            KICKOFF SPORTS WEAR
+            <br />
+            <span className="text-sm font-semibold uppercase">
+              {created_by?.branch}
+            </span>
+          </h5>
 
-    <div className="text-xs">
-      {created_by?.address} <br />
-      {created_by?.district}, {created_by?.state}, {created_by?.pincode}
-      <br />
-      {created_by?.GSTN && `GSTN: ${created_by?.GSTN}`}
-      <div className="flex justify-end gap-3 mt-1">
-        {created_by?.phn_no && (
-          <span className="flex items-center gap-1">
-            <FaPhoneAlt className="w-3.5 h-3.5" />
-            {created_by?.phn_no}
-          </span>
-        )}
-        {created_by?.email && (
-          <span className="flex items-center gap-1">
-            <MdEmail className="w-4 h-4" />
-            {created_by?.email}
-          </span>
-        )}
+          <div className="text-xs">
+            {created_by?.address} <br />
+            {created_by?.district}, {created_by?.state}, {created_by?.pincode}
+            <br />
+            {created_by?.GSTN && `GSTN: ${created_by?.GSTN}`}
+            <div className="flex justify-end gap-3 mt-1">
+              {created_by?.phn_no && (
+                <span className="flex items-center gap-1">
+                  <FaPhoneAlt className="w-3.5 h-3.5" />
+                  {created_by?.phn_no}
+                </span>
+              )}
+              {created_by?.email && (
+                <span className="flex items-center gap-1">
+                  <MdEmail className="w-4 h-4" />
+                  {created_by?.email}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
       <h5 className="relative z-20 mb-2 text-xl font-extrabold text-center text-black bg-white">
         <span className="px-5 text-lg bg-white">
           {printForOfficeInvoice
@@ -189,97 +190,96 @@ const Invoice: React.FC<{
 
       {/* Order Details */}
       {/* Order Details */}
-<div className="flex justify-between items-start mb-7 gap-4">
-  {/* Billed To */}
-  <div className="w-1/3 space-y-1">
-    <h2 className="text-base font-semibold dark:text-white">Billed To</h2>
-    <p className="text-sm text-gray-600 dark:text-gray-300">
-    {customer?.business_name && customer.business_name !== "undefined" && customer.business_name !== "" && (
-  <>
-    {customer.business_name}
-    <br />
-  </>
-)}
-{/* {customer?.name && (
+      <div className="flex justify-between items-start mb-7 gap-4">
+        {/* Billed To */}
+        <div className="w-1/3 space-y-1">
+          <h2 className="text-base font-semibold dark:text-white">Billed To</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            {customer?.business_name &&
+              customer.business_name !== 'undefined' &&
+              customer.business_name !== '' && (
+                <>
+                  {customer.business_name}
+                  <br />
+                </>
+              )}
+            {/* {customer?.name && (
   <p>{customer.name}<br /></p>
 )} */}
 
-{customer?.address1 && (
-  <>
-    {customer.address1} <br />
-  </>
-)}
+            {customer?.address1 && (
+              <>
+                {customer.address1} <br />
+              </>
+            )}
 
-{customer?.address2 && (
-  <>
-    {customer.address2} <br />
-  </>
-)}
+            {customer?.address2 && (
+              <>
+                {customer.address2} <br />
+              </>
+            )}
 
-{customer?.mobile_number1 && (
-  <>
-    {customer.mobile_number1} <br />
-  </>
-)}
+            {customer?.mobile_number1 && (
+              <>
+                {customer.mobile_number1} <br />
+              </>
+            )}
 
-{customer?.gst_no && (
-  <>
-    {customer.gst_no} <br />
-  </>
-)}
+            {customer?.gst_no && (
+              <>
+                {customer.gst_no} <br />
+              </>
+            )}
 
-{customer?.state_name && (
-  <>
-    {customer.state_name}
-  </>
-)}
-    </p>
-  </div>
+            {customer?.state_name && <>{customer.state_name}</>}
+          </p>
+        </div>
 
-  {/* TableView (Centered) */}
-  <div className="w-1/3 flex justify-center">
-    <TableView
-      rowData={[
-        {
-          heading: `${type}`,
-          value: `${type === 'INVOICE' ? invoice_id : orderID}`,
-          visibility: true,
-          rowClassName: 'px-3',
-          valueColumnClassName: '!text-left',
-          labelColumnClassName: '!text-left bg-black/70 text-white',
-        },
-        {
-          heading: `${type} DATE`,
-          value: dayjs(
-            type === 'INVOICE'
-              ? (printForOfficeInvoice
-                  ? (order_invoice_sent_date ? order_invoice_sent_date : new Date())
-                  : created_at)
-              : order_date
-          ).format('DD-MM-YYYY'),
-          visibility: true,
-          rowClassName: 'px-3',
-          valueColumnClassName: '!text-left',
-          labelColumnClassName: '!text-left bg-black/70 text-white',
-        },
-        {
-          heading: `DELIVERY DATE`,
-          value: (dayjs(delivery_date, 'DD-MM-YYYY', true).isValid()
-            ? dayjs(delivery_date, 'DD-MM-YYYY')
-            : dayjs(delivery_date)
-          ).format('DD-MM-YYYY'),
-          visibility: true,
-          rowClassName: 'px-3',
-          valueColumnClassName: '!text-left',
-          labelColumnClassName: '!text-left bg-black/70 text-white',
-        }
-        
-      ]}
-    />
-  </div>
+        {/* TableView (Centered) */}
+        <div className="w-1/3 flex justify-center">
+          <TableView
+            rowData={[
+              {
+                heading: `${type}`,
+                value: `${type === 'INVOICE' ? invoice_id : orderID}`,
+                visibility: true,
+                rowClassName: 'px-3',
+                valueColumnClassName: '!text-left',
+                labelColumnClassName: '!text-left bg-black/70 text-white',
+              },
+              {
+                heading: `${type} DATE`,
+                value: dayjs(
+                  type === 'INVOICE'
+                    ? printForOfficeInvoice
+                      ? order_invoice_sent_date
+                        ? order_invoice_sent_date
+                        : new Date()
+                      : created_at
+                    : order_date,
+                ).format('DD-MM-YYYY'),
+                visibility: true,
+                rowClassName: 'px-3',
+                valueColumnClassName: '!text-left',
+                labelColumnClassName: '!text-left bg-black/70 text-white',
+              },
+              {
+                heading: `DELIVERY DATE`,
+                value: (dayjs(delivery_date, 'DD-MM-YYYY', true).isValid()
+                  ? dayjs(delivery_date, 'DD-MM-YYYY')
+                  : dayjs(delivery_date)
+                ).format('DD-MM-YYYY'),
+                visibility: true,
+                rowClassName: 'px-3',
+                valueColumnClassName: '!text-left',
+                labelColumnClassName: '!text-left bg-black/70 text-white',
+              },
+            ]}
+          />
+        </div>
 
-  {/* Shipped To */}
-  {/* <div className="w-1/3 space-y-1 text-right">
+        {/* Shipped To */}
+        {/* <div className="w-1/3 space-y-1 text-right">
     <h2 className="text-base font-semibold dark:text-white">Shipped To</h2>
     <p className="text-sm text-gray-600 dark:text-gray-300">
     {shipped_customer?.business_name && shipped_customer.business_name !== "undefined" && shipped_customer.business_name !== "" && (
@@ -303,7 +303,7 @@ const Invoice: React.FC<{
     : shipped_customer?.state_name) || ''}
     </p>
   </div> */}
-</div>
+      </div>
 
       {/* Order Items Table */}
       <div className="mb-8">
@@ -367,7 +367,7 @@ const Invoice: React.FC<{
                 <td className="px-4 py-2 border dark:text-white border-black/70">
                   {item.sleeve_case}
                 </td>
-                
+
                 <td className="px-4 py-2 border dark:text-white border-black/70">
                   {item.size}
                 </td>
@@ -377,8 +377,7 @@ const Invoice: React.FC<{
                 <td
                   className={`px-4 py-2 dark:text-white border border-black/70 ${printForOffice && 'print:hidden'} ${downloadForOffice && 'hidden'}`}
                 >
-                  {item.item_cost
-                  }
+                  {item.item_cost}
                 </td>
                 <td className="px-4 py-2 border dark:text-white border-black/70">
                   {item.qty}
@@ -415,7 +414,6 @@ const Invoice: React.FC<{
           <div className="space-y-2">
             <TableView
               rowData={[
-              
                 {
                   heading: 'Raw Subtotal',
                   value: parseFloat(items_total_cost).toFixed(2),
@@ -433,7 +431,7 @@ const Invoice: React.FC<{
                   labelColumnClassName: '!text-right pr-4 w-[60%]',
                   valueColumnClassName: '!pr-4',
                 },
-             
+
                 {
                   heading: 'Sub Total',
                   value: parseFloat(net_cost).toFixed(2),
@@ -442,7 +440,7 @@ const Invoice: React.FC<{
                   labelColumnClassName: '!text-right pr-4 w-[60%]',
                   valueColumnClassName: '!pr-4',
                 },
-               
+
                 ...taxRows,
 
                 {
@@ -497,7 +495,7 @@ const Invoice: React.FC<{
         {/* Row 1 - Bill To (left) */}
         <div className="space-y-1">
           {/* {customer?.id !== shipped_customer?.custom_id && ( */}
-            {/* <>
+          {/* <>
               <h2 className="text-base font-semibold dark:text-white">
                 Shipped Address
               </h2>
@@ -520,48 +518,51 @@ const Invoice: React.FC<{
           {/* )} */}
         </div>
       </div>
-    
-      {/* Remarks Section */}
-      { (type === "ORDER" && !printForOfficeInvoice && remarks && remarks.trim() !== '') && (
-  <div className="col-span-3 mt-8 mb-6 rounded-md bg-white bg-opacity-20 backdrop-blur-sm text-gray-900 dark:text-gray-100">
-    <h3 className="font-semibold mb-1">Remarks</h3>
-    <p className="text-sm whitespace-pre-line leading-relaxed">{remarks}</p>
-    
-  </div>
-      )}
-{(type === "INVOICE" || printForOfficeInvoice) && (
-  <div className="grid grid-cols-2 gap-3 mt-5">
-    {/* Left side: Bank Details */}
-    <div>
-      <h4 className="font-semibold mb-1">Bank Account Details,</h4>
-      <h3 className="text-[15px] font-semibold text-gray-600 whitespace-pre-wrap dark:text-gray-300">
-        {created_by?.account_details}
-      </h3>
-    </div>
 
-    {/* Right side: QR Code and Signature */}
-    {created_by?.qr_code && (
-      <div className="flex flex-col items-end justify-between h-full">
-        <img
-          src={`https://kickoffsportswear.app${created_by?.qr_code}`}
-          alt="QR Code"
-          className="h-32 w-32 object-contain"
-        />
-       
-      </div>
+      {/* Remarks Section */}
+      {type === 'ORDER' &&
+        !printForOfficeInvoice &&
+        remarks &&
+        remarks.trim() !== '' && (
+          <div className="col-span-3 mt-8 mb-6 rounded-md bg-white bg-opacity-20 backdrop-blur-sm text-gray-900 dark:text-gray-100">
+            <h3 className="font-semibold mb-1">Remarks</h3>
+            <p className="text-sm whitespace-pre-line leading-relaxed">
+              {remarks}
+            </p>
+          </div>
+        )}
+      {(type === 'INVOICE' || printForOfficeInvoice) && (
+        <div className="grid grid-cols-2 gap-3 mt-5">
+          {/* Left side: Bank Details */}
+          <div>
+            <h4 className="font-semibold mb-1">Bank Account Details,</h4>
+            <h3 className="text-[15px] font-semibold text-gray-600 whitespace-pre-wrap dark:text-gray-300">
+              {created_by?.account_details}
+            </h3>
+          </div>
+
+          {/* Right side: QR Code and Signature */}
+          {created_by?.qr_code && (
+            <div className="flex flex-col items-end justify-between h-full">
+              <img
+                src={`https://kickoffsportswear.app${created_by?.qr_code}`}
+                alt="QR Code"
+                className="h-32 w-32 object-contain"
+              />
+            </div>
           )}
-         
-     
         </div>
-        
       )}
-{(downloadClicked || type === "INVOICE") && (
-  <div className={`mt-20 text-right ${downloadClicked ? 'block' : 'print:block hidden'}`}>
-    <h5 className="text-base font-bold text-gray-700">Authorized Signature</h5>
-  </div>
-)}
+      {(downloadClicked || type === 'INVOICE') && (
+        <div
+          className={`mt-20 text-right ${downloadClicked ? 'block' : 'print:block hidden'}`}
+        >
+          <h5 className="text-base font-bold text-gray-700">
+            Authorized Signature
+          </h5>
+        </div>
+      )}
     </div>
-   
   );
 };
 
@@ -588,7 +589,6 @@ const TableView: React.FC<any> = ({ rowData }) => {
         ))}
       </tbody>
     </table>
-    
   );
 };
 export default Invoice;

@@ -91,9 +91,12 @@ export const updateItem = async (
 export const DeactivateItem = async (
   put: (url: string, payload: any) => Promise<any>,
   payload: { is_active: boolean },
-  id: string
+  id: string,
 ) => {
-  const response = await put(`/api_item/${id}/?status=status_updation`, payload);
+  const response = await put(
+    `/api_item/${id}/?status=status_updation`,
+    payload,
+  );
 
   return {
     data: response.data,

@@ -1,12 +1,13 @@
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
-import { Form, Input, Pagination, Table, Modal } from 'antd';
+import { Form, Input, Modal, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { IoSearch } from 'react-icons/io5';
-import { getCustomers, updateCustomer } from './api';
 import { FaRegEdit } from 'react-icons/fa';
+import { IoSearch } from 'react-icons/io5';
+
+import { getCustomers, updateCustomer } from './api';
 
 // Define Customer interface
 interface Customer {
@@ -27,7 +28,9 @@ const Customers: React.FC = () => {
   const { get, put } = useApiJSON();
 
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
   const [form] = Form.useForm();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -53,7 +56,12 @@ const Customers: React.FC = () => {
   const fetchCustomers = useCallback(
     async (searchText: string = '') => {
       try {
-        const { data } = await getCustomers(get, searchText, pageNumber, pageSize);
+        const { data } = await getCustomers(
+          get,
+          searchText,
+          pageNumber,
+          pageSize,
+        );
         setCustomers(data.results);
         setPaginationData({
           count: data?.count,
@@ -66,7 +74,7 @@ const Customers: React.FC = () => {
         notify('Failed to fetch data', 'error');
       }
     },
-    [get, pageNumber, pageSize]
+    [get, pageNumber, pageSize],
   );
 
   const onShowSizeChange = useCallback((_current: number, size: number) => {
@@ -236,53 +244,107 @@ const Customers: React.FC = () => {
       </div>
 
       {/* Edit Modal */}
-         <Modal
-           title={<h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>Edit Customer</h2>}
-           open={editModalOpen}
-           onCancel={() => setEditModalOpen(false)}
-           footer={null}
-           width={700} 
-         >
-           <Form form={form} layout="vertical" onFinish={handleUpdateCustomer}>
-     <Form.Item name="business_name" label={<span style={{ fontWeight: 'bold' }}>Business Name</span>}>
-       <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-             </Form.Item>
-             <Form.Item name="address1" label={<span style={{ fontWeight: 'bold' }}>Address 1</span>}>
-       <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-     </Form.Item>
-     <Form.Item name="address2" label={<span style={{ fontWeight: 'bold' }}>Address 2</span>}>
-       <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-     </Form.Item>
-       <Form.Item name="address3" label={<span style={{ fontWeight: 'bold' }}>Address 3</span>}>
-       <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-             </Form.Item>
-             <Form.Item name="state_name" label={<span style={{ fontWeight: 'bold' }}>State</span>}>
-       <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-             </Form.Item>
-             <Form.Item name="pincode" label={<span style={{ fontWeight: 'bold' }}>Pincode</span>}>
-       <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-     </Form.Item>
-     <Form.Item name="mobile_number1" label={<span style={{ fontWeight: 'bold' }}>Mobile Number 1</span>}>
-       <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-     </Form.Item>
-     <Form.Item name="mobile_number2" label={<span style={{ fontWeight: 'bold' }}>Mobile Number 2</span>}>
-       <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-     </Form.Item>
-     <Form.Item name="email" label={<span style={{ fontWeight: 'bold' }}>Email</span>}>
-       <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-     </Form.Item>
-     
-     <Form.Item name="gstn" label={<span style={{ fontWeight: 'bold' }}>GSTN</span>}>
-       <Input style={{ width: '100%', maxWidth: '600px', height: '36px' }} />
-     </Form.Item>
-   
-     <Button
-       title="Update Customer"
-       type="submit"
-       className="text-white bg-green-600 mt-3"
-     />
-   </Form>
-         </Modal>
+      <Modal
+        title={
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
+            Edit Customer
+          </h2>
+        }
+        open={editModalOpen}
+        onCancel={() => setEditModalOpen(false)}
+        footer={null}
+        width={700}
+      >
+        <Form form={form} layout="vertical" onFinish={handleUpdateCustomer}>
+          <Form.Item
+            name="business_name"
+            label={<span style={{ fontWeight: 'bold' }}>Business Name</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="address1"
+            label={<span style={{ fontWeight: 'bold' }}>Address 1</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="address2"
+            label={<span style={{ fontWeight: 'bold' }}>Address 2</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="address3"
+            label={<span style={{ fontWeight: 'bold' }}>Address 3</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="state_name"
+            label={<span style={{ fontWeight: 'bold' }}>State</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="pincode"
+            label={<span style={{ fontWeight: 'bold' }}>Pincode</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="mobile_number1"
+            label={<span style={{ fontWeight: 'bold' }}>Mobile Number 1</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="mobile_number2"
+            label={<span style={{ fontWeight: 'bold' }}>Mobile Number 2</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label={<span style={{ fontWeight: 'bold' }}>Email</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="gstn"
+            label={<span style={{ fontWeight: 'bold' }}>GSTN</span>}
+          >
+            <Input
+              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
+            />
+          </Form.Item>
+
+          <Button
+            title="Update Customer"
+            type="submit"
+            className="text-white bg-green-600 mt-3"
+          />
+        </Form>
+      </Modal>
     </>
   );
 };
