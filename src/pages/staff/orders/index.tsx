@@ -487,41 +487,44 @@ const ModalDetails: React.FC<any> = ({
     setIsConfirmModalOpen(true);
   }, []);
   const onConfirmInvoiceAction = async () => {
-    try {
-      // ✅ Skip API if already generated
-      if (orderDetails?.order_invoice !== 'GENERATED') {
-        // ✅ 1. Determine status to set
-        const statusToSet =
-          invoiceActionType === 'print' || invoiceActionType === 'download'
-            ? 'GENERATED'
-            : 'PENDING'; // fallback just in case
+  try {
+    const invoiceStatus = orderDetails?.order_invoice?.toUpperCase().trim();
 
-        // ✅ 2. Call API to update invoice status
-        await updateInvoiceStatus(put, orderDetails?.id, statusToSet);
-        await getOrderById();
-      }
+    // ✅ Skip if already PAID or GENERATED
+    if (
+      !invoiceStatus?.includes('PAID') &&
+      !invoiceStatus?.includes('GENERATED')
+    ) {
+      const statusToSet =
+        invoiceActionType === 'print' || invoiceActionType === 'download'
+          ? 'GENERATED'
+          : 'PENDING';
 
-      // ✅ 3. Handle Print or Download
-      if (invoiceActionType === 'print') {
-        setPrintForOfficeInvoice(true);
-        setTimeout(() => {
-          reactToPrintFn(); // trigger print
-          setPrintForOfficeInvoice(false);
-        }, 100);
-      } else if (invoiceActionType === 'download') {
-        const fileName = orderDetails?.invoice_id
-          ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
-          : 'Order_Invoice.pdf';
-        await generatePDF({ contentRef, fileName }); // trigger download
-      }
-
-      // ✅ 4. Close modal and reset
-      setIsConfirmModalOpen(false);
-      setInvoiceActionType(null);
-    } catch (err) {
-      console.error('API Error during invoice print/download:', err);
+      await updateInvoiceStatus(put, orderDetails?.id, statusToSet);
+      await getOrderById();
     }
-  };
+
+    // ✅ Handle Print or Download
+    if (invoiceActionType === 'print') {
+      setPrintForOfficeInvoice(true);
+      setTimeout(() => {
+        reactToPrintFn();
+        setPrintForOfficeInvoice(false);
+      }, 100);
+    } else if (invoiceActionType === 'download') {
+      const fileName = orderDetails?.invoice_id
+        ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
+        : 'Order_Invoice.pdf';
+      await generatePDF({ contentRef, fileName });
+    }
+
+    // ✅ Final cleanup
+    setIsConfirmModalOpen(false);
+    setInvoiceActionType(null);
+  } catch (err) {
+    console.error('API Error during invoice print/download:', err);
+  }
+};
 
   return (
     <Modal
