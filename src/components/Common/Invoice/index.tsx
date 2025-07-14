@@ -180,7 +180,7 @@ const Invoice: React.FC<{
       <h5 className="relative z-20 mb-2 text-xl font-extrabold text-center text-black bg-white">
         <span className="px-5 text-lg bg-white">
           {printForOfficeInvoice
-            ? 'TAXINVOICE'
+            ? 'TAX INVOICE'
             : type == 'INVOICE'
               ? `TAX INVOICE`
               : `ORDER FORM`}
