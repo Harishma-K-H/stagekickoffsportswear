@@ -34,12 +34,13 @@ const PaymentHistory: React.FC<any> = ({
 
   // Calculate total paid amount and current balance
   const totalPaid = Math.round(paidAmount(payment_details));
-  const balanceAmount =
-    payment_details?.length > 0 &&
-    payment_details[payment_details?.length - 1]?.balance_amount;
-  const currentBalance = balanceAmount
-    ? parseFloat(balanceAmount)
-    : Math.round(parseFloat(total_cost) - totalPaid);
+  // const balanceAmount =
+  //   payment_details?.length > 0 &&
+  //   payment_details[payment_details?.length - 1]?.balance_amount;
+  // const currentBalance = balanceAmount
+  //   ? parseFloat(balanceAmount)
+  //   : Math.round(parseFloat(total_cost) - totalPaid);
+  const currentBalance = Math.round(parseFloat(total_cost) - totalPaid);
 
   const columns = [
     { title: 'Sl No.', dataIndex: 'slNo', key: 'slNo', width: '8%' },
