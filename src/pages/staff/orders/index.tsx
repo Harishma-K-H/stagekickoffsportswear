@@ -147,17 +147,15 @@ const Orders: React.FC = () => {
 
             {/* Pay / Paid Icon */}
             <FontAwesomeIcon
-              icon={faCreditCard}
-              className={`cursor-pointer ${
-                currentBalance <= 0
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-green-600 hover:text-green-800'
-              }`}
-              title={currentBalance <= 0 ? 'Paid' : 'Pay Now'}
-              onClick={() =>
-                currentBalance > 0 && showModal(ordersList[record?.key]?.id, 2)
-              }
-            />
+            icon={faCreditCard}
+            className={`cursor-pointer ${
+              currentBalance <= 0
+                ? 'text-gray-400 hover:text-gray-500'
+                : 'text-green-600 hover:text-green-800'
+            }`}
+            title={currentBalance <= 0 ? 'View Payment Details (Paid)' : 'Add Payment'}
+            onClick={() => showModal(ordersList[record?.key]?.id, 2)}
+          />
 
             {/* Edit Icon */}
             {currentBalance <= 0 ? (
