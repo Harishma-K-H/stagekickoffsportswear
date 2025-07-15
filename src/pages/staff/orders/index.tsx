@@ -25,7 +25,7 @@ import { Link, useSearchParams } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 
 import { fetchDeliveryOrders } from '../dashboard/api';
-import { orderById, orders, payment, updateInvoiceStatus } from './api';
+import { orderById, orders, payment } from './api';
 // import axios from 'axios';
 
 const Orders: React.FC = () => {
@@ -147,15 +147,19 @@ const Orders: React.FC = () => {
 
             {/* Pay / Paid Icon */}
             <FontAwesomeIcon
-            icon={faCreditCard}
-            className={`cursor-pointer ${
-              currentBalance <= 0
-                ? 'text-gray-400 hover:text-gray-500'
-                : 'text-green-600 hover:text-green-800'
-            }`}
-            title={currentBalance <= 0 ? 'View Payment Details (Paid)' : 'Add Payment'}
-            onClick={() => showModal(ordersList[record?.key]?.id, 2)}
-          />
+              icon={faCreditCard}
+              className={`cursor-pointer ${
+                currentBalance <= 0
+                  ? 'text-gray-400 hover:text-gray-500'
+                  : 'text-green-600 hover:text-green-800'
+              }`}
+              title={
+                currentBalance <= 0
+                  ? 'View Payment Details (Paid)'
+                  : 'Add Payment'
+              }
+              onClick={() => showModal(ordersList[record?.key]?.id, 2)}
+            />
 
             {/* Edit Icon */}
             {currentBalance <= 0 ? (
@@ -373,7 +377,7 @@ const Orders: React.FC = () => {
         setIsModalOpen={setIsModalOpen}
         modalId={modalId}
         setOrderId={setOrderId}
-        getOrderById={getOrderById}
+        // getOrderById={getOrderById}
       />
     </>
   );
@@ -386,7 +390,6 @@ const ModalDetails: React.FC<any> = ({
   setIsModalOpen,
   modalId,
   setOrderId,
-  getOrderById,
 }) => {
   const [downloadClicked] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -398,7 +401,7 @@ const ModalDetails: React.FC<any> = ({
   const [invoiceActionType, setInvoiceActionType] = useState<
     'print' | 'download' | null
   >(null);
-  const { put } = useApiJSON();
+  // const { put } = useApiJSON();
   const handleDownload = useCallback(
     async (filesName?: string) => {
       const fileName = filesName
@@ -487,44 +490,43 @@ const ModalDetails: React.FC<any> = ({
     setIsConfirmModalOpen(true);
   }, []);
   const onConfirmInvoiceAction = async () => {
-  try {
-    const invoiceStatus = orderDetails?.order_invoice?.toUpperCase().trim();
+    try {
+      const invoiceStatus = orderDetails?.order_invoice?.toUpperCase().trim();
 
-    // ✅ Skip if already PAID or GENERATED
-    if (
-      !invoiceStatus?.includes('PAID') &&
-      !invoiceStatus?.includes('GENERATED')
-    ) {
-      const statusToSet =
-        invoiceActionType === 'print' || invoiceActionType === 'download'
-          ? 'GENERATED'
-          : 'PENDING';
+      // ✅ Skip if already PAID or GENERATED
+      if (
+        !invoiceStatus?.includes('PAID') &&
+        !invoiceStatus?.includes('GENERATED')
+      ) {
+        // const statusToSet =
+        //   invoiceActionType === 'print' || invoiceActionType === 'download'
+        //     ? 'GENERATED'
+        //     : 'PENDING';
+        // await updateInvoiceStatus(put, orderDetails?.id, statusToSet);
+        // await getOrderById();
+      }
 
-      await updateInvoiceStatus(put, orderDetails?.id, statusToSet);
-      await getOrderById();
+      // ✅ Handle Print or Download
+      if (invoiceActionType === 'print') {
+        setPrintForOfficeInvoice(true);
+        setTimeout(() => {
+          reactToPrintFn();
+          setPrintForOfficeInvoice(false);
+        }, 100);
+      } else if (invoiceActionType === 'download') {
+        const fileName = orderDetails?.invoice_id
+          ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
+          : 'Order_Invoice.pdf';
+        await generatePDF({ contentRef, fileName });
+      }
+
+      // ✅ Final cleanup
+      setIsConfirmModalOpen(false);
+      setInvoiceActionType(null);
+    } catch (err) {
+      console.error('API Error during invoice print/download:', err);
     }
-
-    // ✅ Handle Print or Download
-    if (invoiceActionType === 'print') {
-      setPrintForOfficeInvoice(true);
-      setTimeout(() => {
-        reactToPrintFn();
-        setPrintForOfficeInvoice(false);
-      }, 100);
-    } else if (invoiceActionType === 'download') {
-      const fileName = orderDetails?.invoice_id
-        ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
-        : 'Order_Invoice.pdf';
-      await generatePDF({ contentRef, fileName });
-    }
-
-    // ✅ Final cleanup
-    setIsConfirmModalOpen(false);
-    setInvoiceActionType(null);
-  } catch (err) {
-    console.error('API Error during invoice print/download:', err);
-  }
-};
+  };
 
   return (
     <Modal
