@@ -14,6 +14,7 @@ const Invoice: React.FC<{
   printForOffice?: boolean;
   downloadForOffice?: boolean;
   printForOfficeInvoice?: boolean;
+  printClicked?: boolean;
   downloadClicked?: boolean;
   paid?: boolean;
 }> = ({
@@ -23,6 +24,7 @@ const Invoice: React.FC<{
   downloadForOffice = false,
   printForOfficeInvoice = false,
   downloadClicked = false,
+  printClicked = false,
   paid = false,
 }) => {
   const {
@@ -51,6 +53,7 @@ const Invoice: React.FC<{
   }, [delivery_date]);
   const totalPaid = paidAmount(payment_details);
   const currentBalance = parseInt(total_cost) - totalPaid;
+  const shouldShow = downloadClicked || printClicked;
   const taxRows =
     customer?.state_name === 'KERALA'
       ? [
@@ -123,7 +126,7 @@ const Invoice: React.FC<{
   console.log('dhgdhgdhgdh', import.meta.env.VITE_MEDIA_BASE_PATH);
   console.log('Logo Path:', created_by?.logo);
   console.log('printForOfficeInvoice', printForOfficeInvoice);
-  console.log('downloadClicked', downloadClicked);
+  // console.log('downloadClicked', downloadClicked);
   return (
     <div
       id="invoice-print"
@@ -179,7 +182,7 @@ const Invoice: React.FC<{
       </div>
       <h5 className="relative z-20 mb-2 text-xl font-extrabold text-center text-black bg-white">
         <span className="px-5 text-lg bg-white">
-          {printForOfficeInvoice
+          {printForOfficeInvoice || downloadClicked
             ? 'TAX INVOICE'
             : type == 'INVOICE'
               ? `TAX INVOICE`
@@ -263,21 +266,25 @@ const Invoice: React.FC<{
                 valueColumnClassName: '!text-left',
                 labelColumnClassName: '!text-left bg-black/70 text-white',
               },
-              {
-                heading: `DELIVERY DATE`,
-                value: (dayjs(delivery_date, 'DD-MM-YYYY', true).isValid()
-                  ? dayjs(delivery_date, 'DD-MM-YYYY')
-                  : dayjs(delivery_date)
-                ).format('DD-MM-YYYY'),
-                visibility: true,
-                rowClassName: 'px-3',
-                valueColumnClassName: '!text-left',
-                labelColumnClassName: '!text-left bg-black/70 text-white',
-              },
+              // ✅ Only include this row if not INVOICE
+              ...(type !== 'INVOICE'
+                ? [
+                    {
+                      heading: `DELIVERY DATE`,
+                      value: (dayjs(delivery_date, 'DD-MM-YYYY', true).isValid()
+                        ? dayjs(delivery_date, 'DD-MM-YYYY')
+                        : dayjs(delivery_date)
+                      ).format('DD-MM-YYYY'),
+                      visibility: true,
+                      rowClassName: 'px-3',
+                      valueColumnClassName: '!text-left',
+                      labelColumnClassName: '!text-left bg-black/70 text-white',
+                    },
+                  ]
+                : []),
             ]}
           />
         </div>
-
         {/* Shipped To */}
         {/* <div className="w-1/3 space-y-1 text-right">
     <h2 className="text-base font-semibold dark:text-white">Shipped To</h2>
@@ -553,9 +560,9 @@ const Invoice: React.FC<{
           )}
         </div>
       )}
-      {(downloadClicked || type === 'INVOICE') && (
+      {type === 'INVOICE' && (
         <div
-          className={`mt-20 text-right ${downloadClicked ? 'block' : 'print:block hidden'}`}
+          className={`mt-20 text-right ${shouldShow ? 'block' : 'hidden print:block'}`}
         >
           <h5 className="text-base font-bold text-gray-700">
             Authorized Signature

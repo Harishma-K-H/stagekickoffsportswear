@@ -147,15 +147,19 @@ const Orders: React.FC = () => {
 
             {/* Pay / Paid Icon */}
             <FontAwesomeIcon
-            icon={faCreditCard}
-            className={`cursor-pointer ${
-              currentBalance <= 0
-                ? 'text-gray-400 hover:text-gray-500'
-                : 'text-green-600 hover:text-green-800'
-            }`}
-            title={currentBalance <= 0 ? 'View Payment Details (Paid)' : 'Add Payment'}
-            onClick={() => showModal(ordersList[record?.key]?.id, 2)}
-          />
+              icon={faCreditCard}
+              className={`cursor-pointer ${
+                currentBalance <= 0
+                  ? 'text-gray-400 hover:text-gray-500'
+                  : 'text-green-600 hover:text-green-800'
+              }`}
+              title={
+                currentBalance <= 0
+                  ? 'View Payment Details (Paid)'
+                  : 'Add Payment'
+              }
+              onClick={() => showModal(ordersList[record?.key]?.id, 2)}
+            />
 
             {/* Edit Icon */}
             {currentBalance <= 0 ? (
@@ -388,7 +392,8 @@ const ModalDetails: React.FC<any> = ({
   setOrderId,
   getOrderById,
 }) => {
-  const [downloadClicked] = useState(false);
+  // const [downloadClicked] = useState(false);
+  const [downloadClicked, setDownloadClicked] = useState<boolean>(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [printForOffice, setPrintForOffice] = useState<boolean>(false);
   const [printForOfficeInvoice, setPrintForOfficeInvoice] =
@@ -416,11 +421,20 @@ const ModalDetails: React.FC<any> = ({
   );
 
   // Configure react-to-print with a custom document title
+  // const reactToPrintFn = useReactToPrint({
+  //   contentRef,
+  //   documentTitle: orderDetails?.orderID
+  //     ? `Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}`
+  //     : 'Order_Invoice', // Fallback if orderDetails is not yet set
+  // });
   const reactToPrintFn = useReactToPrint({
     contentRef,
     documentTitle: orderDetails?.orderID
       ? `Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}`
-      : 'Order_Invoice', // Fallback if orderDetails is not yet set
+      : 'Order_Invoice',
+    onAfterPrint: () => {
+      setPrintForOfficeInvoice(false); // ✅ Reset only after print finishes
+    },
   });
 
   const handleCancel = useCallback(() => {
@@ -455,6 +469,7 @@ const ModalDetails: React.FC<any> = ({
   // }, []);
   const handleOfficeInvoicePrint = useCallback(() => {
     setInvoiceActionType('print');
+    console.log('ddoooowwnnwwwwwwwwwwwwwlolol', setInvoiceActionType);
     setIsConfirmModalOpen(true);
   }, []);
 
@@ -484,47 +499,55 @@ const ModalDetails: React.FC<any> = ({
   // }, [downloadClicked, contentRef, orderDetails]);
   const handleOfficeInvoiceDownload = useCallback(() => {
     setInvoiceActionType('download');
+    console.log('ddoooowwnnlolol', setInvoiceActionType);
     setIsConfirmModalOpen(true);
   }, []);
   const onConfirmInvoiceAction = async () => {
-  try {
-    const invoiceStatus = orderDetails?.order_invoice?.toUpperCase().trim();
+    try {
+      const invoiceStatus = orderDetails?.order_invoice?.toUpperCase().trim();
 
-    // ✅ Skip if already PAID or GENERATED
-    if (
-      !invoiceStatus?.includes('PAID') &&
-      !invoiceStatus?.includes('GENERATED')
-    ) {
-      const statusToSet =
-        invoiceActionType === 'print' || invoiceActionType === 'download'
-          ? 'GENERATED'
-          : 'PENDING';
+      // ✅ Set status if not already PAID or GENERATED
+      if (
+        !invoiceStatus?.includes('PAID') &&
+        !invoiceStatus?.includes('GENERATED')
+      ) {
+        const statusToSet =
+          invoiceActionType === 'print' || invoiceActionType === 'download'
+            ? 'GENERATED'
+            : 'PENDING';
 
-      await updateInvoiceStatus(put, orderDetails?.id, statusToSet);
-      await getOrderById();
+        await updateInvoiceStatus(put, orderDetails?.id, statusToSet);
+        await getOrderById();
+      }
+
+      if (invoiceActionType === 'print') {
+        setPrintForOfficeInvoice(true);
+        setTimeout(() => {
+          reactToPrintFn();
+          // Resetting is handled by onAfterPrint
+        }, 100);
+      } else if (invoiceActionType === 'download') {
+        setDownloadClicked(true);
+
+        const fileName = orderDetails?.invoice_id
+          ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
+          : 'Order_Invoice.pdf';
+
+        setTimeout(async () => {
+          await generatePDF({ contentRef, fileName });
+
+          // ✅ Reset the flags so it doesn't affect later prints
+          setPrintForOfficeInvoice(false);
+          setDownloadClicked(false); // ✅ IMPORTANT: reset to show ORDER form next time
+        }, 100);
+      }
+
+      setIsConfirmModalOpen(false);
+      setInvoiceActionType(null);
+    } catch (err) {
+      console.error('API Error during invoice print/download:', err);
     }
-
-    // ✅ Handle Print or Download
-    if (invoiceActionType === 'print') {
-      setPrintForOfficeInvoice(true);
-      setTimeout(() => {
-        reactToPrintFn();
-        setPrintForOfficeInvoice(false);
-      }, 100);
-    } else if (invoiceActionType === 'download') {
-      const fileName = orderDetails?.invoice_id
-        ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
-        : 'Order_Invoice.pdf';
-      await generatePDF({ contentRef, fileName });
-    }
-
-    // ✅ Final cleanup
-    setIsConfirmModalOpen(false);
-    setInvoiceActionType(null);
-  } catch (err) {
-    console.error('API Error during invoice print/download:', err);
-  }
-};
+  };
 
   return (
     <Modal
@@ -543,6 +566,13 @@ const ModalDetails: React.FC<any> = ({
               type={
                 printForOfficeInvoice || downloadClicked ? 'INVOICE' : 'ORDER'
               }
+              // type={
+              //   invoiceActionType === 'print' || invoiceActionType === 'download'
+              //     ? 'INVOICE'
+              //     : 'ORDER'
+              // }
+              // type={printForOfficeInvoice ? 'INVOICE' : 'ORDER'}
+
               data={orderDetails}
               printForOffice={printForOffice}
               downloadForOffice={downloadForOffice}

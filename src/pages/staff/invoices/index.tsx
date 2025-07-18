@@ -38,6 +38,7 @@ const Invoices: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [invoiceId, setInvoiceId] = useState<number | null>(null);
   const [invoiceDetails, setInvoiceDetails] = useState<any>({});
+
   // const [downloadClicked, setDownloadClicked] = useState(false);
   // Configure react-to-print with a custom document title
   const reactToPrintFn = useReactToPrint({
@@ -59,7 +60,7 @@ const Invoices: React.FC = () => {
       key: 'invoiceNumber',
       render: (text: string) => <strong>{text}</strong>,
     },
-     {
+    {
       title: 'Invoice Date',
       dataIndex: 'invoiceDate',
       key: 'invoiceDate',
@@ -215,16 +216,26 @@ const ModalDetails: React.FC<any> = ({
   setInvoiceId,
   contentRef,
   reactToPrintFn,
+  // setDownloadClicked
 }) => {
   const [downloadClicked, setDownloadClicked] = useState(false);
+  const [printClicked, setPrintClicked] = useState(false);
   const handleCancel = useCallback(() => {
     setIsModalOpen(false);
     setInvoiceId(null); // Reset invoiceId when closing modal
   }, [setIsModalOpen, setInvoiceId]);
 
   // Office Print: printForOffice = true
+  // const handleOfficePrint = useCallback(() => {
+  //   reactToPrintFn(); // Trigger print
+  // }, [reactToPrintFn]);
+
   const handleOfficePrint = useCallback(() => {
-    reactToPrintFn(); // Trigger print
+    setPrintClicked(true);
+    setTimeout(() => {
+      reactToPrintFn();
+      setPrintClicked(false);
+    }, 100);
   }, [reactToPrintFn]);
 
   // Add this new function for download
@@ -273,6 +284,7 @@ const ModalDetails: React.FC<any> = ({
           data={invoiceDetails}
           paid={true}
           downloadClicked={downloadClicked}
+          printClicked={printClicked}
         />
       </div>
       <div className="flex justify-end gap-3">
