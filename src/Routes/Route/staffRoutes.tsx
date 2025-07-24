@@ -3,6 +3,7 @@ import CustomerDetailsPage from '@pages/staff/customers/Details/Loadable';
 import Customers from '@pages/staff/customers/Loadable';
 import Dashboard from '@pages/staff/dashboard/Loadable';
 import Invoices from '@pages/staff/invoices/Loadable';
+import Reports from '@pages/staff/Reports/InvoiceReports/Loadable';
 import EditOrder from '@pages/staff/orders/edit/Loadable';
 import Orders from '@pages/staff/orders/Loadable';
 import NewOrders from '@pages/staff/orders/new/Loadable';
@@ -34,5 +35,6 @@ export const StaffRoutes = (
       <Route path={Paths.Staff.orders.edit()} element={<EditOrder />} />
     </>
     <Route path={Paths.Staff.invoices} element={<Invoices />} />
+    <Route path={Paths.Staff.reports.invoiceReports} element={<Reports />} />
   </Route>
 );

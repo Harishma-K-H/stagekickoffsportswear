@@ -34,7 +34,7 @@ const Customers: React.FC = () => {
   const [form] = Form.useForm();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(25);
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
@@ -200,7 +200,7 @@ const Customers: React.FC = () => {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
           <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-            Customers List
+            Customers
           </h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
@@ -236,6 +236,7 @@ const Customers: React.FC = () => {
             current={pageNumber}
             total={paginationData.count}
             pageSize={pageSize}
+            pageSizeOptions={['25', '50', '100','150','200']}
             onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"

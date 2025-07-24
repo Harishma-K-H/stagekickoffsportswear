@@ -20,3 +20,16 @@ export const invoiceById = async (
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
+// Define the month-wise invoice list function
+export const monthWiseInvoices = async (
+  get: (url: string) => Promise<any>,
+  month: number,
+  year: number
+): Promise<any> => {
+  const response = await get(`/invoice_list/?month=${month}&year=${year}`);
+  return {
+    data: response.data,
+    status: response.status,
+    ok: response.ok,
+  };
+};

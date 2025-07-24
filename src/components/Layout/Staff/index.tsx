@@ -1,7 +1,7 @@
 // import ScrollToTopButton from '@components/Common/ScrollToTopButton';
 import Paths from '@routes/paths';
 import React, { useEffect, useRef, useState } from 'react';
-import { FaFileInvoice, FaUsers } from 'react-icons/fa';
+import { FaFileInvoice, FaUsers,FaRegFileAlt ,FaFileInvoiceDollar} from 'react-icons/fa';
 import { MdDashboardCustomize, MdOutlineChecklistRtl } from 'react-icons/md';
 import { Outlet, useLocation } from 'react-router';
 
@@ -40,6 +40,18 @@ const StaffLayout: React.FC<{}> = () => {
       route: Paths.Staff.customers.index,
       Icon: <FaUsers className="w-[22px] h-auto" />,
     },
+     {
+    title: 'Reports',
+    Icon: <FaRegFileAlt />,
+    children: [
+      {
+        title: 'Pending',
+        link: '/staff/reports/invoice-reports',
+        route: '/staff/reports/invoice-reports',
+        Icon: <FaRegFileAlt />,
+      },
+    ],
+  },
   ]);
 
   useEffect(() => {

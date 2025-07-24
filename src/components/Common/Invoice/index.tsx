@@ -9,7 +9,7 @@ import { FaPhoneAlt } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
 
 const Invoice: React.FC<{
-  type: 'ORDER' | 'INVOICE';
+  type: 'ORDER' | 'INVOICE' | 'MULTIPLEINVOICES';
   data: any;
   printForOffice?: boolean;
   downloadForOffice?: boolean;
