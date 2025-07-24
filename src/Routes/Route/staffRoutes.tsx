@@ -3,10 +3,10 @@ import CustomerDetailsPage from '@pages/staff/customers/Details/Loadable';
 import Customers from '@pages/staff/customers/Loadable';
 import Dashboard from '@pages/staff/dashboard/Loadable';
 import Invoices from '@pages/staff/invoices/Loadable';
-import Reports from '@pages/staff/Reports/InvoiceReports/Loadable';
 import EditOrder from '@pages/staff/orders/edit/Loadable';
 import Orders from '@pages/staff/orders/Loadable';
 import NewOrders from '@pages/staff/orders/new/Loadable';
+import Reports from '@pages/staff/Reports/InvoiceReports/Loadable';
 import Paths from '@routes/paths';
 import { Route } from 'react-router';
 

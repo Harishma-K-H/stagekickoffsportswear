@@ -24,7 +24,7 @@ export const invoiceById = async (
 export const monthWiseInvoices = async (
   get: (url: string) => Promise<any>,
   month: number,
-  year: number
+  year: number,
 ): Promise<any> => {
   const response = await get(`/invoice_list/?month=${month}&year=${year}`);
   return {

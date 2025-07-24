@@ -9,7 +9,7 @@ import { API_CONFIG } from '@services/ApiService/Api.config';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { generatePDF } from '@utils/staff/downloadPdf';
-import { Modal, Pagination, Table, DatePicker } from 'antd';
+import { DatePicker, Modal, Pagination, Table } from 'antd';
 import locale from 'antd/es/date-picker/locale/en_US';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -17,6 +17,7 @@ import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
+
 import { invoiceById, invoices, monthWiseInvoices } from './api';
 
 const Invoices: React.FC = () => {
@@ -29,9 +30,10 @@ const Invoices: React.FC = () => {
   const currentDate = dayjs();
   const currentYear = currentDate.year();
   // If current month is Jan/Feb/Mar (i.e., before April), financial year started last year
-const financialYearStart = currentDate.month() < 3
-  ? dayjs(`${currentYear - 1}-04-01`)
-  : dayjs(`${currentYear}-04-01`);
+  const financialYearStart =
+    currentDate.month() < 3
+      ? dayjs(`${currentYear - 1}-04-01`)
+      : dayjs(`${currentYear}-04-01`);
   const currentMonth = dayjs(); // today
 
   const [selectedMonth, setSelectedMonth] = useState<dayjs.Dayjs | null>(null);
@@ -51,7 +53,7 @@ const financialYearStart = currentDate.month() < 3
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [invoiceId, setInvoiceId] = useState<number | null>(null);
   const [invoiceDetails, setInvoiceDetails] = useState<any>({});
-// const [batchInvoices, setBatchInvoices] = useState<any[]>([]);
+  // const [batchInvoices, setBatchInvoices] = useState<any[]>([]);
 
   // const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
@@ -64,13 +66,11 @@ const financialYearStart = currentDate.month() < 3
   });
 
   // Print batch invoices
-// const batchPrintFn = useReactToPrint({
-//   content: () => batchContentRef.current,
-//   documentTitle: `Invoices_${dayjs().format('YYYYMMDD_HHmmss')}`,
-//   removeAfterPrint: true,
-// } as Parameters<typeof useReactToPrint>[0]);
-
-
+  // const batchPrintFn = useReactToPrint({
+  //   content: () => batchContentRef.current,
+  //   documentTitle: `Invoices_${dayjs().format('YYYYMMDD_HHmmss')}`,
+  //   removeAfterPrint: true,
+  // } as Parameters<typeof useReactToPrint>[0]);
 
   const columns = [
     {
@@ -165,7 +165,7 @@ const financialYearStart = currentDate.month() < 3
       //   getInvoices();
       // }
     },
-    [getInvoices]
+    [getInvoices],
   );
 
   const onShowSizeChange = useCallback(
@@ -176,7 +176,7 @@ const financialYearStart = currentDate.month() < 3
       //   getInvoices();
       // }
     },
-    [getInvoices]
+    [getInvoices],
   );
 
   const tableDataSource = invoicesList?.map((invoice: any, i: number) => ({
@@ -184,7 +184,9 @@ const financialYearStart = currentDate.month() < 3
     slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: invoice?.orderID,
     invoice_generated: invoice?.invoice_generated,
-    customerName: capitalizeFirstLetterOfEachWord(invoice?.customer?.business_name).toUpperCase(),
+    customerName: capitalizeFirstLetterOfEachWord(
+      invoice?.customer?.business_name,
+    ).toUpperCase(),
     invoiceNumber: invoice?.invoice_id,
     totalAmount: invoice?.order_amount,
     orderDate: dayjs(invoice?.order_date).format('DD-MM-YYYY'),
@@ -205,35 +207,35 @@ const financialYearStart = currentDate.month() < 3
   // };
   // console.log('Selected Invoice IDs:', selectedRowKeys);
 
- const handleGoClick = async () => {
-  if (!selectedMonth) {
-    notify('❗ Please select a month before proceeding.', 'error');
-    return;
-  }
+  const handleGoClick = async () => {
+    if (!selectedMonth) {
+      notify('❗ Please select a month before proceeding.', 'error');
+      return;
+    }
 
-  const month = selectedMonth.month() + 1; // 0-indexed, so +1
-  const year = selectedMonth.year();
+    const month = selectedMonth.month() + 1; // 0-indexed, so +1
+    const year = selectedMonth.year();
 
-  try {
-    const { data } = await monthWiseInvoices(get, month, year);
-    setInvoicesList(data.results);
-    setPaginationData({
-      count: data?.count ?? data?.length ?? 0,
-      hasPreviousPage: false,
-      hasNextPage: false,
-      pageNumber: 1,
-      pageSize: 20,
-    });
-    // setIsFiltered(true);
-    setPageNumber(1);
-  } catch (error) {
-    notify('❌ Failed to fetch invoices', 'error');
-    console.error('Error:', error);
-  }
-};
+    try {
+      const { data } = await monthWiseInvoices(get, month, year);
+      setInvoicesList(data.results);
+      setPaginationData({
+        count: data?.count ?? data?.length ?? 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+        pageNumber: 1,
+        pageSize: 20,
+      });
+      // setIsFiltered(true);
+      setPageNumber(1);
+    } catch (error) {
+      notify('❌ Failed to fetch invoices', 'error');
+      console.error('Error:', error);
+    }
+  };
 
   useEffect(() => {
-      getInvoices();
+    getInvoices();
   }, [getInvoices]);
 
   useEffect(() => {
@@ -250,7 +252,7 @@ const financialYearStart = currentDate.month() < 3
   //       ))}
   //   </div>
   // );
-// console.log('Selected Invoice IDs:', selectedRowKeys);
+  // console.log('Selected Invoice IDs:', selectedRowKeys);
 
   return (
     <>
@@ -259,30 +261,30 @@ const financialYearStart = currentDate.month() < 3
       </Helmet>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
-          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">Invoices</h3>
-
+          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
+            Invoices
+          </h3>
         </div>
 
         <div className="p-3 bg-white md:p-5 custom-table">
-             <div className="flex justify-end items-center gap-2 mb-4">
-          <DatePicker
-            picker="month"
-            allowClear={false}
-            value={selectedMonth}
-            onChange={(date) => setSelectedMonth(date ?? dayjs())}
-            disabledDate={(current) => {
-              const now = dayjs();
-              return (
-                current < financialYearStart.startOf('month') ||
-                current > currentMonth.endOf('month') ||
-                current.isSame(now, 'month') // ❌ disable current month
-              );
-            }}
-            className="w-[200px]"
-            format="YYYY-MM"
-            locale={locale}
-          />
-
+          <div className="flex justify-end items-center gap-2 mb-4">
+            <DatePicker
+              picker="month"
+              allowClear={false}
+              value={selectedMonth}
+              onChange={(date) => setSelectedMonth(date ?? dayjs())}
+              disabledDate={(current) => {
+                const now = dayjs();
+                return (
+                  current < financialYearStart.startOf('month') ||
+                  current > currentMonth.endOf('month') ||
+                  current.isSame(now, 'month') // ❌ disable current month
+                );
+              }}
+              className="w-[200px]"
+              format="YYYY-MM"
+              locale={locale}
+            />
 
             <Button
               title="Go"
@@ -318,7 +320,7 @@ const financialYearStart = currentDate.month() < 3
             total={paginationData.count}
             pageSize={pageSize}
             showSizeChanger
-            pageSizeOptions={['25', '50', '100','150','200']}
+            pageSizeOptions={['25', '50', '100', '150', '200']}
             onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
@@ -337,7 +339,7 @@ const financialYearStart = currentDate.month() < 3
         contentRef={contentRef}
         reactToPrintFn={reactToPrintFn}
       />
-     {/* 🔽 Batch invoices section, hidden off-screen
+      {/* 🔽 Batch invoices section, hidden off-screen
 <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
   <div ref={batchContentRef}>
     {batchInvoices.map((inv, idx) => (
@@ -353,7 +355,6 @@ const financialYearStart = currentDate.month() < 3
     ))}
   </div>
 </div> */}
-    
     </>
   );
 };
@@ -409,9 +410,21 @@ const ModalDetails: React.FC<ModalDetailsProps> = ({
   }, [downloadClicked, contentRef, invoiceDetails]);
 
   return (
-    <Modal open={isModalOpen} width={1000} centered onCancel={handleCancel} footer={null}>
+    <Modal
+      open={isModalOpen}
+      width={1000}
+      centered
+      onCancel={handleCancel}
+      footer={null}
+    >
       <div ref={contentRef}>
-        <Invoice type="INVOICE" data={invoiceDetails} paid downloadClicked={downloadClicked} printClicked={printClicked} />
+        <Invoice
+          type="INVOICE"
+          data={invoiceDetails}
+          paid
+          downloadClicked={downloadClicked}
+          printClicked={printClicked}
+        />
       </div>
       <div className="flex justify-end gap-3 mt-2">
         <Button

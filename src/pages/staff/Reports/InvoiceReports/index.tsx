@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Table, message, Modal } from 'antd';
-import { InvoiceReportsGet, invoiceById } from './api';
-import { useApiJSON } from '@services/ApiService/Api.service';
-import dayjs from 'dayjs';
 import Invoice from '@components/Common/Invoice';
+import { useApiJSON } from '@services/ApiService/Api.service';
+import { message, Modal, Table } from 'antd';
 
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { invoiceById, InvoiceReportsGet } from './api';
 
 interface InvoiceItem {
   item_id: number;
@@ -95,24 +94,31 @@ const InvoiceReportsPage: React.FC = () => {
   };
 
   const columns = [
-{
-  title: 'Invoice ID',
-  dataIndex: 'invoice_id',
-  key: 'invoice_id',
-  render: (_: any, record: Invoice) => (
-    <span
-      className="text-blue-600 cursor-pointer underline"
-      onClick={() => setInvoiceId(record.id)}
-    >
-      <strong>{record.invoice_id}</strong>
-    </span>
-  ),
-},
+    {
+      title: 'Invoice ID',
+      dataIndex: 'invoice_id',
+      key: 'invoice_id',
+      render: (_: any, record: Invoice) => (
+        <span
+          className="text-blue-600 cursor-pointer underline"
+          onClick={() => setInvoiceId(record.id)}
+        >
+          <strong>{record.invoice_id}</strong>
+        </span>
+      ),
+    },
     { title: 'Customer', dataIndex: 'customer_name', key: 'customer_name' },
     { title: 'Total Cost', dataIndex: 'total_cost', key: 'total_cost' },
-    { title: 'Paid Amount', dataIndex: 'total_paid_amount', key: 'total_paid_amount' },
-    { title: 'Balance Amount', dataIndex: 'balance_amount', key: 'balance_amount' }
-    
+    {
+      title: 'Paid Amount',
+      dataIndex: 'total_paid_amount',
+      key: 'total_paid_amount',
+    },
+    {
+      title: 'Balance Amount',
+      dataIndex: 'balance_amount',
+      key: 'balance_amount',
+    },
   ];
 
   return (
@@ -184,8 +190,6 @@ const ModalDetails: React.FC<ModalDetailsProps> = ({
     if (!downloadClicked || !invoiceDetails) return;
 
     (async () => {
-      
-   
       setDownloadClicked(false);
     })();
   }, [downloadClicked, contentRef, invoiceDetails]);
@@ -193,7 +197,13 @@ const ModalDetails: React.FC<ModalDetailsProps> = ({
   if (!invoiceDetails) return null;
 
   return (
-    <Modal open={isModalOpen} width={1000} centered onCancel={handleCancel} footer={null}>
+    <Modal
+      open={isModalOpen}
+      width={1000}
+      centered
+      onCancel={handleCancel}
+      footer={null}
+    >
       {/* Hidden printable content */}
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
         <div ref={contentRef}>

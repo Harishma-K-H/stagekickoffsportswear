@@ -364,7 +364,7 @@ const Orders: React.FC = () => {
             total={paginationData.count}
             pageSize={pageSize}
             showSizeChanger
-            pageSizeOptions={['25', '50', '100','150','200']}
+            pageSizeOptions={['25', '50', '100', '150', '200']}
             onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"

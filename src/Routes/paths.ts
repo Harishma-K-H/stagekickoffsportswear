@@ -22,7 +22,7 @@ interface PathsType {
       edit: (orderId?: string) => string;
     };
     invoices: string;
-     reports: {
+    reports: {
       invoiceReports: string;
     };
   };
@@ -56,9 +56,9 @@ const Paths: PathsType = {
       edit: (orderId = ':orderId') => `/branch/orders/${orderId}/edit`,
     },
     invoices: '/branch/invoices',
-   reports: {
-  invoiceReports: '/staff/reports/invoice-reports',
-}
+    reports: {
+      invoiceReports: '/staff/reports/invoice-reports',
+    },
   },
 
   error: '*',

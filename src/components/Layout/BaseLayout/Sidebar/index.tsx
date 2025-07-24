@@ -6,7 +6,6 @@ import { Link, NavLink, useLocation } from 'react-router';
 
 const Sidebar: React.FC<SidebarProps> = ({
   sidebarOpen,
-  setSidebarOpen,
   isExpanded,
   setIsExpanded,
   menuList,
@@ -19,7 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleOpen = (index: number) => {
-    setOpenIndex(prev => (prev === index ? null : index));
+    setOpenIndex((prev) => (prev === index ? null : index));
   };
 
   return (
@@ -61,7 +60,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                           <button
                             onClick={() => toggleOpen(index)}
                             className={`flex items-center gap-2 px-[15px] py-[13px] w-full rounded-[5px] hover:bg-[#E7EAEE] ${
-                              openIndex === index && 'bg-[#E7EAEE] font-semibold'
+                              openIndex === index &&
+                              'bg-[#E7EAEE] font-semibold'
                             } ${!isExpanded && 'justify-center'}`}
                           >
                             <div className="text-[18px]">{menu.Icon}</div>
@@ -70,20 +70,25 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                           {/* Submenu Items */}
                           {openIndex === index && (
-                            <ul className={`${isExpanded ? 'pl-6' : 'hidden'} mt-1`}>
-                          {menu.children.map((child: any, cIndex: number) => (
-                          <li key={cIndex}>
-                            <NavLink
-                              to={child.link}
-                              className={`flex items-center gap-3 px-[15px] py-[10px] text-[14px] rounded-[5px] hover:bg-[#F0F2F5] ${
-                                isRoute(child.route) && 'bg-[#E7EAEE] font-semibold'
-                              }`}
+                            <ul
+                              className={`${isExpanded ? 'pl-6' : 'hidden'} mt-1`}
                             >
-                              {child.Icon}
-                              <span>{child.title}</span>
-                            </NavLink>
-                          </li>
-                        ))}
+                              {menu.children.map(
+                                (child: any, cIndex: number) => (
+                                  <li key={cIndex}>
+                                    <NavLink
+                                      to={child.link}
+                                      className={`flex items-center gap-3 px-[15px] py-[10px] text-[14px] rounded-[5px] hover:bg-[#F0F2F5] ${
+                                        isRoute(child.route) &&
+                                        'bg-[#E7EAEE] font-semibold'
+                                      }`}
+                                    >
+                                      {child.Icon}
+                                      <span>{child.title}</span>
+                                    </NavLink>
+                                  </li>
+                                ),
+                              )}
                             </ul>
                           )}
                         </>
@@ -94,7 +99,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                             ${isRoute(menu.route) && 'bg-[#E7EAEE] font-semibold'}
                             ${!isExpanded && 'justify-center'}`}
                         >
-                          <div className={`${!isExpanded && 'tooltip-container'}`}>
+                          <div
+                            className={`${!isExpanded && 'tooltip-container'}`}
+                          >
                             {menu.Icon}
                           </div>
                           {isExpanded && <span>{menu.title}</span>}
