@@ -290,7 +290,7 @@ const Invoices: React.FC = () => {
               title="Go"
               type="button"
               handleClick={handleGoClick}
-              className="text-white bg-green-600 hover:bg-green-700 rounded-md !py-2 px-4 w-fit flex items-center"
+              className="text-white bg-green-600 hover:bg-green-700 rounded-md !py-1 px-4 w-fit flex items-center"
             />
           </div>
           {/* {isFiltered && (

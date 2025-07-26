@@ -4,7 +4,7 @@ import { message, Modal, Table ,Select,Pagination } from 'antd';
 import Button from '@components/Common/Button';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { invoiceById, InvoiceReportsGet } from './api';
+import { invoiceById, InvoiceReportsGet,getBranchList } from './api';
 
 interface InvoiceItem {
   item_id: number;
@@ -60,7 +60,7 @@ const [pageSize, setPageSize] = useState<number>(25);
   const loadReports = async () => {
     setLoading(true);
     try {
-      const response = await InvoiceReportsGet(get, pageNumber, pageSize);
+      const response = await InvoiceReportsGet(get, pageNumber, pageSize,selectedBranch);
       if (response.ok) {
         setData(response.data.results || []);
         setPaginationData({
@@ -88,7 +88,26 @@ const [pageSize, setPageSize] = useState<number>(25);
     const handlePageChange = useCallback((page: number) => {
       setPageNumber(page);
     }, []);
+useEffect(() => {
+  const fetchBranches = async () => {
+    const res = await getBranchList(get);
+    if (res.ok) {
+      setBranches(res.data);
+      
+      // If only one branch and user is admin, select it
+      if (res.data.length === 1) {
+        setSelectedBranch(res.data[0].id);
+      }
 
+      // Optional: if current user has a preferred branch, pre-select it
+      // setSelectedBranch(user?.branch?.id);
+    } else {
+      message.error('Failed to load branches');
+    }
+  };
+
+  fetchBranches();
+}, []);
 
 useEffect(() => {
   loadReports();
@@ -176,7 +195,20 @@ useEffect(() => {
   return (
     <div className="p-4">
       <h2 className="text-xl font-semibold mb-4">Pending Invoices</h2>
-     
+     <Select
+    allowClear
+    placeholder="Select Branch"
+    style={{ width: 250 }}
+    value={selectedBranch}
+    onChange={(val) => {
+      setSelectedBranch(val);
+      setPageNumber(1); // reset pagination
+    }}
+    options={branches.map((b) => ({
+      label: b.name,
+      value: b.id,
+    }))}
+  />
       <Table
   bordered
   dataSource={data}

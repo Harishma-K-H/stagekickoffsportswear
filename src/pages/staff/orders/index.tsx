@@ -136,7 +136,7 @@ const Orders: React.FC = () => {
           : Math.round(parseFloat(record.total_cost || '0') - totalPaid);
 
         return (
-          <div className="flex items-center justify-center space-x-[10px] text-[22px]">
+          <div className="flex items-center justify-center space-x-[16px] text-[20px]">
             {/* View Invoice Icon */}
             <FontAwesomeIcon
               icon={faFileInvoice}

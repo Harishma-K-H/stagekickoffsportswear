@@ -9,6 +9,9 @@ interface PathsType {
     };
     invoices: string;
     orders: string;
+    reports: {
+      invoiceReports: string;
+    };
   };
   Staff: {
     dashboard: string;
@@ -43,6 +46,9 @@ const Paths: PathsType = {
     },
     invoices: '/admin/invoices',
     orders: '/admin/orders',
+    reports: {
+      invoiceReports: '/admin/reports/invoice-reports',
+    },
   },
   Staff: {
     dashboard: '/branch/dashboard',

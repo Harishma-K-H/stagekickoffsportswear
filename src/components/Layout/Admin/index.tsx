@@ -1,7 +1,7 @@
 // import ScrollToTopButton from '@components/Common/ScrollToTopButton';
 import Paths from '@routes/paths';
 import React, { useEffect, useRef, useState } from 'react';
-import { FaFileInvoice, FaUsers } from 'react-icons/fa';
+import { FaFileInvoice, FaUsers,FaRegFileAlt } from 'react-icons/fa';
 import { FaClipboardList } from 'react-icons/fa6';
 import { MdDashboardCustomize, MdOutlineChecklistRtl } from 'react-icons/md';
 import { Outlet, useLocation } from 'react-router';
@@ -47,7 +47,19 @@ const AdminLayout: React.FC<{}> = () => {
       route: Paths.Admin.customers.index,
       Icon: <FaUsers className="w-[22px] h-auto" />,
     },
-  ]);
+  {
+        title: 'Reports',
+        Icon: <FaRegFileAlt />,
+        children: [
+          {
+            title: 'Pending',
+            link: '/admin/reports/invoice-reports',
+            route: '/admin/reports/invoice-reports',
+            Icon: <FaRegFileAlt />,
+          },
+        ],
+      },
+    ]);
 
   useEffect(() => {
     if (containerRef.current) {

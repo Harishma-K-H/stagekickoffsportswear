@@ -72,7 +72,7 @@ const Items: React.FC = () => {
   // const [itemsList, setItemsList] = useState<any>([]);
   const [itemsList, setItemsList] = useState<Item[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(25);
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
@@ -721,7 +721,7 @@ const Items: React.FC = () => {
         <div className="flex items-center justify-between pb-2 border-b-2">
           <div>
             <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-              Items List
+              Items
               {selectedBranch?.label || selectedModel?.label ? (
                 <span className="ml-2 text-xl text-gray-600">
                   {selectedBranch?.label ?? '(branchname)'}
@@ -840,6 +840,7 @@ const Items: React.FC = () => {
             total={paginationData.count}
             pageSize={paginationData.pageSize}
             showSizeChanger
+            pageSizeOptions={['25', '50', '100', '150', '200']}
             onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"

@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Link
               to={Paths.Staff.orders.new}
               title="New Order"
-              className="flex items-center justify-center gap-3 py-2 mx-3 mb-2 text-white rounded-sm lg:px-3 bg-primary"
+              className="flex items-center justify-center gap-3 py-2 mx-3 mb-2 text-white rounded-full bg-primary"
             >
               <FaPlus />
               {isExpanded && <span>New Order</span>}
@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <>
                           <button
                             onClick={() => toggleOpen(index)}
-                            className={`flex items-center gap-2 px-[15px] py-[13px] w-full rounded-[5px] hover:bg-[#E7EAEE] ${
+                            className={`flex items-center gap-5 px-[15px] py-[13px] w-full rounded-[5px] hover:bg-[#E7EAEE] ${
                               openIndex === index &&
                               'bg-[#E7EAEE] font-semibold'
                             } ${!isExpanded && 'justify-center'}`}
@@ -70,9 +70,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                           {/* Submenu Items */}
                           {openIndex === index && (
-                            <ul
-                              className={`${isExpanded ? 'pl-6' : 'hidden'} mt-1`}
-                            >
+                             <ul
+                                className={`${
+                                  isExpanded ? 'pl-6 pr-2' : 'hidden'
+                                } mt-2 mb-2 flex flex-col gap-1`}
+                              >
                               {menu.children.map(
                                 (child: any, cIndex: number) => (
                                   <li key={cIndex}>

@@ -5,7 +5,10 @@ import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLe
 import { Form, Input, Modal, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { FaRegEdit } from 'react-icons/fa';
+import {
+  faFilePen,
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IoSearch } from 'react-icons/io5';
 
 import { getCustomers, updateCustomer } from './api';
@@ -15,7 +18,7 @@ const Customers: React.FC = () => {
 
   const [customers, setCustomers] = useState<any[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(25);
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
@@ -124,7 +127,7 @@ const Customers: React.FC = () => {
           href={`/admin/customers/${record.key}/details`}
           className="text-blue-600 hover:underline"
         >
-          {record.businessName}
+           <strong>{record.businessName.toUpperCase()}</strong>
         </a>
       ),
     },
@@ -157,9 +160,14 @@ const Customers: React.FC = () => {
         <div className="flex gap-3 items-center">
           <button
             onClick={() => handleEditCustomer(record.key)}
-            className="text-blue-600 hover:text-blue-800 text-xl"
+            className="text-gray-400 cursor-not-allowed text-xl"
+            title="Edit Disabled"
+            disabled
           >
-            <FaRegEdit />
+            <FontAwesomeIcon
+              icon={faFilePen}
+              className="text-gray-600 hover:text-gray-800 cursor-pointer"
+            />
           </button>
         </div>
       ),
@@ -178,7 +186,7 @@ const Customers: React.FC = () => {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
           <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-            Customers List
+            Customers
           </h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
@@ -210,6 +218,7 @@ const Customers: React.FC = () => {
             total={paginationData.count}
             pageSize={pageSize}
             showSizeChanger
+            pageSizeOptions={['25', '50', '100', '150', '200']}
             onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"

@@ -5,23 +5,23 @@ import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { generatePDF } from '@utils/staff/downloadPdf';
-import { Modal, Pagination, Table } from 'antd';
+import { Modal, Pagination, Table,DatePicker} from 'antd';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
-
-import { invoiceById, invoices } from './api';
+import locale from 'antd/es/date-picker/locale/en_US';
+import { invoiceById, invoices,monthWiseInvoices } from './api';
 
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const [invoicesList, setInvoicesList] = useState<any>([]);
+  const [invoicesList, setInvoicesList] = useState<any[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(25);
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
@@ -33,6 +33,15 @@ const Invoices: React.FC = () => {
   const [invoiceId, setInvoiceId] = useState<number | null>(null);
   const [invoiceDetails, setInvoiceDetails] = useState<any>({});
 
+  const [selectedMonth, setSelectedMonth] = useState<dayjs.Dayjs | null>(null);
+    const currentDate = dayjs();
+    const currentYear = currentDate.year();
+    // If current month is Jan/Feb/Mar (i.e., before April), financial year started last year
+    const financialYearStart =
+      currentDate.month() < 3
+        ? dayjs(`${currentYear - 1}-04-01`)
+        : dayjs(`${currentYear}-04-01`);
+    const currentMonth = dayjs();
   const reactToPrintFn = useReactToPrint({
     contentRef,
     documentTitle: invoiceDetails?.invoice_id
@@ -120,8 +129,33 @@ const Invoices: React.FC = () => {
   const handlePageChange = useCallback((page: number) => {
     setPageNumber(page);
   }, []);
+  const handleGoClick = async () => {
+    if (!selectedMonth) {
+      notify('❗ Please select a month before proceeding.', 'error');
+      return;
+    }
 
-  const tableDataSource = invoicesList.map((invoice: any, i: number) => ({
+    const month = selectedMonth.month() + 1; // 0-indexed, so +1
+    const year = selectedMonth.year();
+
+    try {
+      const { data } = await monthWiseInvoices(get, month, year);
+      setInvoicesList(data.results);
+      setPaginationData({
+        count: data?.count ?? data?.length ?? 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+        pageNumber: 1,
+        pageSize: 20,
+      });
+      // setIsFiltered(true);
+      setPageNumber(1);
+    } catch (error) {
+      notify('❌ Failed to fetch invoices', 'error');
+      console.error('Error:', error);
+    }
+  };
+  const tableDataSource = invoicesList?.map((invoice: any, i: number) => ({
     key: i,
     slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: invoice?.orderID,
@@ -146,10 +180,35 @@ const Invoices: React.FC = () => {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
           <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-            Invoice List
+            Invoices
           </h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
+          <div className="flex justify-end items-center gap-2 mb-4">
+            <DatePicker
+              picker="month"
+              allowClear={false}
+              value={selectedMonth}
+              onChange={(date) => setSelectedMonth(date ?? dayjs())}
+              disabledDate={(current) => {
+                const now = dayjs();
+                return (
+                  current < financialYearStart.startOf('month') ||
+                  current > currentMonth.endOf('month') ||
+                  current.isSame(now, 'month') // ❌ disable current month
+                );
+              }}
+              className="w-[200px]"
+              format="YYYY-MM"
+              locale={locale}
+            />
+              <Button
+                          title="Go"
+                          type="button"
+                          handleClick={handleGoClick}
+                          className="text-white bg-green-600 hover:bg-green-700 rounded-md !py-1 px-4 w-fit flex items-center"
+                        />
+</div>
           <Table
             bordered
             dataSource={tableDataSource}
@@ -162,6 +221,7 @@ const Invoices: React.FC = () => {
             total={paginationData.count}
             pageSize={pageSize}
             showSizeChanger
+            pageSizeOptions={['25', '50', '100', '150', '200']}
             onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"

@@ -29,7 +29,7 @@ const Orders: React.FC = () => {
   >(undefined);
   const [ordersList, setOrdersList] = useState<any>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(25);
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
@@ -259,7 +259,7 @@ const Orders: React.FC = () => {
         <div className="flex items-center justify-between pb-2 border-b-2">
           <div>
             <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
-              Order List
+              Orders
             </h3>
           </div>
           <Link
@@ -282,6 +282,7 @@ const Orders: React.FC = () => {
             total={paginationData.count}
             pageSize={paginationData.pageSize}
             showSizeChanger
+            pageSizeOptions={['25', '50', '100', '150', '200']}
             onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
