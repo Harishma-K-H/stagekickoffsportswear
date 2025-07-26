@@ -88,7 +88,7 @@ const InvoiceReportsPage: React.FC = () => {
 
   useEffect(() => {
     loadReports();
-  }, [pageNumber, pageSize, selectedBranch]);
+  }, [pageNumber, pageSize]);
 
   useEffect(() => {
     const fetchInvoice = async () => {
