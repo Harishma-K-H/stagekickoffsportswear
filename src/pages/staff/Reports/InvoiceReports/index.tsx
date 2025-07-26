@@ -1,7 +1,7 @@
 import Button from '@components/Common/Button';
 import Invoice from '@components/Common/Invoice';
 import { useApiJSON } from '@services/ApiService/Api.service';
-import { message, Modal, Pagination, Select, Table } from 'antd';
+import { message, Modal, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { invoiceById, InvoiceReportsGet } from './api';
@@ -51,12 +51,9 @@ const InvoiceReportsPage: React.FC = () => {
     pageNumber: 1,
     pageSize: 25,
   });
-  const [totalCount, setTotalCount] = useState(0);
+  const [, setTotalCount] = useState(0);
 
   const contentRef = useRef<HTMLDivElement>(null);
-
-  const [branches, setBranches] = useState<{ id: number; name: string }[]>([]);
-  const [selectedBranch, setSelectedBranch] = useState<number | undefined>();
   const loadReports = async () => {
     setLoading(true);
     try {
