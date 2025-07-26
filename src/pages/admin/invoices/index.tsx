@@ -5,15 +5,16 @@ import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { generatePDF } from '@utils/staff/downloadPdf';
-import { Modal, Pagination, Table,DatePicker} from 'antd';
+import { DatePicker, Modal, Pagination, Table } from 'antd';
+import locale from 'antd/es/date-picker/locale/en_US';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
-import locale from 'antd/es/date-picker/locale/en_US';
-import { invoiceById, invoices,monthWiseInvoices } from './api';
+
+import { invoiceById, invoices, monthWiseInvoices } from './api';
 
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();
@@ -34,14 +35,14 @@ const Invoices: React.FC = () => {
   const [invoiceDetails, setInvoiceDetails] = useState<any>({});
 
   const [selectedMonth, setSelectedMonth] = useState<dayjs.Dayjs | null>(null);
-    const currentDate = dayjs();
-    const currentYear = currentDate.year();
-    // If current month is Jan/Feb/Mar (i.e., before April), financial year started last year
-    const financialYearStart =
-      currentDate.month() < 3
-        ? dayjs(`${currentYear - 1}-04-01`)
-        : dayjs(`${currentYear}-04-01`);
-    const currentMonth = dayjs();
+  const currentDate = dayjs();
+  const currentYear = currentDate.year();
+  // If current month is Jan/Feb/Mar (i.e., before April), financial year started last year
+  const financialYearStart =
+    currentDate.month() < 3
+      ? dayjs(`${currentYear - 1}-04-01`)
+      : dayjs(`${currentYear}-04-01`);
+  const currentMonth = dayjs();
   const reactToPrintFn = useReactToPrint({
     contentRef,
     documentTitle: invoiceDetails?.invoice_id
@@ -202,13 +203,13 @@ const Invoices: React.FC = () => {
               format="YYYY-MM"
               locale={locale}
             />
-              <Button
-                          title="Go"
-                          type="button"
-                          handleClick={handleGoClick}
-                          className="text-white bg-green-600 hover:bg-green-700 rounded-md !py-1 px-4 w-fit flex items-center"
-                        />
-</div>
+            <Button
+              title="Go"
+              type="button"
+              handleClick={handleGoClick}
+              className="text-white bg-green-600 hover:bg-green-700 rounded-md !py-1 px-4 w-fit flex items-center"
+            />
+          </div>
           <Table
             bordered
             dataSource={tableDataSource}

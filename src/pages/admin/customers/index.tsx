@@ -1,14 +1,12 @@
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
+import { faFilePen } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { Form, Input, Modal, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import {
-  faFilePen,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IoSearch } from 'react-icons/io5';
 
 import { getCustomers, updateCustomer } from './api';
@@ -127,7 +125,7 @@ const Customers: React.FC = () => {
           href={`/admin/customers/${record.key}/details`}
           className="text-blue-600 hover:underline"
         >
-           <strong>{record.businessName.toUpperCase()}</strong>
+          <strong>{record.businessName.toUpperCase()}</strong>
         </a>
       ),
     },

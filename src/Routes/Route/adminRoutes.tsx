@@ -5,9 +5,10 @@ import Dashboard from '@pages/admin/dashboard/Loadable';
 import Invoices from '@pages/admin/invoices/Loadable';
 import Items from '@pages/admin/items/Loadable';
 import Orders from '@pages/admin/orders/Loadable';
+import Reports from '@pages/admin/Reports/InvoiceReports/Loadable';
 import Paths from '@routes/paths';
 import { Route } from 'react-router';
-import Reports from '@pages/admin/Reports/InvoiceReports/Loadable';
+
 import { ProtectedRoute } from '../ProtectedRoute';
 import UserRoles from '../roles';
 

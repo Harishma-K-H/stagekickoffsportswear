@@ -1,15 +1,14 @@
 import Button from '@components/Common/Button';
 import { notify } from '@components/Common/Toastify';
+import { faFilePen } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { Form, Input, Modal, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import { getCustomers, updateCustomer } from './api';
-import {
-  faFilePen,
-} from '@fortawesome/free-solid-svg-icons';
 // Define Customer interface
 interface Customer {
   id: number;
@@ -109,7 +108,7 @@ const Customers: React.FC = () => {
           href={`/branch/customers/${record.key}/details`}
           className="text-blue-600 hover:underline"
         >
-           <strong>{record.businessName}</strong>
+          <strong>{record.businessName}</strong>
         </a>
       ),
     },
@@ -139,26 +138,26 @@ const Customers: React.FC = () => {
       dataIndex: 'pincode',
       key: 'pincode',
     },
-{
-  title: 'Action',
-  dataIndex: 'action',
-  key: 'action',
-  render: (_: any, record: any) => (
-    <div className="flex gap-3 items-center">
-      <button
-        onClick={() => handleEditCustomer(record.key)}
-        className="text-gray-400 cursor-not-allowed text-xl"
-        title="Edit Disabled"
-        disabled
-      >
-        <FontAwesomeIcon
-          icon={faFilePen}
-          className="text-gray-600 hover:text-gray-800 cursor-pointer"
-        />
-      </button>
-    </div>
-  ),
-},
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      render: (_: any, record: any) => (
+        <div className="flex gap-3 items-center">
+          <button
+            onClick={() => handleEditCustomer(record.key)}
+            className="text-gray-400 cursor-not-allowed text-xl"
+            title="Edit Disabled"
+            disabled
+          >
+            <FontAwesomeIcon
+              icon={faFilePen}
+              className="text-gray-600 hover:text-gray-800 cursor-pointer"
+            />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   const handlePageChange = useCallback((page: number) => {

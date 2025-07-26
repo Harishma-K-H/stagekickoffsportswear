@@ -70,11 +70,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                           {/* Submenu Items */}
                           {openIndex === index && (
-                             <ul
-                                className={`${
-                                  isExpanded ? 'pl-6 pr-2' : 'hidden'
-                                } mt-2 mb-2 flex flex-col gap-1`}
-                              >
+                            <ul
+                              className={`${
+                                isExpanded ? 'pl-6 pr-2' : 'hidden'
+                              } mt-2 mb-2 flex flex-col gap-1`}
+                            >
                               {menu.children.map(
                                 (child: any, cIndex: number) => (
                                   <li key={cIndex}>

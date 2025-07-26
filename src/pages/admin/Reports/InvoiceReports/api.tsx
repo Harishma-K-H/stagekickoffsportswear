@@ -4,7 +4,7 @@ export const InvoiceReportsGet = async (
   pageSize: number,
   branchId?: number | string, // optional for admin
 ): Promise<any> => {
-  let url =  `/invoice_reports/?data=unpaid_invoices&pageNumber=${pageNumber}&pageSize=${pageSize}`;
+  let url = `/invoice_reports/?data=unpaid_invoices&pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   // Add branch_id if provided (for Admin)
   if (branchId) {
