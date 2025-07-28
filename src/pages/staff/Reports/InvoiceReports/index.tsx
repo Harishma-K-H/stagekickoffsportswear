@@ -155,11 +155,11 @@ const InvoiceReportsPage: React.FC = () => {
   align: 'center' as const,
   render: (_: any, record: any) => (
     <FontAwesomeIcon
-      icon={faFileInvoice}
-      className="cursor-pointer text-white bg-blue-600 hover:bg-blue-800 text-lg p-2 rounded-md"
-      title="View Invoice"
-      onClick={() => setInvoiceId(record.id)}
-    />
+            icon={faFileInvoice}
+             className={`cursor-pointer text-blue-800 text-2xl`}
+            title="View Invoice"
+            onClick={() => setInvoiceId(record.id)}
+          />
   ),
 }
     

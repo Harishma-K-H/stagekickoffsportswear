@@ -61,6 +61,7 @@ const Orders: React.FC = () => {
       title: 'Invoice ID',
       dataIndex: 'invoice_id', // Make sure this matches your key in dataSource
       key: 'invoice_id',
+      render: (text: string) => <span className="font-bold">{text}</span>,
     },
     {
       title: 'Customer Name',
@@ -100,20 +101,28 @@ const Orders: React.FC = () => {
           : Math.round(parseFloat(record.total_cost || '0') - totalPaid);
 
         return (
-        <div className="flex items-center justify-center space-x-4 text-[16px]">
+        <div className="flex items-center justify-center space-x-4 text-[20px]">
           <FontAwesomeIcon
             icon={faFileInvoice}
             onClick={() => showModal(ordersList[record?.key]?.id, 1)}
             title="View"
-            className="text-white bg-gray-500 rounded-md p-2 cursor-pointer hover:bg-gray-700"
+            className="text-blue-600 hover:text-blue-800 cursor-pointer"
           />
           <FontAwesomeIcon
             icon={faCreditCard}
             onClick={() => showModal(ordersList[record?.key]?.id, 2)}
-            title="Payments"
-            className={`text-white rounded-md p-2 cursor-pointer hover:opacity-90 ${
-              currentBalance <= 0 ? 'bg-gray-500' : 'bg-green-700 hover:bg-green-800'
-            }`}
+            
+            
+                          className={`cursor-pointer ${
+                            currentBalance <= 0
+                              ? 'text-gray-400 hover:text-gray-500'
+                              : 'text-green-600 hover:text-green-800'
+                          }`}
+                          title={
+                            currentBalance <= 0
+                              ? 'View Payment Details (Paid)'
+                              : 'Add Payment'
+                          }
           />
         </div>
         );
