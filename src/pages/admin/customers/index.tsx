@@ -151,25 +151,24 @@ const Customers: React.FC = () => {
       key: 'gstn',
     },
     {
-      title: 'Action',
-      dataIndex: 'action',
-      key: 'action',
-      render: (_: any, record: any) => (
-        <div className="flex gap-3 items-center">
-          <button
-            onClick={() => handleEditCustomer(record.key)}
-            className="text-gray-400 cursor-not-allowed text-xl"
-            title="Edit Disabled"
-            disabled
-          >
-            <FontAwesomeIcon
-              icon={faFilePen}
-              className="text-gray-600 hover:text-gray-800 cursor-pointer"
-            />
-          </button>
-        </div>
-      ),
-    },
+  title: 'Action',
+  dataIndex: 'action',
+  key: 'action',
+  render: (_: any, record: any) => (
+    <div className="flex items-center justify-center">
+      <button
+        onClick={() => handleEditCustomer(record.key)}
+        className="text-black-500 hover:text-blue-800 text-xl cursor-pointer"
+        title="Edit"
+      >
+        <FontAwesomeIcon
+          icon={faFilePen}
+          className="text-inherit"
+        />
+      </button>
+    </div>
+  ),
+}
   ];
 
   useEffect(() => {

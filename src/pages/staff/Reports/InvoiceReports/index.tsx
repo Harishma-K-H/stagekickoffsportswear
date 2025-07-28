@@ -5,7 +5,8 @@ import { message, Modal, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { invoiceById, InvoiceReportsGet } from './api';
-
+import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 interface InvoiceItem {
   item_id: number;
   name: string;
@@ -148,20 +149,35 @@ const InvoiceReportsPage: React.FC = () => {
       key: 'balance_amount',
       render: (value: any) => Number(value).toFixed(2),
     },
-    {
-      title: 'Action',
-      dataIndex: 'action',
-      key: 'action',
-      align: 'center' as const, // ✅ important
-      render: (_: any, record: Invoice) => (
-        <Button
-          handleClick={() => setInvoiceId(record.id)}
-          title="View"
-          type="button"
-          className="text-white bg-blue-600 rounded-md !py-1 px-2 text-sm"
-        />
-      ),
-    },
+{
+  title: 'Action',
+  dataIndex: 'action',
+  key: 'action',
+  align: 'center' as const,
+  render: (_: any, record: any) => (
+    <FontAwesomeIcon
+      icon={faFileInvoice}
+      className="cursor-pointer text-white bg-blue-600 hover:bg-blue-800 text-lg p-2 rounded-md"
+      title="View Invoice"
+      onClick={() => setInvoiceId(record.id)}
+    />
+  ),
+}
+    
+    // {
+    //   title: 'Action',
+    //   dataIndex: 'action',
+    //   key: 'action',
+    //   align: 'center' as const, // ✅ important
+    //   render: (_: any, record: Invoice) => (
+    //     <Button
+    //       handleClick={() => setInvoiceId(record.id)}
+    //       title="View"
+    //       type="button"
+    //       className="text-white bg-blue-600 rounded-md !py-1 px-2 text-sm"
+    //     />
+    //   ),
+    // },
   ];
 
   return (

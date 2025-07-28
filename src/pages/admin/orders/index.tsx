@@ -17,7 +17,11 @@ import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { Link, useSearchParams } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
-
+import {
+  faCreditCard,
+  faFileInvoice,
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { fetchDeliveryOrders } from '../dashboard/api';
 import { orderById, orders, payment } from './api';
 
@@ -96,20 +100,22 @@ const Orders: React.FC = () => {
           : Math.round(parseFloat(record.total_cost || '0') - totalPaid);
 
         return (
-          <div className="flex gap-2">
-            <Button
-              handleClick={() => showModal(ordersList[record?.key]?.id, 1)}
-              title="View"
-              type="button"
-              className="text-white bg-gray-500 rounded-md !py-2"
-            />
-            <Button
-              handleClick={() => showModal(ordersList[record?.key]?.id, 2)}
-              title={'Payments'}
-              type="button"
-              className={`text-white ${currentBalance <= 0 ? 'bg-gray-500' : 'bg-green-700'}  rounded-md !py-2`}
-            />
-          </div>
+        <div className="flex items-center justify-center space-x-4 text-[16px]">
+          <FontAwesomeIcon
+            icon={faFileInvoice}
+            onClick={() => showModal(ordersList[record?.key]?.id, 1)}
+            title="View"
+            className="text-white bg-gray-500 rounded-md p-2 cursor-pointer hover:bg-gray-700"
+          />
+          <FontAwesomeIcon
+            icon={faCreditCard}
+            onClick={() => showModal(ordersList[record?.key]?.id, 2)}
+            title="Payments"
+            className={`text-white rounded-md p-2 cursor-pointer hover:opacity-90 ${
+              currentBalance <= 0 ? 'bg-gray-500' : 'bg-green-700 hover:bg-green-800'
+            }`}
+          />
+        </div>
         );
       },
     },

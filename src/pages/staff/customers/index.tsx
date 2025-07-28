@@ -143,7 +143,7 @@ const Customers: React.FC = () => {
       dataIndex: 'action',
       key: 'action',
       render: (_: any, record: any) => (
-        <div className="flex gap-3 items-center">
+        <div className="flex items-center justify-center">
           <button
             onClick={() => handleEditCustomer(record.key)}
             className="text-gray-400 cursor-not-allowed text-xl"

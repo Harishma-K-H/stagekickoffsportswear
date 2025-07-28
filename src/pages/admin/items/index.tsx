@@ -15,8 +15,9 @@ import {
 } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { FaRegEdit, FaToggleOff, FaToggleOn } from 'react-icons/fa';
-
+import {FaToggleOff, FaToggleOn } from 'react-icons/fa';
+import {faFilePen} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   DeactivateItem,
   fetchBranches,
@@ -547,12 +548,13 @@ const Items: React.FC = () => {
             </Popconfirm>
           </span>
         ) : (
-          <div className="flex items-center gap-3">
-            <FaRegEdit
-              className="w-8 h-8 p-1 cursor-pointer hover:text-blue-600"
+            <div className="flex items-center gap-3">
+               <FontAwesomeIcon
+            icon={faFilePen}
+              className="text-lg p-1 cursor-pointer hover:text-blue-600"
               onClick={() => edit(record)}
               title="Edit"
-            />
+              />
             <Popconfirm
               title="Are you sure you want to change the status of this item?"
               onConfirm={() => {

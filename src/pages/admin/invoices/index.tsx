@@ -13,9 +13,10 @@ import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
-
+import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { invoiceById, invoices, monthWiseInvoices } from './api';
-
+import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();
   const contentRef = useRef<HTMLDivElement>(null);
@@ -51,44 +52,58 @@ const Invoices: React.FC = () => {
   });
 
   const columns = [
-    {
-      title: 'Sl No.',
-      dataIndex: 'slNo',
-      key: 'slNo',
-    },
-    {
-      title: 'Order ID',
-      dataIndex: 'OrderId',
-      key: 'OrderId',
-    },
-    {
-      title: 'Customer Name',
-      dataIndex: 'customerName',
-      key: 'name',
-    },
-    {
-      title: 'Invoice number',
-      dataIndex: 'invoiceNumber',
-      key: 'invoiceNumber',
-    },
-    {
-      title: 'Delivery Date',
-      dataIndex: 'deliveryDate',
-      key: 'deliveryDate',
-    },
-    {
-      title: 'Action',
-      dataIndex: 'action',
-      key: 'action',
-      render: (_: any, record: any) => (
-        <Button
-          handleClick={() => showModal(invoicesList[record?.key]?.id)}
-          title="View"
-          type="button"
-          className="text-white bg-gray-500 rounded-md !py-2 w-full"
-        />
-      ),
-    },
+      {
+        title: 'Sl No.',
+        dataIndex: 'slNo',
+        key: 'slNo',
+      },
+      {
+        title: 'Invoice Number',
+        dataIndex: 'invoiceNumber',
+        key: 'invoiceNumber',
+        render: (text: string) => <strong>{text}</strong>,
+      },
+      {
+        title: 'Invoice Date',
+        dataIndex: 'invoiceDate',
+        key: 'invoiceDate',
+      },
+      {
+        title: 'Customer',
+        dataIndex: 'customerName',
+        key: 'name',
+      },
+      {
+        title: 'Total Amount',
+        dataIndex: 'totalAmount',
+        key: 'totalAmount',
+      },
+      {
+        title: 'Order ID',
+        dataIndex: 'OrderId',
+        key: 'OrderId',
+      },
+      {
+        title: 'Action',
+        dataIndex: 'action',
+        key: 'action',
+        width: 170,
+        render: (_: any, record: any) => {
+          const isGenerated = record.invoice_generated;
+          return (
+            <div className="flex justify-center">
+              <FontAwesomeIcon
+                icon={faFileInvoice}
+                onClick={() => showModal(invoicesList[record?.key]?.id)}
+                className={`cursor-pointer text-white text-lg p-2 rounded-md ${
+                  isGenerated ? 'bg-green-600' : 'bg-blue-800'
+                }`}
+                title="View Invoice"
+              />
+            </div>
+          );
+        },
+      },
   ];
 
   const getInvoices = useCallback(async () => {
@@ -160,9 +175,14 @@ const Invoices: React.FC = () => {
     key: i,
     slNo: (pageNumber - 1) * pageSize + i + 1,
     OrderId: invoice?.orderID,
-    customerName: invoice?.customer?.business_name,
+    invoice_generated: invoice?.invoice_generated,
+    customerName: capitalizeFirstLetterOfEachWord(
+      invoice?.customer?.business_name,
+    ).toUpperCase(),
     invoiceNumber: invoice?.invoice_id,
-    deliveryDate: invoice?.delivery_date,
+    totalAmount: invoice?.order_amount,
+    orderDate: dayjs(invoice?.order_date).format('DD-MM-YYYY'),
+    invoiceDate: dayjs(invoice?.created_at).format('DD-MM-YYYY'),
   }));
 
   useEffect(() => {
