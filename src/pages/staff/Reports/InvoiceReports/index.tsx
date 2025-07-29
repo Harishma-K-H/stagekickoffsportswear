@@ -2,7 +2,7 @@ import Invoice from '@components/Common/Invoice';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { message, Modal, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-
+import { Helmet } from 'react-helmet';
 import { invoiceById, InvoiceReportsGet } from './api';
 import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -180,9 +180,15 @@ const InvoiceReportsPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Pending Invoices</h2>
-
+    <>
+      <Helmet>
+        <title>KICKOFF SPORTS WEAR - Invoice Reports  </title>
+      </Helmet>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between pb-2 border-b-2">
+      <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">Pending Invoices</h3>
+        </div>
+        <div className="p-3 bg-white md:p-5 custom-table">
       <Table
         bordered
         dataSource={data}
@@ -216,7 +222,9 @@ const InvoiceReportsPage: React.FC = () => {
         contentRef={contentRef}
         // reactToPrintFn={reactToPrintFn}
       />
-    </div>
+        </div>
+        </div>
+       </>
   );
 };
 type ModalDetailsProps = {

@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getBranchList, invoiceById, InvoiceReportsGet } from './api';
-
+import { Helmet } from 'react-helmet';
 interface InvoiceItem {
   item_id: number;
   name: string;
@@ -193,56 +193,74 @@ const InvoiceReportsPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Pending Invoices</h2>
-      <Select
-        allowClear
-        placeholder="Select Branch"
-        style={{ width: 250 }}
-        value={selectedBranch}
-        onChange={(val) => {
-          setSelectedBranch(val);
-          setPageNumber(1); // reset pagination
-        }}
-        options={branches.map((b) => ({
-          label: b.name,
-          value: b.id,
-        }))}
-      />
-      <Table
-        bordered
-        dataSource={data}
-        rowKey="id"
-        loading={loading}
-        columns={columns}
-        pagination={false} // ✅ keep false here to control pagination manually
-      />
-      {paginationData.count > 0 && (
-        <Pagination
-          current={pageNumber}
-          total={paginationData.count} // ✅ this is correct now
-          pageSize={pageSize}
-          showSizeChanger
-          pageSizeOptions={['25', '50', '100', '150', '200']}
-          onShowSizeChange={onShowSizeChange}
-          onChange={handlePageChange}
-          // showTotal={(total, range) =>
-          //   `Showing ${range[0]}-${range[1]} of ${total} invoices`
-          // }
-          rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-        />
-      )}
+     <>
+      <Helmet>
+        <title>KICKOFF SPORTS WEAR - Invoice Reports</title>
+      </Helmet>
 
-      {/* 🔽 Modal for invoice with hidden printable section */}
-      <ModalDetails
-        invoiceDetails={invoiceDetails}
-        isModalOpen={isModalOpen}
-        setIsModalOpen={setIsModalOpen}
-        setInvoiceId={setInvoiceId}
-        contentRef={contentRef}
-        // reactToPrintFn={reactToPrintFn}
-      />
-    </div>
+      <div className="flex flex-col gap-4">
+        {/* Header */}
+        <div className="flex items-center justify-between pb-2 border-b-2">
+          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">Pending Invoices</h3>
+        </div>
+
+        {/* Content Section */}
+        <div className="p-3 bg-white md:p-5 custom-table">
+          {/* Select Filter */}
+          <div className="mb-6">
+            <Select
+              allowClear
+              showSearch
+              placeholder="Select Branch"
+              style={{ width: '100%' }}
+              className="w-[700px] max-w-full h-10 rounded-md border border-gray-300 placeholder:text-gray-400"
+              value={selectedBranch}
+              onChange={(val) => {
+                setSelectedBranch(val);
+                setPageNumber(1); // reset pagination
+              }}
+              options={branches.map((b) => ({
+                label: b.name,
+                value: b.id,
+              }))}
+            />
+          </div>
+
+          {/* Invoice Table */}
+          <Table
+            bordered
+            dataSource={data}
+            rowKey="id"
+            loading={loading}
+            columns={columns}
+            pagination={false}
+          />
+
+          {/* Pagination */}
+          {paginationData.count > 0 && (
+            <Pagination
+              current={pageNumber}
+              total={paginationData.count}
+              pageSize={pageSize}
+              showSizeChanger
+              pageSizeOptions={['25', '50', '100', '150', '200']}
+              onShowSizeChange={onShowSizeChange}
+              onChange={handlePageChange}
+              rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
+            />
+          )}
+
+          {/* Invoice Modal */}
+          <ModalDetails
+            invoiceDetails={invoiceDetails}
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            setInvoiceId={setInvoiceId}
+            contentRef={contentRef}
+          />
+        </div>
+      </div>
+    </>
   );
 };
 type ModalDetailsProps = {
