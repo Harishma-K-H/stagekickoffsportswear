@@ -207,24 +207,23 @@ const InvoiceReportsPage: React.FC = () => {
         {/* Content Section */}
         <div className="p-3 bg-white md:p-5 custom-table">
           {/* Select Filter */}
-          <div className="mb-6">
-            <Select
-              allowClear
-              showSearch
-              placeholder="Select Branch"
-              style={{ width: '100%' }}
-              className="w-[700px] max-w-full h-10 rounded-md border border-gray-300 placeholder:text-gray-400"
-              value={selectedBranch}
-              onChange={(val) => {
-                setSelectedBranch(val);
-                setPageNumber(1); // reset pagination
-              }}
-              options={branches.map((b) => ({
-                label: b.name,
-                value: b.id,
-              }))}
-            />
-          </div>
+         <div className="mb-6 flex items-center gap-2">
+  <Select
+    allowClear
+    showSearch
+    placeholder="Select Branch"
+    className="w-[600px] h-9 rounded-full border border-gray-300 shadow-sm placeholder:text-gray-400"
+    value={selectedBranch}
+    onChange={(val) => {
+      setSelectedBranch(val);
+      setPageNumber(1); // reset pagination
+    }}
+    options={branches.map((b) => ({
+      label: b.name,
+      value: b.id,
+    }))}
+  />
+</div>
 
           {/* Invoice Table */}
           <Table

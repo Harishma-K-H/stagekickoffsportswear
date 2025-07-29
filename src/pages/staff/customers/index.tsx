@@ -209,9 +209,9 @@ const Customers: React.FC = () => {
           </h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
-          <Form className="flex gap-2 pb-3" onFinish={handleSubmit}>
+          <Form className="flex items-center gap-2 pb-3" onFinish={handleSubmit}>
             <Form.Item
-              className="!mb-0 w-full"
+              className="!mb-0 w-1/2"
               name="customerName"
               rules={[{ required: false }]}
             >
@@ -219,7 +219,7 @@ const Customers: React.FC = () => {
                 placeholder="Search customer name"
                 allowClear
                 onClear={handleClickClear}
-                className="w-full py-2 h-9 placeholder:text-gray-400"
+                className="py-2 h-9 placeholder:text-gray-400"
               />
             </Form.Item>
             <Button

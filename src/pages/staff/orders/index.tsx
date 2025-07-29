@@ -346,7 +346,7 @@ const Orders: React.FC = () => {
           </div>
           <Link
             to={Paths.Staff.orders.new}
-            className="px-[25px] py-3 transition-all text-white bg-[#CC3232] rounded-md invisible xl:visible"
+            className="px-[25px] py-3 transition-all text-white bg-[#CC3232] hover:bg-[#B42318] rounded-md invisible xl:visible"
           >
             New
           </Link>

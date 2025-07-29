@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Link
               to={Paths.Staff.orders.new}
               title="New Order"
-              className="flex items-center justify-center gap-3 py-2 mx-3 mb-2 text-white rounded-full bg-primary"
+              className="flex items-center justify-center gap-3 py-2 mx-3 mb-2 text-white bg-[#D92D20] hover:bg-[#B42318] rounded-md bg-primary"
             >
               <FaPlus />
               {isExpanded && <span>New Order</span>}
