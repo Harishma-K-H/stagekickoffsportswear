@@ -72,6 +72,7 @@ const Customers: React.FC = () => {
       mobile_number2: customer.mobile_number2,
       address1: customer.address1,
       address2: customer.address2,
+      address3:customer.address3,
       email: customer.email,
       state_name: customer.state_name,
       gst_no: customer.gst_no,
@@ -105,7 +106,7 @@ const Customers: React.FC = () => {
     name: capitalizeFirstLetterOfEachWord(customer.name),
     businessName: capitalizeFirstLetterOfEachWord(customer.business_name),
     mobile: `${customer?.mobile_number1}${customer?.mobile_number2 ? `, ${customer?.mobile_number2}` : ''}`,
-    address: `${customer?.address1 || ''} ${customer?.address2 || ''}`,
+    address: `${customer?.address1 || ''} ${customer?.address2 || ''} ${customer?.address3 || ''}`,
     email: customer?.email || '-',
     gstn: customer?.gst_no || '-',
   }));
@@ -311,7 +312,7 @@ const Customers: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            name="gstn"
+            name="gst_no"
             label={<span style={{ fontWeight: 'bold' }}>GSTN</span>}
           >
             <Input
