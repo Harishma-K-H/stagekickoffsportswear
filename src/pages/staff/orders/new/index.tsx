@@ -1634,12 +1634,12 @@ const CustomerDetails: React.FC<any> = ({
                 </div>
                 <div>
                   <span className="font-semibold text-gray-950">Address:</span>{' '}
-                  {customerDetails?.address1} {customerDetails?.address2}
+                  {customerDetails?.address1} {customerDetails?.address2} {customerDetails?.address3}
                 </div>
-                <div>
+                {/* <div>
                   <span className="font-semibold text-gray-950">Address:</span>{' '}
                   {customerDetails?.address1} {customerDetails?.address3}
-                </div>
+                </div> */}
                 <div>
                   <span className="font-semibold text-gray-950">Mobile:</span>{' '}
                   {customerDetails?.mobile_number1}

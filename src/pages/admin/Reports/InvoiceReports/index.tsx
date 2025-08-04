@@ -1,11 +1,13 @@
 import Invoice from '@components/Common/Invoice';
+import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { message, Modal, Pagination, Select, Table } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { getBranchList, invoiceById, InvoiceReportsGet } from './api';
 import { Helmet } from 'react-helmet';
+
+import { getBranchList, invoiceById, InvoiceReportsGet } from './api';
+
 interface InvoiceItem {
   item_id: number;
   name: string;
@@ -176,24 +178,24 @@ const InvoiceReportsPage: React.FC = () => {
       key: 'balance_amount',
       render: (value: any) => Number(value).toFixed(2),
     },
-  {
-    title: 'Action',
-    dataIndex: 'action',
-    key: 'action',
-    align: 'center' as const,
-    render: (_: any, record: any) => (
-      <FontAwesomeIcon
-        icon={faFileInvoice}
-         className={`cursor-pointer text-blue-800 text-2xl`}
-        title="View Invoice"
-        onClick={() => setInvoiceId(record.id)}
-      />
-    ),
-  }
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      align: 'center' as const,
+      render: (_: any, record: any) => (
+        <FontAwesomeIcon
+          icon={faFileInvoice}
+          className={`cursor-pointer text-blue-800 text-2xl`}
+          title="View Invoice"
+          onClick={() => setInvoiceId(record.id)}
+        />
+      ),
+    },
   ];
 
   return (
-     <>
+    <>
       <Helmet>
         <title>KICKOFF SPORTS WEAR - Invoice Reports</title>
       </Helmet>
@@ -201,29 +203,31 @@ const InvoiceReportsPage: React.FC = () => {
       <div className="flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-center justify-between pb-2 border-b-2">
-          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">Pending Invoices</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
+            Pending Invoices
+          </h3>
         </div>
 
         {/* Content Section */}
         <div className="p-3 bg-white md:p-5 custom-table">
           {/* Select Filter */}
-         <div className="mb-6 flex items-center gap-2">
-  <Select
-    allowClear
-    showSearch
-    placeholder="Select Branch"
-    className="w-[600px] h-9 rounded-full border border-gray-300 shadow-sm placeholder:text-gray-400"
-    value={selectedBranch}
-    onChange={(val) => {
-      setSelectedBranch(val);
-      setPageNumber(1); // reset pagination
-    }}
-    options={branches.map((b) => ({
-      label: b.name,
-      value: b.id,
-    }))}
-  />
-</div>
+          <div className="mb-6 flex items-center gap-2">
+            <Select
+              allowClear
+              showSearch
+              placeholder="Select Branch"
+              className="w-[600px] h-9 rounded-full border border-gray-300 shadow-sm placeholder:text-gray-400"
+              value={selectedBranch}
+              onChange={(val) => {
+                setSelectedBranch(val);
+                setPageNumber(1); // reset pagination
+              }}
+              options={branches.map((b) => ({
+                label: b.name,
+                value: b.id,
+              }))}
+            />
+          </div>
 
           {/* Invoice Table */}
           <Table

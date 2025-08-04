@@ -112,14 +112,14 @@ const Invoices: React.FC = () => {
       render: (_: any, record: any) => {
         const isGenerated = record.invoice_generated;
         return (
-       <div className="flex justify-center">
-  <FontAwesomeIcon
-    icon={faFileInvoice}
-    onClick={() => showModal(invoicesList[record?.key]?.id)}
-    className={`cursor-pointer ${isGenerated ? 'text-green-600' : 'text-blue-800'} text-2xl`}
-    title="View Invoice"
-  />
-</div>
+          <div className="flex justify-center">
+            <FontAwesomeIcon
+              icon={faFileInvoice}
+              onClick={() => showModal(invoicesList[record?.key]?.id)}
+              className={`cursor-pointer ${isGenerated ? 'text-green-600' : 'text-blue-800'} text-2xl`}
+              title="View Invoice"
+            />
+          </div>
         );
       },
     },

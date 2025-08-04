@@ -3,7 +3,10 @@ import './style.css';
 import Button from '@components/Common/Button';
 import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
+import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useApiJSON } from '@services/ApiService/Api.service';
+import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { generatePDF } from '@utils/staff/downloadPdf';
 import { DatePicker, Modal, Pagination, Table } from 'antd';
 import locale from 'antd/es/date-picker/locale/en_US';
@@ -13,10 +16,9 @@ import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { useReactToPrint } from 'react-to-print';
-import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import { invoiceById, invoices, monthWiseInvoices } from './api';
-import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
+
 const Invoices: React.FC = () => {
   const { get } = useApiJSON();
   const contentRef = useRef<HTMLDivElement>(null);
@@ -52,56 +54,56 @@ const Invoices: React.FC = () => {
   });
 
   const columns = [
-      {
-        title: 'Sl No.',
-        dataIndex: 'slNo',
-        key: 'slNo',
+    {
+      title: 'Sl No.',
+      dataIndex: 'slNo',
+      key: 'slNo',
+    },
+    {
+      title: 'Invoice Number',
+      dataIndex: 'invoiceNumber',
+      key: 'invoiceNumber',
+      render: (text: string) => <strong>{text}</strong>,
+    },
+    {
+      title: 'Invoice Date',
+      dataIndex: 'invoiceDate',
+      key: 'invoiceDate',
+    },
+    {
+      title: 'Customer',
+      dataIndex: 'customerName',
+      key: 'name',
+    },
+    {
+      title: 'Total Amount',
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
+    },
+    {
+      title: 'Order ID',
+      dataIndex: 'OrderId',
+      key: 'OrderId',
+    },
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      width: 170,
+      render: (_: any, record: any) => {
+        const isGenerated = record.invoice_generated;
+        return (
+          <div className="flex justify-center">
+            <FontAwesomeIcon
+              icon={faFileInvoice}
+              onClick={() => showModal(invoicesList[record?.key]?.id)}
+              className={`cursor-pointer ${isGenerated ? 'text-green-600' : 'text-blue-800'} text-2xl`}
+              title="View Invoice"
+            />
+          </div>
+        );
       },
-      {
-        title: 'Invoice Number',
-        dataIndex: 'invoiceNumber',
-        key: 'invoiceNumber',
-        render: (text: string) => <strong>{text}</strong>,
-      },
-      {
-        title: 'Invoice Date',
-        dataIndex: 'invoiceDate',
-        key: 'invoiceDate',
-      },
-      {
-        title: 'Customer',
-        dataIndex: 'customerName',
-        key: 'name',
-      },
-      {
-        title: 'Total Amount',
-        dataIndex: 'totalAmount',
-        key: 'totalAmount',
-      },
-      {
-        title: 'Order ID',
-        dataIndex: 'OrderId',
-        key: 'OrderId',
-      },
-      {
-        title: 'Action',
-        dataIndex: 'action',
-        key: 'action',
-        width: 170,
-        render: (_: any, record: any) => {
-          const isGenerated = record.invoice_generated;
-          return (
-             <div className="flex justify-center">
-              <FontAwesomeIcon
-                icon={faFileInvoice}
-                onClick={() => showModal(invoicesList[record?.key]?.id)}
-                className={`cursor-pointer ${isGenerated ? 'text-green-600' : 'text-blue-800'} text-2xl`}
-                title="View Invoice"
-              />
-            </div>
-          );
-        },
-      },
+    },
   ];
 
   const getInvoices = useCallback(async () => {

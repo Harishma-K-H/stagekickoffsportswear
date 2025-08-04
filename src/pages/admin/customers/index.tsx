@@ -151,24 +151,21 @@ const Customers: React.FC = () => {
       key: 'gstn',
     },
     {
-  title: 'Action',
-  dataIndex: 'action',
-  key: 'action',
-  render: (_: any, record: any) => (
-    <div className="flex items-center justify-center">
-      <button
-        onClick={() => handleEditCustomer(record.key)}
-        className="text-black-500 hover:text-blue-800 text-xl cursor-pointer"
-        title="Edit"
-      >
-        <FontAwesomeIcon
-          icon={faFilePen}
-          className="text-inherit"
-        />
-      </button>
-    </div>
-  ),
-}
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      render: (_: any, record: any) => (
+        <div className="flex items-center justify-center">
+          <button
+            onClick={() => handleEditCustomer(record.key)}
+            className="text-black-500 hover:text-blue-800 text-xl cursor-pointer"
+            title="Edit"
+          >
+            <FontAwesomeIcon icon={faFilePen} className="text-inherit" />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   useEffect(() => {
@@ -189,24 +186,24 @@ const Customers: React.FC = () => {
         <div className="p-3 bg-white md:p-5 custom-table">
           <Form className="flex gap-2 pb-3" onFinish={handleSubmit}>
             <Form.Item
-                          className="!mb-0 w-1/2"
-                          name="customerName"
-                          rules={[{ required: false }]}
-                        >
-                          <Input
-                            placeholder="Search customer name"
-                            allowClear
-                            onClear={handleClickClear}
-                            className="py-2 h-9 placeholder:text-gray-400"
-                          />
-                        </Form.Item>
-                        <Button
-                          type="submit"
-                          title=""
-                          icon={<IoSearch />}
-                          className="text-white bg-gray-500 rounded-md !py-2"
-                        />
-                      </Form>
+              className="!mb-0 w-1/2"
+              name="customerName"
+              rules={[{ required: false }]}
+            >
+              <Input
+                placeholder="Search customer name"
+                allowClear
+                onClear={handleClickClear}
+                className="py-2 h-9 placeholder:text-gray-400"
+              />
+            </Form.Item>
+            <Button
+              type="submit"
+              title=""
+              icon={<IoSearch />}
+              className="text-white bg-gray-500 rounded-md !py-2"
+            />
+          </Form>
           <Table
             bordered
             dataSource={tableDataSource}

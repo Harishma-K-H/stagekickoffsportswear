@@ -4,6 +4,8 @@ import Button from '@components/Common/Button';
 import Invoice from '@components/Common/Invoice';
 import { notify } from '@components/Common/Toastify';
 import PaymentHistory from '@components/Staff/PaymentHistory';
+import { faCreditCard, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Paths from '@routes/paths';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
@@ -17,11 +19,7 @@ import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
 import { Link, useSearchParams } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
-import {
-  faCreditCard,
-  faFileInvoice,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import { fetchDeliveryOrders } from '../dashboard/api';
 import { orderById, orders, payment } from './api';
 
@@ -101,30 +99,28 @@ const Orders: React.FC = () => {
           : Math.round(parseFloat(record.total_cost || '0') - totalPaid);
 
         return (
-        <div className="flex items-center justify-center space-x-4 text-[20px]">
-          <FontAwesomeIcon
-            icon={faFileInvoice}
-            onClick={() => showModal(ordersList[record?.key]?.id, 1)}
-            title="View"
-            className="text-blue-600 hover:text-blue-800 cursor-pointer"
-          />
-          <FontAwesomeIcon
-            icon={faCreditCard}
-            onClick={() => showModal(ordersList[record?.key]?.id, 2)}
-            
-            
-                          className={`cursor-pointer ${
-                            currentBalance <= 0
-                              ? 'text-gray-400 hover:text-gray-500'
-                              : 'text-green-600 hover:text-green-800'
-                          }`}
-                          title={
-                            currentBalance <= 0
-                              ? 'View Payment Details (Paid)'
-                              : 'Add Payment'
-                          }
-          />
-        </div>
+          <div className="flex items-center justify-center space-x-4 text-[20px]">
+            <FontAwesomeIcon
+              icon={faFileInvoice}
+              onClick={() => showModal(ordersList[record?.key]?.id, 1)}
+              title="View"
+              className="text-blue-600 hover:text-blue-800 cursor-pointer"
+            />
+            <FontAwesomeIcon
+              icon={faCreditCard}
+              onClick={() => showModal(ordersList[record?.key]?.id, 2)}
+              className={`cursor-pointer ${
+                currentBalance <= 0
+                  ? 'text-gray-400 hover:text-gray-500'
+                  : 'text-green-600 hover:text-green-800'
+              }`}
+              title={
+                currentBalance <= 0
+                  ? 'View Payment Details (Paid)'
+                  : 'Add Payment'
+              }
+            />
+          </div>
         );
       },
     },

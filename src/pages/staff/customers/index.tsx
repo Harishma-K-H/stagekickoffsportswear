@@ -87,7 +87,7 @@ const Customers: React.FC = () => {
     slNo: (pageNumber - 1) * pageSize + index + 1,
     businessName: customer.business_name.toUpperCase(),
     mobile: `${customer.mobile_number1}${customer.mobile_number2 ? `, ${customer.mobile_number2}` : ''}`,
-    address: `${customer.address1} ${customer.address2}`,
+    address: `${customer.address1} ${customer.address2} ${customer.address3}`,
     email: customer.email || '-',
     gstn: customer.gst_no || '-',
     pincode: customer.pincode || '-',
@@ -139,26 +139,23 @@ const Customers: React.FC = () => {
       key: 'pincode',
     },
     {
-      title: 'Action',
-      dataIndex: 'action',
-      key: 'action',
-      render: (_: any, record: any) => (
-        <div className="flex items-center justify-center">
-          <button
-            onClick={() => handleEditCustomer(record.key)}
-            className="text-gray-400 cursor-not-allowed text-xl"
-            title="Edit Disabled"
-            disabled
-          >
-            <FontAwesomeIcon
-              icon={faFilePen}
-              className="text-gray-600 hover:text-gray-800 cursor-pointer"
-            />
-          </button>
-        </div>
-      ),
-    },
-  ];
+          title: 'Action',
+          dataIndex: 'action',
+          key: 'action',
+          render: (_: any, record: any) => (
+            <div className="flex items-center justify-center">
+              <button
+                onClick={() => handleEditCustomer(record.key)}
+                className="text-black-500 hover:text-blue-800 text-xl cursor-pointer"
+                title="Edit"
+              >
+                <FontAwesomeIcon icon={faFilePen} className="text-inherit" />
+              </button>
+            </div>
+          ),
+        },
+      ];
+    
 
   const handlePageChange = useCallback((page: number) => {
     setPageNumber(page);
@@ -174,6 +171,7 @@ const Customers: React.FC = () => {
       mobile_number2: customer.mobile_number2,
       address1: customer.address1,
       address2: customer.address2,
+      address3: customer.address3,
       email: customer.email,
       state_name: customer.state_name,
       gstn: customer.gst_no,
@@ -209,7 +207,10 @@ const Customers: React.FC = () => {
           </h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
-          <Form className="flex items-center gap-2 pb-3" onFinish={handleSubmit}>
+          <Form
+            className="flex items-center gap-2 pb-3"
+            onFinish={handleSubmit}
+          >
             <Form.Item
               className="!mb-0 w-1/2"
               name="customerName"
@@ -251,7 +252,7 @@ const Customers: React.FC = () => {
 
       {/* Edit Modal */}
       <Modal
-        title={
+          title={
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
             Edit Customer
           </h2>

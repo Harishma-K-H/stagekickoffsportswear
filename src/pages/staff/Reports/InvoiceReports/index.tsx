@@ -1,11 +1,13 @@
 import Invoice from '@components/Common/Invoice';
+import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { message, Modal, Pagination, Table } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
+
 import { invoiceById, InvoiceReportsGet } from './api';
-import { faFileInvoice } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 interface InvoiceItem {
   item_id: number;
   name: string;
@@ -148,21 +150,21 @@ const InvoiceReportsPage: React.FC = () => {
       key: 'balance_amount',
       render: (value: any) => Number(value).toFixed(2),
     },
-{
-  title: 'Action',
-  dataIndex: 'action',
-  key: 'action',
-  align: 'center' as const,
-  render: (_: any, record: any) => (
-    <FontAwesomeIcon
-            icon={faFileInvoice}
-             className={`cursor-pointer text-blue-800 text-2xl`}
-            title="View Invoice"
-            onClick={() => setInvoiceId(record.id)}
-          />
-  ),
-}
-    
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      align: 'center' as const,
+      render: (_: any, record: any) => (
+        <FontAwesomeIcon
+          icon={faFileInvoice}
+          className={`cursor-pointer text-blue-800 text-2xl`}
+          title="View Invoice"
+          onClick={() => setInvoiceId(record.id)}
+        />
+      ),
+    },
+
     // {
     //   title: 'Action',
     //   dataIndex: 'action',
@@ -182,49 +184,51 @@ const InvoiceReportsPage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>KICKOFF SPORTS WEAR - Invoice Reports  </title>
+        <title>KICKOFF SPORTS WEAR - Invoice Reports </title>
       </Helmet>
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between pb-2 border-b-2">
-      <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">Pending Invoices</h3>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between pb-2 border-b-2">
+          <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
+            Pending Invoices
+          </h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
-      <Table
-        bordered
-        dataSource={data}
-        rowKey="id"
-        loading={loading}
-        columns={columns}
-        pagination={false} // ✅ keep false here to control pagination manually
-      />
-      {paginationData.count > 0 && (
-        <Pagination
-          current={pageNumber}
-          total={paginationData.count} // ✅ this is correct now
-          pageSize={pageSize}
-          showSizeChanger
-          pageSizeOptions={['25', '50', '100', '150', '200']}
-          onShowSizeChange={onShowSizeChange}
-          onChange={handlePageChange}
-          // showTotal={(total, range) =>
-          //   `Showing ${range[0]}-${range[1]} of ${total} invoices`
-          // }
-          rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-        />
-      )}
+          <Table
+            bordered
+            dataSource={data}
+            rowKey="id"
+            loading={loading}
+            columns={columns}
+            pagination={false} // ✅ keep false here to control pagination manually
+          />
+          {paginationData.count > 0 && (
+            <Pagination
+              current={pageNumber}
+              total={paginationData.count} // ✅ this is correct now
+              pageSize={pageSize}
+              showSizeChanger
+              pageSizeOptions={['25', '50', '100', '150', '200']}
+              onShowSizeChange={onShowSizeChange}
+              onChange={handlePageChange}
+              // showTotal={(total, range) =>
+              //   `Showing ${range[0]}-${range[1]} of ${total} invoices`
+              // }
+              rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
+            />
+          )}
 
-      {/* 🔽 Modal for invoice with hidden printable section */}
-      <ModalDetails
-        invoiceDetails={invoiceDetails}
-        isModalOpen={isModalOpen}
-        setIsModalOpen={setIsModalOpen}
-        setInvoiceId={setInvoiceId}
-        contentRef={contentRef}
-        // reactToPrintFn={reactToPrintFn}
-      />
+          {/* 🔽 Modal for invoice with hidden printable section */}
+          <ModalDetails
+            invoiceDetails={invoiceDetails}
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            setInvoiceId={setInvoiceId}
+            contentRef={contentRef}
+            // reactToPrintFn={reactToPrintFn}
+          />
         </div>
-        </div>
-       </>
+      </div>
+    </>
   );
 };
 type ModalDetailsProps = {
