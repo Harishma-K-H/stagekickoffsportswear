@@ -76,6 +76,7 @@ const Customers: React.FC = () => {
       email: customer.email,
       state_name: customer.state_name,
       gst_no: customer.gst_no,
+      
     });
     setEditModalOpen(true);
   };
@@ -109,6 +110,7 @@ const Customers: React.FC = () => {
     address: `${customer?.address1 || ''} ${customer?.address2 || ''} ${customer?.address3 || ''}`,
     email: customer?.email || '-',
     gstn: customer?.gst_no || '-',
+    pincode: customer.pincode || '-',
   }));
 
   const columns = [
@@ -150,6 +152,11 @@ const Customers: React.FC = () => {
       title: 'GSTN',
       dataIndex: 'gstn',
       key: 'gstn',
+    },
+    {
+      title: 'Pincode',
+      dataIndex: 'pincode',
+      key: 'pincode',
     },
     {
       title: 'Action',

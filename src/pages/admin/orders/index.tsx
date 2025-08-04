@@ -62,7 +62,7 @@ const Orders: React.FC = () => {
       render: (text: string) => <span className="font-bold">{text}</span>,
     },
     {
-      title: 'Customer Name',
+      title: 'Customer',
       dataIndex: 'customerName',
       key: 'name',
     },
@@ -82,6 +82,35 @@ const Orders: React.FC = () => {
       key: 'total_cost',
       align: 'right' as const, // ✅ FIXED: Add comma here
       render: (value: any) => parseFloat(value).toFixed(2),
+    },
+    {
+      title: 'Invoice Status',
+      dataIndex: 'order_invoice',
+      key: 'order_invoice',
+      render: (value: string) => {
+        let bgColor = '#d32f2f'; // Red (default: Awaiting Invoice)
+
+        if (value === 'PAID') {
+          bgColor = '#2e7d32'; // Blue
+        } else if (value === 'GENERATED') {
+          bgColor = '#1976d2'; // Green
+        }
+
+        return (
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '4px 12px',
+              borderRadius: '999px',
+              fontSize: '12px',
+              color: '#fff',
+              backgroundColor: bgColor,
+            }}
+          >
+            {value || 'Awaiting Invoice'}
+          </span>
+        );
+      },
     },
     {
       title: 'Action',
@@ -192,6 +221,7 @@ const Orders: React.FC = () => {
     deliveryDate: dayjs(order?.delivery_date).format('DD-MM-YYYY'),
     payment_details: order?.payment_details, // Pass payment_details to the record
     total_cost: order?.total_cost, // Pass total_cost to the record
+    order_invoice: order?.order_invoice,
   }));
   console.log('🧾 Table Data:', tableDataSource);
   const onShowSizeChange = useCallback((current: number, pageSize: number) => {
