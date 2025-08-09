@@ -174,6 +174,7 @@ const Customers: React.FC = () => {
       address3: customer.address3,
       email: customer.email,
       state_name: customer.state_name,
+      pincode:customer.pincode,
       gstn: customer.gst_no,
     });
     setEditModalOpen(true);

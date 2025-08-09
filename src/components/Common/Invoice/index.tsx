@@ -234,7 +234,9 @@ const Invoice: React.FC<{
               </>
             )}
 
-            {customer?.state_name && <>{customer.state_name}</>}
+            {customer?.state_name && <>{customer.state_name}</>}<br/>
+            {customer?.pincode && <>{customer.pincode}</>}
+           
           </p>
         </div>
 
