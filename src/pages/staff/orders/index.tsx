@@ -134,7 +134,8 @@ const Orders: React.FC = () => {
         const currentBalance = balanceAmount
           ? parseFloat(balanceAmount)
           : Math.round(parseFloat(record.total_cost || '0') - totalPaid);
-
+        
+        const isPaid = record.order_invoice === "PAID"; 
         return (
           <div className="flex items-center justify-center space-x-[16px] text-[20px]">
             {/* View Invoice Icon */}
@@ -162,21 +163,21 @@ const Orders: React.FC = () => {
             />
 
             {/* Edit Icon */}
-            {currentBalance <= 0 ? (
+          {isPaid ? (
+            <FontAwesomeIcon
+              icon={faFilePen}
+              className="text-gray-400 cursor-not-allowed"
+              title="Edit Disabled (Order Paid)"
+            />
+          ) : (
+            <Link to={Paths.Staff.orders.edit(ordersList[record?.key]?.id)}>
               <FontAwesomeIcon
                 icon={faFilePen}
-                className="text-gray-400 cursor-not-allowed"
-                title="Edit Disabled"
+                className="text-gray-600 hover:text-gray-800 cursor-pointer"
+                title="Edit Order"
               />
-            ) : (
-              <Link to={Paths.Staff.orders.edit(ordersList[record?.key]?.id)}>
-                <FontAwesomeIcon
-                  icon={faFilePen}
-                  className="text-gray-600 hover:text-gray-800 cursor-pointer"
-                  title="Edit Order"
-                />
-              </Link>
-            )}
+            </Link>
+          )}
           </div>
         );
       },
