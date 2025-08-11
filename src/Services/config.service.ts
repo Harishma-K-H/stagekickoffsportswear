@@ -21,7 +21,7 @@ const hostname = window.location.hostname;
 
 const API_BASE_PATH = (() => {
   if (hostname === '139.59.71.247') {
-    return 'http://139.59.71.247/api';
+    return 'https://139.59.71.247/api';  // Use HTTPS here
   } else if (hostname === 'stage.kickoffsportswear.app') {
     return 'https://stage.kickoffsportswear.app/api';
   } else {
