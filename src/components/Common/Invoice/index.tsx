@@ -255,13 +255,7 @@ const Invoice: React.FC<{
               {
                 heading: `${type} DATE`,
                 value: dayjs(
-                  type === 'INVOICE'
-                    ? printForOfficeInvoice
-                      ? order_invoice_sent_date
-                        ? order_invoice_sent_date
-                        : new Date()
-                      : created_at
-                    : order_date,
+                  type === 'INVOICE' ? created_at : order_date
                 ).format('DD-MM-YYYY'),
                 visibility: true,
                 rowClassName: 'px-3',

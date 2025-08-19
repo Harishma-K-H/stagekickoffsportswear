@@ -238,9 +238,43 @@ const InvoiceReportsPage: React.FC = () => {
             columns={columns}
             pagination={false}
           />
+          <div className="mt-4 w-full flex items-center justify-end gap-2">
+                      <span className="text-sm text-gray-600">Rows:</span>
+                      <Select
+                        size="small"
+                        style={{ width: 120 }}
+                        value={pageSize === paginationData.count ? 'All' : String(pageSize)}
+                        onChange={(val) => {
+                          if (val === 'All') {
+                            setPageSize(paginationData.count); // show all
+                            setPageNumber(1);
+                          } else {
+                            setPageSize(Number(val));
+                            setPageNumber(1);
+                          }
+                        }}
+                        options={[
+                          { value: '25', label: '25 / page' },
+                          { value: '50', label: '50 / page' },
+                          { value: '100', label: '100 / page' },
+                          { value: '150', label: '150 / page' },
+                          { value: '200', label: '200 / page' },
+                          { value: 'All', label: 'All' },
+                        ]}
+                      />
+                    {paginationData.count > 0 && (
+                      <Pagination
+                        current={pageNumber}
+                        pageSize={pageSize}
+                        total={paginationData.count}
+                        onChange={(page) => setPageNumber(page)}
+                        showSizeChanger={false} // we hide default changer
+              />
+              )}
+                    </div>
 
           {/* Pagination */}
-          {paginationData.count > 0 && (
+          {/* {paginationData.count > 0 && (
             <Pagination
               current={pageNumber}
               total={paginationData.count}
@@ -251,7 +285,7 @@ const InvoiceReportsPage: React.FC = () => {
               onChange={handlePageChange}
               rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
             />
-          )}
+          )} */}
 
           {/* Invoice Modal */}
           <ModalDetails

@@ -3,12 +3,13 @@ import { notify } from '@components/Common/Toastify';
 import { faFilePen } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useApiJSON } from '@services/ApiService/Api.service';
-import { Form, Input, Modal, Pagination, Table } from 'antd';
+import { Form, Input, Modal, Pagination, Table, Select } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
 
 import { getCustomers, updateCustomer } from './api';
+
 // Define Customer interface
 interface Customer {
   id: number;
@@ -77,11 +78,6 @@ const Customers: React.FC = () => {
     [get, pageNumber, pageSize],
   );
 
-  const onShowSizeChange = useCallback((_current: number, size: number) => {
-    setPageSize(size);
-    setPageNumber(1);
-  }, []);
-
   const tableDataSource = customers.map((customer, index) => ({
     key: customer.id,
     slNo: (pageNumber - 1) * pageSize + index + 1,
@@ -139,27 +135,22 @@ const Customers: React.FC = () => {
       key: 'pincode',
     },
     {
-          title: 'Action',
-          dataIndex: 'action',
-          key: 'action',
-          render: (_: any, record: any) => (
-            <div className="flex items-center justify-center">
-              <button
-                onClick={() => handleEditCustomer(record.key)}
-                className="text-black-500 hover:text-blue-800 text-xl cursor-pointer"
-                title="Edit"
-              >
-                <FontAwesomeIcon icon={faFilePen} className="text-inherit" />
-              </button>
-            </div>
-          ),
-        },
-      ];
-    
-
-  const handlePageChange = useCallback((page: number) => {
-    setPageNumber(page);
-  }, []);
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      render: (_: any, record: any) => (
+        <div className="flex items-center justify-center">
+          <button
+            onClick={() => handleEditCustomer(record.key)}
+            className="text-black-500 hover:text-blue-800 text-xl cursor-pointer"
+            title="Edit"
+          >
+            <FontAwesomeIcon icon={faFilePen} className="text-inherit" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   const handleEditCustomer = (customerId: number) => {
     const customer = customers.find((c) => c.id === customerId);
@@ -174,7 +165,7 @@ const Customers: React.FC = () => {
       address3: customer.address3,
       email: customer.email,
       state_name: customer.state_name,
-      pincode:customer.pincode,
+      pincode: customer.pincode,
       gstn: customer.gst_no,
     });
     setEditModalOpen(true);
@@ -232,6 +223,7 @@ const Customers: React.FC = () => {
             />
           </Form>
 
+          {/* Table */}
           <Table
             bordered
             dataSource={tableDataSource}
@@ -239,21 +231,47 @@ const Customers: React.FC = () => {
             pagination={false}
             scroll={{ x: '700' }}
           />
-          <Pagination
-            current={pageNumber}
-            total={paginationData.count}
-            pageSize={pageSize}
-            pageSizeOptions={['25', '50', '100', '150', '200']}
-            onShowSizeChange={onShowSizeChange}
-            onChange={handlePageChange}
-            rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-          />
+
+          {/* Custom Pagination + PageSize */}
+          <div className="mt-4 w-full flex items-center justify-end gap-2">
+            <span className="text-sm text-gray-600">Rows:</span>
+            <Select
+              size="small"
+              style={{ width: 120 }}
+              value={pageSize === paginationData.count ? 'All' : String(pageSize)}
+              onChange={(val) => {
+                if (val === 'All') {
+                  setPageSize(paginationData.count); // show all
+                  setPageNumber(1);
+                } else {
+                  setPageSize(Number(val));
+                  setPageNumber(1);
+                }
+              }}
+              options={[
+                { value: '25', label: '25 / page' },
+                { value: '50', label: '50 / page' },
+                { value: '100', label: '100 / page' },
+                { value: '150', label: '150 / page' },
+                { value: '200', label: '200 / page' },
+                { value: 'All', label: 'All' },
+              ]}
+            />
+
+            <Pagination
+              current={pageNumber}
+              pageSize={pageSize}
+              total={paginationData.count}
+              onChange={(page) => setPageNumber(page)}
+              showSizeChanger={false} // we hide default changer
+            />
+          </div>
         </div>
       </div>
 
       {/* Edit Modal */}
       <Modal
-          title={
+        title={
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
             Edit Customer
           </h2>
@@ -264,88 +282,36 @@ const Customers: React.FC = () => {
         width={700}
       >
         <Form form={form} layout="vertical" onFinish={handleUpdateCustomer}>
-          <Form.Item
-            name="business_name"
-            label={<span style={{ fontWeight: 'bold' }}>Business Name</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="business_name" label="Business Name">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="address1"
-            label={<span style={{ fontWeight: 'bold' }}>Address 1</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="address1" label="Address 1">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="address2"
-            label={<span style={{ fontWeight: 'bold' }}>Address 2</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="address2" label="Address 2">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="address3"
-            label={<span style={{ fontWeight: 'bold' }}>Address 3</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="address3" label="Address 3">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="state_name"
-            label={<span style={{ fontWeight: 'bold' }}>State</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="state_name" label="State">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="pincode"
-            label={<span style={{ fontWeight: 'bold' }}>Pincode</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="pincode" label="Pincode">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="mobile_number1"
-            label={<span style={{ fontWeight: 'bold' }}>Mobile Number 1</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="mobile_number1" label="Mobile Number 1">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="mobile_number2"
-            label={<span style={{ fontWeight: 'bold' }}>Mobile Number 2</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="mobile_number2" label="Mobile Number 2">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="email"
-            label={<span style={{ fontWeight: 'bold' }}>Email</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="email" label="Email">
+            <Input />
           </Form.Item>
-
-          <Form.Item
-            name="gstn"
-            label={<span style={{ fontWeight: 'bold' }}>GSTN</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="gstn" label="GSTN">
+            <Input />
           </Form.Item>
-
           <Button
             title="Update Customer"
             type="submit"
