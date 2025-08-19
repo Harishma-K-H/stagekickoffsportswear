@@ -32,7 +32,6 @@ const Invoice: React.FC<{
     orderID,
     order_date,
     delivery_date,
-    order_invoice_sent_date,
     net_cost,
     items_total_cost,
     gst,

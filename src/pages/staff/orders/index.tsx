@@ -274,9 +274,9 @@ const Orders: React.FC = () => {
     setIsModalOpen(true);
   }, []);
 
-  const handlePageChange = useCallback((page: number) => {
-    setPageNumber(page);
-  }, []);
+  // const handlePageChange = useCallback((page: number) => {
+  //   setPageNumber(page);
+  // }, []);
 
   const tableDataSource = ordersList?.map((order: any, i: number) => ({
     key: i,
@@ -293,10 +293,10 @@ const Orders: React.FC = () => {
     order_invoice: order?.order_invoice,
   }));
 
-  const onShowSizeChange = useCallback((current: number, pageSize: number) => {
-    setPageSize(pageSize);
-    setPageNumber(current);
-  }, []);
+  // const onShowSizeChange = useCallback((current: number, pageSize: number) => {
+  //   setPageSize(pageSize);
+  //   setPageNumber(current);
+  // }, []);
 
   // useEffect(() => {
   //   getOrders();

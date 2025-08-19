@@ -88,13 +88,13 @@ const InvoiceReportsPage: React.FC = () => {
       setLoading(false);
     }
   };
-  const onShowSizeChange = useCallback((_current: number, size: number) => {
-    setPageSize(size);
-    setPageNumber(1);
-  }, []);
-  const handlePageChange = useCallback((page: number) => {
-    setPageNumber(page);
-  }, []);
+  // const onShowSizeChange = useCallback((_current: number, size: number) => {
+  //   setPageSize(size);
+  //   setPageNumber(1);
+  // }, []);
+  // const handlePageChange = useCallback((page: number) => {
+  //   setPageNumber(page);
+  // }, []);
   useEffect(() => {
     const fetchBranches = async () => {
       const res = await getBranchList(get);

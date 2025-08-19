@@ -156,26 +156,26 @@ const Invoices: React.FC = () => {
     setIsModalOpen(true);
   }, []);
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      setPageNumber(page);
-      // if (!isFiltered) {
-      //   getInvoices();
-      // }
-    },
-    [getInvoices],
-  );
+  // const handlePageChange = useCallback(
+  //   (page: number) => {
+  //     setPageNumber(page);
+  //     // if (!isFiltered) {
+  //     //   getInvoices();
+  //     // }
+  //   },
+  //   [getInvoices],
+  // );
 
-  const onShowSizeChange = useCallback(
-    (_current: number, size: number) => {
-      setPageSize(size);
-      setPageNumber(1);
-      // if (!isFiltered) {
-      //   getInvoices();
-      // }
-    },
-    [getInvoices],
-  );
+  // const onShowSizeChange = useCallback(
+  //   (_current: number, size: number) => {
+  //     setPageSize(size);
+  //     setPageNumber(1);
+  //     // if (!isFiltered) {
+  //     //   getInvoices();
+  //     // }
+  //   },
+  //   [getInvoices],
+  // );
 
   const tableDataSource = invoicesList?.map((invoice: any, i: number) => ({
     key: i,

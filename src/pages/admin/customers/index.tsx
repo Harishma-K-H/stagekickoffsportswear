@@ -92,14 +92,14 @@ const Customers: React.FC = () => {
     }
   };
 
-  const handlePageChange = useCallback((page: number) => {
-    setPageNumber(page);
-  }, []);
+  // const handlePageChange = useCallback((page: number) => {
+  //   setPageNumber(page);
+  // }, []);
 
-  const onShowSizeChange = useCallback((_current: number, size: number) => {
-    setPageSize(size);
-    setPageNumber(1);
-  }, []);
+  // const onShowSizeChange = useCallback((_current: number, size: number) => {
+  //   setPageSize(size);
+  //   setPageNumber(1);
+  // }, []);
 
   const tableDataSource = customers?.map((customer: any, index: number) => ({
     key: customer.id,

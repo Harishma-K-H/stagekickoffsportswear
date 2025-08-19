@@ -673,14 +673,14 @@ const Items: React.FC = () => {
     [get, pageNumber, pageSize, selectedBranch, selectedModel],
   );
 
-  const handlePageChange = useCallback((page: number) => {
-    setPageNumber(page);
-  }, []);
+  // const handlePageChange = useCallback((page: number) => {
+  //   setPageNumber(page);
+  // }, []);
 
-  const onShowSizeChange = useCallback((current: number, pageSize: number) => {
-    setPageSize(pageSize);
-    setPageNumber(current);
-  }, []);
+  // const onShowSizeChange = useCallback((current: number, pageSize: number) => {
+  //   setPageSize(pageSize);
+  //   setPageNumber(current);
+  // }, []);
 
   const tableDataSource = itemsList?.map((item: any, i: number) => ({
     key: i,
