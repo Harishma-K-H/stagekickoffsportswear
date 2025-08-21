@@ -25,7 +25,7 @@ const Invoice: React.FC<{
   printForOfficeInvoice = false,
   downloadClicked = false,
   printClicked = false,
-  paid = false,
+  // paid = false,
 }) => {
   const {
     invoice_id,

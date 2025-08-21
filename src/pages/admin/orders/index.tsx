@@ -6,7 +6,7 @@ import { notify } from '@components/Common/Toastify';
 import PaymentHistory from '@components/Staff/PaymentHistory';
 import { faCreditCard, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Paths from '@routes/paths';
+// import Paths from '@routes/paths';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { generatePDF } from '@utils/staff/downloadPdf';
@@ -17,7 +17,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaPrint } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa6';
-import { Link, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 
 import { fetchDeliveryOrders } from '../dashboard/api';
