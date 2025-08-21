@@ -840,7 +840,15 @@ const Items: React.FC = () => {
           </Form>
            {/* Custom Pagination + PageSize */}
                     <div className="mt-4 w-full flex items-center justify-end gap-2">
-                      <span className="text-sm text-gray-600">Rows:</span>
+                      
+                      <Pagination
+                        current={pageNumber}
+                        pageSize={pageSize}
+                        total={paginationData.count}
+                        onChange={(page) => setPageNumber(page)}
+                        showSizeChanger={false} // we hide default changer
+            />
+            <span className="text-sm text-gray-600">Rows:</span>
                       <Select
                         size="small"
                         style={{ width: 120 }}
@@ -864,13 +872,6 @@ const Items: React.FC = () => {
                         ]}
                       />
           
-                      <Pagination
-                        current={pageNumber}
-                        pageSize={pageSize}
-                        total={paginationData.count}
-                        onChange={(page) => setPageNumber(page)}
-                        showSizeChanger={false} // we hide default changer
-                      />
                     </div>
         </div>
       </div>

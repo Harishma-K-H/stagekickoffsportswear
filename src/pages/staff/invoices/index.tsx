@@ -283,12 +283,18 @@ const Invoices: React.FC = () => {
               format="YYYY-MM"
               locale={locale}
             />
-
+            
+          {/* <Link
+            to={Paths.Staff.orders.new}
+            className="px-[25px] py-3 transition-all text-white bg-[#D92D20] hover:bg-[#B42318] rounded-md invisible xl:visible"
+          >
+            New
+          </Link> */}
             <Button
               title="Go"
               type="button"
               handleClick={handleGoClick}
-              className="px-[15px] py-3 text-white bg-green-600 hover:bg-green-700 rounded-md w-fit flex items-center"
+              className="px-[15px] py-3 text-white bg-green-600 hover:bg-green-700 rounded-md invisible xl:visible"
             />
           </div>
           {/* {isFiltered && (
@@ -314,7 +320,15 @@ const Invoices: React.FC = () => {
           />
           {/* Custom Pagination + PageSize */}
                               <div className="mt-4 w-full flex items-center justify-end gap-2">
-                                <span className="text-sm text-gray-600">Rows:</span>
+                                
+                                <Pagination
+                                  current={pageNumber}
+                                  pageSize={pageSize}
+                                  total={paginationData.count}
+                                  onChange={(page) => setPageNumber(page)}
+                                  showSizeChanger={false} // we hide default changer
+            />
+            <span className="text-sm text-gray-600">Rows:</span>
                                 <Select
                                   size="small"
                                   style={{ width: 120 }}
@@ -338,13 +352,6 @@ const Invoices: React.FC = () => {
                                   ]}
                                 />
                     
-                                <Pagination
-                                  current={pageNumber}
-                                  pageSize={pageSize}
-                                  total={paginationData.count}
-                                  onChange={(page) => setPageNumber(page)}
-                                  showSizeChanger={false} // we hide default changer
-                                />
                               </div>
 
           {/* <Pagination

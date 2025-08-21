@@ -216,7 +216,7 @@ const InvoiceReportsPage: React.FC = () => {
               allowClear
               showSearch
               placeholder="Select Branch"
-              className="w-[600px] h-9 rounded-full border border-gray-300 shadow-sm placeholder:text-gray-400 ml-auto"
+              className="w-[300px] h-11 rounded-full border border-gray-300 shadow-sm placeholder:text-gray-400 ml-auto"
               value={selectedBranch}
               onChange={(val) => {
                 setSelectedBranch(val);
@@ -239,7 +239,17 @@ const InvoiceReportsPage: React.FC = () => {
             pagination={false}
           />
           <div className="mt-4 w-full flex items-center justify-end gap-2">
-                      <span className="text-sm text-gray-600">Rows:</span>
+                     
+                    {paginationData.count > 0 && (
+                      <Pagination
+                        current={pageNumber}
+                        pageSize={pageSize}
+                        total={paginationData.count}
+                        onChange={(page) => setPageNumber(page)}
+                        showSizeChanger={false} // we hide default changer
+              />
+            )}
+             <span className="text-sm text-gray-600">Rows:</span>
                       <Select
                         size="small"
                         style={{ width: 120 }}
@@ -262,15 +272,6 @@ const InvoiceReportsPage: React.FC = () => {
                           { value: 'All', label: 'All' },
                         ]}
                       />
-                    {paginationData.count > 0 && (
-                      <Pagination
-                        current={pageNumber}
-                        pageSize={pageSize}
-                        total={paginationData.count}
-                        onChange={(page) => setPageNumber(page)}
-                        showSizeChanger={false} // we hide default changer
-              />
-              )}
                     </div>
 
           {/* Pagination */}

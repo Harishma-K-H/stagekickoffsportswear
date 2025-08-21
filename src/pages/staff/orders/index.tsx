@@ -366,7 +366,16 @@ const Orders: React.FC = () => {
           
              {/* Custom Pagination + PageSize */}
           <div className="mt-4 w-full flex items-center justify-end gap-2">
-            <span className="text-sm text-gray-600">Rows:</span>
+           
+
+            <Pagination
+              current={pageNumber}
+              pageSize={pageSize}
+              total={paginationData.count}
+              onChange={(page) => setPageNumber(page)}
+              showSizeChanger={false}
+            />
+             <span className="text-sm text-gray-600">Rows:</span>
             <Select
               size="small"
               style={{ width: 120 }}
@@ -388,14 +397,6 @@ const Orders: React.FC = () => {
                 { value: '200', label: '200 / page' },
                 { value: 'All', label: 'All' },
               ]}
-            />
-
-            <Pagination
-              current={pageNumber}
-              pageSize={pageSize}
-              total={paginationData.count}
-              onChange={(page) => setPageNumber(page)}
-              showSizeChanger={false}
             />
         
         </div>

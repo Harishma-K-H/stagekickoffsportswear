@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useApiJSON } from '@services/ApiService/Api.service';
 import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
 import { generatePDF } from '@utils/staff/downloadPdf';
-import { DatePicker, Modal, Pagination, Table } from 'antd';
+import { DatePicker, Modal, Pagination, Table ,Select} from 'antd';
 import locale from 'antd/es/date-picker/locale/en_US';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -228,7 +228,7 @@ const Invoices: React.FC = () => {
               title="Go"
               type="button"
               handleClick={handleGoClick}
-              className="px-[15px] py-3 text-white bg-green-600 hover:bg-green-700 rounded-md w-fit flex items-center"
+                className="px-[15px] py-2 text-white bg-green-600 hover:bg-green-700 rounded-md"
             />
      
           </div>
@@ -239,7 +239,42 @@ const Invoices: React.FC = () => {
             pagination={false}
             scroll={{ x: '700' }}
           />
-          <Pagination
+          {/* Custom Pagination + PageSize */}
+                              <div className="mt-4 w-full flex items-center justify-end gap-2">
+                               
+                                <Pagination
+                                  current={pageNumber}
+                                  pageSize={pageSize}
+                                  total={paginationData.count}
+                                  onChange={(page) => setPageNumber(page)}
+                                  showSizeChanger={false} // we hide default changer
+            />
+             <span className="text-sm text-gray-600">Rows:</span>
+                                <Select
+                                  size="small"
+                                  style={{ width: 120 }}
+                                  value={pageSize === paginationData.count ? 'All' : String(pageSize)}
+                                  onChange={(val) => {
+                                    if (val === 'All') {
+                                      setPageSize(paginationData.count); // show all
+                                      setPageNumber(1);
+                                    } else {
+                                      setPageSize(Number(val));
+                                      setPageNumber(1);
+                                    }
+                                  }}
+                                  options={[
+                                    { value: '25', label: '25 / page' },
+                                    { value: '50', label: '50 / page' },
+                                    { value: '100', label: '100 / page' },
+                                    { value: '150', label: '150 / page' },
+                                    { value: '200', label: '200 / page' },
+                                    { value: 'All', label: 'All' },
+                                  ]}
+                                />
+                    
+                              </div>
+          {/* <Pagination
             current={pageNumber}
             total={paginationData.count}
             pageSize={pageSize}
@@ -248,7 +283,7 @@ const Invoices: React.FC = () => {
             onShowSizeChange={onShowSizeChange}
             onChange={handlePageChange}
             rootClassName="w-fit mx-auto lg:ml-auto lg:mr-0 mt-5 lg:mt-1"
-          />
+          /> */}
         </div>
       </div>
       <ModalDetails

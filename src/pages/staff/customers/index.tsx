@@ -199,34 +199,32 @@ const Customers: React.FC = () => {
           </h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
-          <Form
-  className="flex items-center pb-3"
-  onFinish={handleSubmit}
->
-  <div className="flex items-center gap-2 ml-auto">
-    <Form.Item
-      className="!mb-0 flex-30"
-      name="customerName"
-      rules={[{ required: false }]}
-    >
-      <Input
-        placeholder="Search customer name"
-        allowClear
-        onClear={handleClickClear}
-        className="py-3 h-10 placeholder:text-gray-400"
-      />
-    </Form.Item>
-
-    <Button
-      type="submit"
-      title=""
-      icon={<IoSearch />}
-      className="text-white bg-gray-500 rounded-md !py-3"
-    />
-  </div>
-</Form>
-
-
+           <Form
+                      className="flex items-center pb-3"
+                      onFinish={handleSubmit}
+                    >
+                      <div className="flex items-center gap-2 ml-auto">
+                        <Form.Item
+                          className="!mb-0 flex-1"
+                          name="customerName"
+                          rules={[{ required: false }]}
+                        >
+                          <Input
+                            placeholder="Search customer name"
+                            allowClear
+                            onClear={handleClickClear}
+                            className="w-64 h-11 px-3 placeholder:text-gray-400"
+                          />
+                        </Form.Item>
+                    
+                        <Button
+                          type="submit"
+                          title=""
+                          icon={<IoSearch className="text-xl" />}
+                          className="text-white bg-gray-500 rounded-md !py-3"
+                        />
+                      </div>
+                    </Form>
           {/* Table */}
           <Table
             bordered
@@ -238,6 +236,14 @@ const Customers: React.FC = () => {
 
           {/* Custom Pagination + PageSize */}
           <div className="mt-4 w-full flex items-center justify-end gap-2">
+            
+            <Pagination
+              current={pageNumber}
+              pageSize={pageSize}
+              total={paginationData.count}
+              onChange={(page) => setPageNumber(page)}
+              showSizeChanger={false} // we hide default changer
+            />
             <span className="text-sm text-gray-600">Rows:</span>
             <Select
               size="small"
@@ -262,13 +268,6 @@ const Customers: React.FC = () => {
               ]}
             />
 
-            <Pagination
-              current={pageNumber}
-              pageSize={pageSize}
-              total={paginationData.count}
-              onChange={(page) => setPageNumber(page)}
-              showSizeChanger={false} // we hide default changer
-            />
           </div>
         </div>
       </div>
