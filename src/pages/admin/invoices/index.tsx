@@ -137,14 +137,14 @@ const Invoices: React.FC = () => {
     setIsModalOpen(true);
   }, []);
 
-  const onShowSizeChange = useCallback((_current: number, size: number) => {
-    setPageSize(size);
-    setPageNumber(1);
-  }, []);
+  // const onShowSizeChange = useCallback((_current: number, size: number) => {
+  //   setPageSize(size);
+  //   setPageNumber(1);
+  // }, []);
 
-  const handlePageChange = useCallback((page: number) => {
-    setPageNumber(page);
-  }, []);
+  // const handlePageChange = useCallback((page: number) => {
+  //   setPageNumber(page);
+  // }, []);
   const handleGoClick = async () => {
     if (!selectedMonth) {
       notify('❗ Please select a month before proceeding.', 'error');
