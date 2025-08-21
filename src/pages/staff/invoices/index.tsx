@@ -279,7 +279,7 @@ const Invoices: React.FC = () => {
                   current.isSame(now, 'month') // ❌ disable current month
                 );
               }}
-              className="w-[200px]"
+              className="w-[200px] px-[15px] py-3 rounded-md"
               format="YYYY-MM"
               locale={locale}
             />
@@ -288,7 +288,7 @@ const Invoices: React.FC = () => {
               title="Go"
               type="button"
               handleClick={handleGoClick}
-              className="text-white bg-green-600 hover:bg-green-700 rounded-md !py-1 px-4 w-fit flex items-center"
+              className="px-[15px] py-3 text-white bg-green-600 hover:bg-green-700 rounded-md w-fit flex items-center"
             />
           </div>
           {/* {isFiltered && (

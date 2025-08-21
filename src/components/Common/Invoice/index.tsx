@@ -44,6 +44,7 @@ const Invoice: React.FC<{
     created_at,
     remarks,
     discount,
+    invoice_satus
   } = data;
   useEffect(() => {
     console.log('🔍 delivery_date raw:', delivery_date);
@@ -404,7 +405,7 @@ const Invoice: React.FC<{
           <strong className="text-base">
             {numberToWords(parseInt(total_cost))}
           </strong>
-          {paid && (
+          {invoice_satus =="PAID" && (
             <img
               src="/paid.png"
               alt="Company Logo"

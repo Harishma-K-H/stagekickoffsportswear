@@ -216,7 +216,7 @@ const InvoiceReportsPage: React.FC = () => {
               allowClear
               showSearch
               placeholder="Select Branch"
-              className="w-[600px] h-9 rounded-full border border-gray-300 shadow-sm placeholder:text-gray-400"
+              className="w-[600px] h-9 rounded-full border border-gray-300 shadow-sm placeholder:text-gray-400 ml-auto"
               value={selectedBranch}
               onChange={(val) => {
                 setSelectedBranch(val);

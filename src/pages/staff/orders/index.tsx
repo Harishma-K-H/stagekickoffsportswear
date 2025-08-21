@@ -345,14 +345,17 @@ const Orders: React.FC = () => {
               Orders
             </h3>
           </div>
+          
+        </div>
+        <div className="p-3 bg-white md:p-5 custom-table">
+           <div className="flex justify-end mb-4">
           <Link
             to={Paths.Staff.orders.new}
-            className="px-[25px] py-3 transition-all text-white bg-[#CC3232] hover:bg-[#B42318] rounded-md invisible xl:visible"
+            className="px-[25px] py-3 transition-all text-white bg-[#D92D20] hover:bg-[#B42318] rounded-md invisible xl:visible"
           >
             New
           </Link>
-        </div>
-        <div className="p-3 bg-white md:p-5 custom-table">
+           </div>
           <Table
             bordered
             dataSource={tableDataSource}
@@ -360,6 +363,7 @@ const Orders: React.FC = () => {
             pagination={false}
             scroll={{ x: '700' }}
           />
+          
              {/* Custom Pagination + PageSize */}
           <div className="mt-4 w-full flex items-center justify-end gap-2">
             <span className="text-sm text-gray-600">Rows:</span>

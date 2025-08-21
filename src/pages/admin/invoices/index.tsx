@@ -86,24 +86,24 @@ const Invoices: React.FC = () => {
       key: 'OrderId',
     },
     {
-      title: 'Action',
-      dataIndex: 'action',
-      key: 'action',
-      width: 170,
-      render: (_: any, record: any) => {
-        const isGenerated = record.invoice_generated;
-        return (
-          <div className="flex justify-center">
-            <FontAwesomeIcon
-              icon={faFileInvoice}
-              onClick={() => showModal(invoicesList[record?.key]?.id)}
-              className={`cursor-pointer ${isGenerated ? 'text-green-600' : 'text-blue-800'} text-2xl`}
-              title="View Invoice"
-            />
-          </div>
-        );
-      },
-    },
+          title: 'Action',
+          dataIndex: 'action',
+          key: 'action',
+          width: 170,
+          render: (_: any, record: any) => {
+            const isGenerated = record.invoice_generated;
+            return (
+              <div className="flex justify-center">
+                <FontAwesomeIcon
+                  icon={faFileInvoice}
+                  onClick={() => showModal(invoicesList[record?.key]?.id)}
+                  className={`cursor-pointer ${isGenerated ? 'text-green-600' : 'text-blue-800'} text-2xl`}
+                  title="View Invoice"
+                />
+              </div>
+            );
+          },
+        },
   ];
 
   const getInvoices = useCallback(async () => {
@@ -219,16 +219,18 @@ const Invoices: React.FC = () => {
                   current.isSame(now, 'month') // ❌ disable current month
                 );
               }}
-              className="w-[200px]"
+              className="w-[200px] px-[15px] py-3 rounded-md"
               format="YYYY-MM"
               locale={locale}
             />
+
             <Button
               title="Go"
               type="button"
               handleClick={handleGoClick}
-              className="text-white bg-green-600 hover:bg-green-700 rounded-md !py-1 px-4 w-fit flex items-center"
+              className="px-[15px] py-3 text-white bg-green-600 hover:bg-green-700 rounded-md w-fit flex items-center"
             />
+     
           </div>
           <Table
             bordered

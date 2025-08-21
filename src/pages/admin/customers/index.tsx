@@ -192,25 +192,31 @@ const Customers: React.FC = () => {
           </h3>
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
-          <Form className="flex gap-2 pb-3" onFinish={handleSubmit}>
-            <Form.Item
-              className="!mb-0 w-1/2"
-              name="customerName"
-              rules={[{ required: false }]}
-            >
-              <Input
-                placeholder="Search customer name"
-                allowClear
-                onClear={handleClickClear}
-                className="py-2 h-9 placeholder:text-gray-400"
+          <Form
+            className="flex items-center pb-3"
+            onFinish={handleSubmit}
+          >
+            <div className="flex items-center gap-2 ml-auto">
+              <Form.Item
+                className="!mb-0 flex-30"
+                name="customerName"
+                rules={[{ required: false }]}
+              >
+                <Input
+                  placeholder="Search customer name"
+                  allowClear
+                  onClear={handleClickClear}
+                  className="py-3 h-10 placeholder:text-gray-400"
+                />
+              </Form.Item>
+          
+              <Button
+                type="submit"
+                title=""
+                icon={<IoSearch />}
+                className="text-white bg-gray-500 rounded-md !py-3"
               />
-            </Form.Item>
-            <Button
-              type="submit"
-              title=""
-              icon={<IoSearch />}
-              className="text-white bg-gray-500 rounded-md !py-2"
-            />
+            </div>
           </Form>
           <Table
             bordered
