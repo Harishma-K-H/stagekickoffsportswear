@@ -328,33 +328,47 @@ const ModalDetails: React.FC<any> = ({
 
   return (
     <Modal
-      open={isModalOpen}
-      width={1000}
-      centered
-      onCancel={handleCancel}
-      footer={null}
-    >
-      <div ref={contentRef}>
-        <Invoice type="INVOICE" data={invoiceDetails} paid />
+  open={isModalOpen}
+  width={1000}
+  centered
+  onCancel={handleCancel}
+  footer={null}
+  title={null}
+  closable={false}
+  className="[&_.ant-modal-body]:p-0 [&_.ant-modal-content]:p-0"
+>
+  {/* Custom Header */}
+  <div className="w-full flex justify-end items-center bg-gray-600 px-3 py-2">
+    <div className="flex gap-2">
+      <div
+        className="bg-white p-2 rounded shadow cursor-pointer"
+        onClick={handleOfficePrint}
+      >
+        <FaPrint className="text-secondary" />
       </div>
-      <div className="flex justify-end gap-3">
-        <Button
-          handleClick={handleOfficePrint}
-          title="Print"
-          type="button"
-          icon={<FaPrint />}
-          className="text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2"
-        />
-        <Button
-          handleClick={handleDownload}
-          title="Download"
-          type="button"
-          icon={<FaDownload />}
-          className="text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2"
-        />
+      <div
+        className="bg-white p-2 rounded shadow cursor-pointer"
+        onClick={handleDownload}
+      >
+        <FaDownload className="text-secondary" />
       </div>
-    </Modal>
-  );
+    </div>
+  </div>
+
+  {/* Invoice Body */}
+  <div ref={contentRef} className="mt-3 pb-6 px-4">
+    <Invoice
+      type="INVOICE"
+      data={invoiceDetails}
+      paid
+      // downloadClicked={downloadClicked}
+      // printClicked={printClicked}
+    />
+  </div>
+</Modal>
+);
+    
+
 };
 
 export default Invoices;
