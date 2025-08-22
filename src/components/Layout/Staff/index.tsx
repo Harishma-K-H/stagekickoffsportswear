@@ -7,6 +7,7 @@ import { Outlet, useLocation } from 'react-router';
 
 import Header from '../BaseLayout/Header';
 import Sidebar from '../BaseLayout/Sidebar';
+// import Footer from '../footer';
 
 const StaffLayout: React.FC<{}> = () => {
   const { pathname } = useLocation();
@@ -84,6 +85,8 @@ const StaffLayout: React.FC<{}> = () => {
               <Outlet />
             </div>
           </main>
+            {/* Footer (always at bottom)
+        <Footer /> */}
         </div>
       </div>
     </div>
