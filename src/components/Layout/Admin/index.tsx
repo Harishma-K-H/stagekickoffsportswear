@@ -8,7 +8,7 @@ import { Outlet, useLocation } from 'react-router';
 
 import Header from '../BaseLayout/Header';
 import Sidebar from '../BaseLayout/Sidebar';
-
+import Footer from '../footer';
 const AdminLayout: React.FC<{}> = () => {
   const { pathname } = useLocation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -71,7 +71,7 @@ const AdminLayout: React.FC<{}> = () => {
     <div className="bg-[#F8FAFC]">
       <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <div className="flex overflow-hidden">
+      <div className="min-h-screen flex flex-col">
         <div className="border-r-2 fixed top-[73px] left-0 z-40 flex flex-col justify-between h-screen pt-24 duration-300 ease-linear translate-x-0 bg-white shadow-md lg:shadow-none lg:translate-x-0 lg:pt-0">
           <Sidebar
             isExpanded={isExpanded}
@@ -91,6 +91,7 @@ const AdminLayout: React.FC<{}> = () => {
               <Outlet />
             </div>
           </main>
+          <Footer/>
         </div>
       </div>
     </div>

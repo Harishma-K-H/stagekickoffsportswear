@@ -1,5 +1,4 @@
 import Layout from '@components/Layout/Staff/index';
-// import Footer from '@components/Layout/footer';
 import CustomerDetailsPage from '@pages/staff/customers/Details/Loadable';
 import Customers from '@pages/staff/customers/Loadable';
 import Dashboard from '@pages/staff/dashboard/Loadable';
