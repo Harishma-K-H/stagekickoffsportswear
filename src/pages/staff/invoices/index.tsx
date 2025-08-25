@@ -457,26 +457,28 @@ const ModalDetails: React.FC<ModalDetailsProps> = ({
   footer={null}
   title={null}
   closable={false}
-  className="[&_.ant-modal-body]:p-0 [&_.ant-modal-content]:p-0"
+      // className="[&_.ant-modal-body]:p-0 [&_.ant-modal-content]:p-0"
+  className="[&_.ant-modal-body]:p-0 [&_.ant-modal-content]:p-0 dark-mode-modal"
 >
   {/* Custom Header */}
-  <div className="w-full flex justify-end items-center bg-gray-600 px-3 py-2">
-    <div className="flex gap-2">
-      <div
-        className="bg-white p-2 rounded shadow cursor-pointer"
-        onClick={handleOfficePrint}
-      >
-        <FaPrint className="text-secondary" />
-      </div>
-      <div
-        className="bg-white p-2 rounded shadow cursor-pointer"
-        onClick={handleDownload}
-      >
-        <FaDownload className="text-secondary" />
-      </div>
+  <div className="w-full flex justify-end items-center bg-gray-200 px-3 py-2">
+  <div className="flex gap-2">
+    <div
+      className="flex items-center gap-2 bg-gray-900 text-white rounded-md py-2 px-3 shadow cursor-pointer"
+      onClick={handleOfficePrint}
+    >
+      <FaPrint />
+      <span>Invoice Print</span>
+    </div>
+    <div
+      className="flex items-center gap-2 bg-gray-900 text-white rounded-md py-2 px-3 shadow cursor-pointer"
+      onClick={handleDownload}
+    >
+      <FaDownload />
+      <span>Download</span>
     </div>
   </div>
-
+</div>
   {/* Invoice Body */}
   <div ref={contentRef} className="mt-3 pb-6 px-4">
     <Invoice

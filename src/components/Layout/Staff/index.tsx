@@ -85,6 +85,7 @@ const StaffLayout: React.FC<{}> = () => {
               <Outlet />
             </div>
           </main>
+          <Footer/>
         </div>
       </div>
     </div>

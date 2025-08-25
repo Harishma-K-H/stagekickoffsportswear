@@ -21,7 +21,7 @@ import { useSearchParams } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 
 import { fetchDeliveryOrders } from '../dashboard/api';
-import { orderById, orders, payment } from './api';
+import { orderById, orders, payment,updateInvoiceStatus } from './api';
 
 const Orders: React.FC = () => {
   const { get, post } = useApiJSON();
@@ -377,13 +377,19 @@ const ModalDetails: React.FC<any> = ({
   setIsModalOpen,
   modalId,
   setOrderId,
+  getOrderById,
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [printForOffice, setPrintForOffice] = useState<boolean>(false);
   const [printForOfficeInvoice, setPrintForOfficeInvoice] =
     useState<boolean>(false);
   const [downloadForOffice, setDownloadForOffice] = useState<boolean>(false);
-
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [downloadClicked, setDownloadClicked] = useState<boolean>(false);
+  const [invoiceActionType, setInvoiceActionType] = useState<
+      'print' | 'download' | null
+    >(null);
+  const { put } = useApiJSON();
   const handleDownload = useCallback(
     async (filesName?: string) => {
       const fileName = filesName
@@ -407,7 +413,11 @@ const ModalDetails: React.FC<any> = ({
       ? `Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}`
       : 'Order_Invoice', // Fallback if orderDetails is not yet set
   });
-
+//  const handleOfficeInvoicePrint = useCallback(() => {
+//     setInvoiceActionType('print');
+//     console.log('ddoooowwnnwwwwwwwwwwwwwlolol', setInvoiceActionType);
+//     setIsConfirmModalOpen(true);
+//   }, []);
   const handleCancel = useCallback(() => {
     setIsModalOpen(false);
     setOrderId(null); // Reset orderId when closing modal
@@ -448,77 +458,150 @@ const ModalDetails: React.FC<any> = ({
       setPrintForOfficeInvoice(false);
     }, 100);
   }, [orderDetails]);
+const onConfirmInvoiceAction = async () => {
+    try {
+      const invoiceStatus = orderDetails?.order_invoice?.toUpperCase().trim();
 
+      // ✅ Set status if not already PAID or GENERATED
+      if (
+        !invoiceStatus?.includes('PAID') &&
+        !invoiceStatus?.includes('GENERATED')
+      ) {
+        const statusToSet =
+          invoiceActionType === 'print' || invoiceActionType === 'download'
+            ? 'GENERATED'
+            : 'PENDING';
+
+        await updateInvoiceStatus(put, orderDetails?.id, statusToSet);
+        await getOrderById();
+      }
+
+      if (invoiceActionType === 'print') {
+        setPrintForOfficeInvoice(true);
+        setTimeout(() => {
+          reactToPrintFn();
+          // Resetting is handled by onAfterPrint
+        }, 100);
+      } else if (invoiceActionType === 'download') {
+        setDownloadClicked(true);
+
+        const fileName = orderDetails?.invoice_id
+          ? `Invoice_${orderDetails.invoice_id}_${dayjs().format('YYYYMMDD')}.pdf`
+          : 'Order_Invoice.pdf';
+
+        setTimeout(async () => {
+          await generatePDF({ contentRef, fileName });
+
+          // ✅ Reset the flags so it doesn't affect later prints
+          setPrintForOfficeInvoice(false);
+          setDownloadClicked(false); // ✅ IMPORTANT: reset to show ORDER form next time
+        }, 100);
+      }
+
+      setIsConfirmModalOpen(false);
+      setInvoiceActionType(null);
+    } catch (err) {
+      console.error('API Error during invoice print/download:', err);
+    }
+  };
   return (
-    <Modal
-      open={isModalOpen}
-      width={1000}
-      centered
-      onCancel={handleCancel}
-      footer={null}
-    >
-      {modalId === 1 && orderDetails && (
-        <>
-          <div ref={contentRef}>
-            {' '}
-            <Invoice
-              type={printForOfficeInvoice ? 'INVOICE' : 'ORDER'}
-              data={orderDetails}
-              printForOffice={printForOffice}
-              downloadForOffice={downloadForOffice}
-              printForOfficeInvoice={printForOfficeInvoice}
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              handleClick={reactToPrintFn}
-              title="Customer Print"
-              type="button"
-              icon={<FaPrint />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-            <Button
-              handleClick={() =>
-                handleDownload(
-                  `Order_${orderDetails?.orderID}_${dayjs().format('YYYYMMDD')}.pdf`,
-                )
-              }
-              title=""
-              type="button"
-              icon={<FaDownload />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-            <Button
-              handleClick={handleOfficePrint}
-              title="Office Print"
-              type="button"
-              icon={<FaPrint />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-            <Button
-              handleClick={handleOfficeDownload}
-              title=""
-              type="button"
-              icon={<FaDownload />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
+           <Modal
+  open={isModalOpen}
+  width={1000}
+  centered
+  onCancel={handleCancel}
+  footer={null}
+  title={null} // remove default title
+  closable={false} // remove default close icon
+  className="[&_.ant-modal-body]:p-0 [&_.ant-modal-content]:p-0 dark-mode-modal" // remove padding
+>
+  {modalId === 1 && orderDetails && (
+    <>
+      {/* 🔹 Top Gray Header with Buttons */}
+      <div className="w-full flex justify-end gap-2 flex-wrap bg-gray-200 px-3 py-3 rounded-t-md">
+        {/* Customer Print */}
+        <Button
+          handleClick={reactToPrintFn}
+          title="Customer Print"
+          type="button"
+          icon={<FaPrint />}
+          className={`text-white bg-blue-600 rounded-md !py-2 w-fit flex gap-2 items-center`}
+        />
+        {/* Customer Download */}
+        <Button
+          handleClick={() =>
+            handleDownload(
+              `Order_${orderDetails?.orderID}_${dayjs().format("YYYYMMDD")}.pdf`
+            )
+          }
+          title=""
+          type="button"
+          icon={<FaDownload />}
+          className={`text-white bg-blue-600 rounded-md !py-2 w-fit flex gap-2 items-center`}
+        />
+        {/* Office Print */}
+        <Button
+          handleClick={handleOfficePrint}
+          title="Office Print"
+          type="button"
+          icon={<FaPrint />}
+          className={`text-white bg-emerald-600 rounded-md !py-2 w-fit flex gap-2 items-center`}
+        />
+        {/* Office Download */}
+        <Button
+          handleClick={handleOfficeDownload}
+          title=""
+          type="button"
+          icon={<FaDownload />}
+          className={`text-white bg-emerald-600 rounded-md !py-2 w-fit flex gap-2 items-center`}
+        />
+        {/* Invoice Print */}
+        <Button
+          handleClick={handleOfficeInvoicePrint}
+          title="Invoice Print"
+          type="button"
+          icon={<FaPrint />}
+          className={`text-white bg-gray-900 rounded-md !py-2 w-fit flex gap-2 items-center`}
+        />
+        {/* Invoice Download */}
+        <Button
+          handleClick={handleOfficeInvoiceDownload}
+          title=""
+          type="button"
+          icon={<FaDownload />}
+          className={`text-white bg-gray-900 rounded-md !py-2 w-fit flex gap-2 items-center`}
+        />
+      </div>
 
-            <Button
-              handleClick={handleOfficeInvoicePrint}
-              title="Invoice Print"
-              type="button"
-              icon={<FaPrint />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-            <Button
-              handleClick={handleOfficeInvoiceDownload}
-              title=""
-              type="button"
-              icon={<FaDownload />}
-              className={`text-white bg-secondary rounded-md !py-2 w-fit flex gap-2 items-center mt-2`}
-            />
-          </div>
-        </>
+      {/* 🔹 Invoice Body */}
+      <div ref={contentRef} className="p-4">
+        <Invoice
+          type={
+            printForOfficeInvoice || downloadClicked ? "INVOICE" : "ORDER"
+          }
+          data={orderDetails}
+          printForOffice={printForOffice}
+          downloadForOffice={downloadForOffice}
+          printForOfficeInvoice={printForOfficeInvoice}
+          // downloadClicked={downloadClicked}
+        />
+      </div>
+
+      {/* Confirm Modal */}
+      <Modal
+        title="Confirm Invoice Action"
+        open={isConfirmModalOpen}
+        onOk={onConfirmInvoiceAction}
+        onCancel={() => {
+          setIsConfirmModalOpen(false);
+          setInvoiceActionType(null);
+        }}
+        okText={`Yes, ${invoiceActionType === "print" ? "Print" : "Download"}`}
+        cancelText="Cancel"
+      >
+        <p>Are you sure you want to {invoiceActionType} the invoice?</p>
+      </Modal>
+    </>
       )}
 
       {modalId === 2 && orderDetails && (
