@@ -8,7 +8,7 @@ import { Outlet, useLocation } from 'react-router';
 
 import Header from '../BaseLayout/Header';
 import Sidebar from '../BaseLayout/Sidebar';
-import Footer from '../footer';
+import Footer from "../BaseLayout/Footer"
 const AdminLayout: React.FC<{}> = () => {
   const { pathname } = useLocation();
   const containerRef = useRef<HTMLDivElement>(null);

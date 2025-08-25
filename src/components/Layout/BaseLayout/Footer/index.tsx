@@ -45,11 +45,11 @@ const Footer: React.FC = () => {
         <div className="px-6 py-6 space-y-4 text-gray-700 text-sm">
            <p className="flex items-center gap-2">
             <FontAwesomeIcon icon={faPhone} className="text-slate-600" />
-            <span className="font-semibold">Phone:</span> 0484-1234567
+            <span className="font-semibold"></span> 0484-1234567
           </p>
           <p className="flex items-center gap-2">
             <FontAwesomeIcon icon={faWhatsapp} className="text-green-600" />
-            <span className="font-semibold">WhatsApp:</span>{" "}
+            <span className="font-semibold"></span>{" "}
             <a
               href="https://wa.me/919876543210"
               target="_blank"
@@ -60,7 +60,7 @@ const Footer: React.FC = () => {
             </a>
           </p> 
           <p className="flex items-center gap-2">
-            <span className="font-semibold">✉ Email:</span>{" "}
+            <span className="font-semibold">✉ </span>{" "}
             <a
               href="mailto:support@signroots.com"
               className="text-blue-600 hover:underline"

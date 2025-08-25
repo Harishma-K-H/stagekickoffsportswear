@@ -7,7 +7,7 @@ import { Outlet, useLocation } from 'react-router';
 
 import Header from '../BaseLayout/Header';
 import Sidebar from '../BaseLayout/Sidebar';
-import Footer from '../footer';
+import Footer from "../BaseLayout/Footer"
 
 const StaffLayout: React.FC<{}> = () => {
   const { pathname } = useLocation();
