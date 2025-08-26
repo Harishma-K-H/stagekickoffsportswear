@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Modal } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import { faPhone } from "@fortawesome/free-solid-svg-icons";
+import { faPhone,faEnvelope  } from "@fortawesome/free-solid-svg-icons";
 
 const Footer: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,33 +42,39 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Body */}
-        <div className="px-6 py-6 space-y-4 text-gray-700 text-sm">
-           <p className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faPhone} className="text-slate-600" />
-            <span className="font-semibold"></span> 0484-1234567
-          </p>
-          <p className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faWhatsapp} className="text-green-600" />
-            <span className="font-semibold"></span>{" "}
-            <a
-              href="https://wa.me/919876543210"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              +91 98765 43210
-            </a>
-          </p> 
-          <p className="flex items-center gap-2">
-            <span className="font-semibold">✉ </span>{" "}
-            <a
-              href="mailto:support@signroots.com"
-              className="text-blue-600 hover:underline"
-            >
-              support@signroots.com
-            </a>
-          </p>
-        </div>
+
+<div className="px-6 py-6 space-y-4 text-gray-700">
+  {/* Phone */}
+  <p className="flex items-center gap-3">
+    <FontAwesomeIcon icon={faPhone} className="text-slate-600 w-5 h-5" />
+    <span className="text-base">04885 211331</span>
+  </p>
+
+  {/* WhatsApp */}
+  <p className="flex items-center gap-3">
+    <FontAwesomeIcon icon={faWhatsapp} className="text-green-600 w-5 h-5" />
+    <a
+      href="https://wa.me/919447232332"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:underline text-base"
+    >
+      +91 9447232332
+    </a>
+  </p>
+
+  {/* Email */}
+  <p className="flex items-center gap-3">
+    <FontAwesomeIcon icon={faEnvelope} className="text-slate-600 w-5 h-5" />
+    <a
+      href="mailto:support@signroots.com"
+      className="text-blue-600 hover:underline text-base"
+    >
+      support@signroots.com
+    </a>
+  </p>
+</div>
+
       </Modal>
     </>
   );
