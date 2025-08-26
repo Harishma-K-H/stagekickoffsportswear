@@ -222,6 +222,12 @@ const Invoice: React.FC<{
               </>
             )}
 
+            {customer?.address3 && (
+              <>
+                {customer.address3} <br />
+              </>
+            )}
+
             {customer?.mobile_number1 && (
               <>
                 {customer.mobile_number1} <br />
