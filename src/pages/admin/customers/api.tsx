@@ -18,3 +18,17 @@ export const updateCustomer = async (
 ) => {
   return await put(`/customers/${customerId}/`, payload);
 };
+// Define the get states list function
+export const fetchStates = async (
+  get: (url: string) => Promise<any>,
+): Promise<any> => {
+  const response = await get('/state_list/');
+
+  return { data: response.data, status: response.status, ok: response.ok };
+};
+export const createCustomer = async (
+  post: (url: string, data: any) => Promise<any>,
+  payload: any,
+) => {
+  return await post('/customers/', payload);
+};

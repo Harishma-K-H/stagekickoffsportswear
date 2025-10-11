@@ -3,31 +3,66 @@ import { notify } from '@components/Common/Toastify';
 import { faFilePen } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useApiJSON } from '@services/ApiService/Api.service';
-import { capitalizeFirstLetterOfEachWord } from '@utils/common/capitalizeFirstLetter';
-import { Form, Input, Modal, Pagination, Table,Select } from 'antd';
+import { Form, Input, Modal, Pagination, Table, Select } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
+import { fetchStates } from "./api";
+import { getCustomers, updateCustomer,createCustomer } from './api';
 
-import { getCustomers, updateCustomer } from './api';
+// Define Customer interface
+interface Customer {
+  id: number;
+  business_name: string;
+  mobile_number1: string;
+  mobile_number2?: string;
+  address1: string;
+  address2: string;
+  address3?: string;
+  state_name?: string;
+  state?: string;
+  pincode?: string;
+  email?: string;
+  gst_no?: string;
+}
 
 const Customers: React.FC = () => {
-  const { get, put } = useApiJSON();
+  const { get, put,post } = useApiJSON();
 
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
+  const [form] = Form.useForm();
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
+    const [states, setStates] = useState<{ id: number; name: string }[]>([]);
   const [pageSize, setPageSize] = useState<number>(25);
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
     hasNextPage: false,
-    pageNumber,
-    pageSize,
+    pageNumber: 1,
+    pageSize: 20,
   });
+ const handleAddCustomerClick = () => {
+  form.resetFields(); // Clear old form values
+  setSelectedCustomer(null); // Make sure no customer is selected
+  setAddModalOpen(true); // Open the modal
+};
 
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-  const [form] = Form.useForm();
+
+  const handleSubmit = (values: { customerName: string }) => {
+    if (values?.customerName !== '') {
+      fetchCustomers(values.customerName);
+    }
+  };
+
+  const handleClickClear = () => {
+    fetchCustomers();
+  };
 
   const fetchCustomers = useCallback(
     async (searchText: string = '') => {
@@ -52,64 +87,26 @@ const Customers: React.FC = () => {
     },
     [get, pageNumber, pageSize],
   );
+  useEffect(() => {
+    const getStates = async () => {
+      try {
+        const { data } = await fetchStates(get);
+        setStates(data); // Assuming `data` is an array of state names or objects
+      } catch (error) {
+        notify('Failed to fetch states', 'error');
+      }
+    };
 
-  const handleSubmit = (values: any) => {
-    fetchCustomers(values?.customerName);
-  };
-
-  const handleClickClear = () => {
-    fetchCustomers();
-  };
-
-  const handleEditCustomer = (customerId: number) => {
-    const customer = customers.find((c) => c.id === customerId);
-    if (!customer) return;
-    setSelectedCustomer(customer);
-    form.setFieldsValue({
-      // name: customer.name,
-      business_name: customer.business_name,
-      mobile_number1: customer.mobile_number1,
-      mobile_number2: customer.mobile_number2,
-      address1: customer.address1,
-      address2: customer.address2,
-      address3:customer.address3,
-      email: customer.email,
-      state_name: customer.state_name,
-      gst_no: customer.gst_no,
-      
-    });
-    setEditModalOpen(true);
-  };
-
-  const handleUpdateCustomer = async (values: any) => {
-    try {
-      await updateCustomer(put, selectedCustomer.id, values);
-      notify('Customer updated successfully', 'success');
-      fetchCustomers();
-      setEditModalOpen(false);
-    } catch (error) {
-      notify('Failed to update customer', 'error');
-    }
-  };
-
-  // const handlePageChange = useCallback((page: number) => {
-  //   setPageNumber(page);
-  // }, []);
-
-  // const onShowSizeChange = useCallback((_current: number, size: number) => {
-  //   setPageSize(size);
-  //   setPageNumber(1);
-  // }, []);
-
-  const tableDataSource = customers?.map((customer: any, index: number) => ({
+    getStates();
+  }, [get]);
+  const tableDataSource = customers.map((customer, index) => ({
     key: customer.id,
     slNo: (pageNumber - 1) * pageSize + index + 1,
-    name: capitalizeFirstLetterOfEachWord(customer.name),
-    businessName: capitalizeFirstLetterOfEachWord(customer.business_name),
-    mobile: `${customer?.mobile_number1}${customer?.mobile_number2 ? `, ${customer?.mobile_number2}` : ''}`,
-    address: `${customer?.address1 || ''} ${customer?.address2 || ''} ${customer?.address3 || ''}`,
-    email: customer?.email || '-',
-    gstn: customer?.gst_no || '-',
+    businessName: customer.business_name.toUpperCase(),
+    mobile: `${customer.mobile_number1}${customer.mobile_number2 ? `, ${customer.mobile_number2}` : ''}`,
+    address: `${customer.address1} ${customer.address2} ${customer.address3}`,
+    email: customer.email || '-',
+    gstn: customer.gst_no || '-',
     pincode: customer.pincode || '-',
   }));
 
@@ -125,10 +122,10 @@ const Customers: React.FC = () => {
       key: 'businessName',
       render: (_: any, record: any) => (
         <a
-          href={`/admin/customers/${record.key}/details`}
+          href={`/branch/customers/${record.key}/details`}
           className="text-blue-600 hover:underline"
         >
-          <strong>{record.businessName.toUpperCase()}</strong>
+          <strong>{record.businessName}</strong>
         </a>
       ),
     },
@@ -176,6 +173,49 @@ const Customers: React.FC = () => {
     },
   ];
 
+  const handleEditCustomer = (customerId: number) => {
+    const customer = customers.find((c) => c.id === customerId);
+    if (!customer) return;
+    setSelectedCustomer(customer);
+    form.setFieldsValue({
+      business_name: customer.business_name,
+      mobile_number1: customer.mobile_number1,
+      mobile_number2: customer.mobile_number2,
+      address1: customer.address1,
+      address2: customer.address2,
+      address3: customer.address3,
+      email: customer.email,
+      state: {
+      label: customer.state_name || '', // e.g., "KARNATAKA"
+      value: customer.state,            // e.g., 20
+    },
+  
+      pincode: customer.pincode,
+      gstn: customer.gst_no,
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateCustomer = async (values: any) => {
+  if (!selectedCustomer) return;
+
+  const payload = {
+    ...values,
+    name: values.business_name, 
+    state: values.state?.value, // ✅ Extract just the state ID
+  };
+
+  try {
+    await updateCustomer(put, selectedCustomer.id, payload);
+    notify('Customer updated successfully', 'success');
+    fetchCustomers();
+    setEditModalOpen(false);
+  } catch (error) {
+    notify('Failed to update customer', 'error');
+  }
+};
+
+
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
@@ -183,41 +223,51 @@ const Customers: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>KICKOFF SPORTS WEAR - Customers</title>
+        <title>KICKOFF SPORTS WEAR - Customers </title>
       </Helmet>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between pb-2 border-b-2">
           <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
             Customers
           </h3>
+          
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
-          <Form
-            className="flex items-center pb-3"
-            onFinish={handleSubmit}
-          >
-            <div className="flex items-center gap-2 ml-auto">
-              <Form.Item
-                className="!mb-0 flex-1"
-                name="customerName"
-                rules={[{ required: false }]}
-              >
-                <Input
-                  placeholder="Search customer name"
-                  allowClear
-                  onClear={handleClickClear}
-                  className="w-64 h-11 px-3 placeholder:text-gray-400"
-                />
-              </Form.Item>
-          
-              <Button
-                type="submit"
-                title=""
-                icon={<IoSearch className="text-xl" />}
-                className="text-white bg-gray-500 rounded-md !py-3"
+           <Form
+                      className="flex items-center pb-3"
+                      onFinish={handleSubmit}
+                    >
+                      <div className="flex items-center gap-2 ml-auto">
+                        <Form.Item
+                          className="!mb-0 flex-1"
+                          name="customerName"
+                          rules={[{ required: false }]}
+                        >
+                          <Input
+                            placeholder="Search customer name"
+                            allowClear
+                            onClear={handleClickClear}
+                            className="w-64 h-11 px-3 placeholder:text-gray-400"
+                          />
+                        </Form.Item>
+                    
+                        <Button
+                          type="submit"
+                          title=""
+                          icon={<IoSearch className="text-xl" />}
+                          className="text-white bg-gray-500 rounded-md !py-3"
               />
-            </div>
-          </Form>
+ <Button
+  type="button"
+  title="New"
+  className="px-[15px] py-3 transition-all text-white bg-[#D92D20] hover:bg-[#B42318] rounded-md invisible xl:visible"
+  handleClick={handleAddCustomerClick}
+/>
+
+
+                      </div>
+                    </Form>
+          {/* Table */}
           <Table
             bordered
             dataSource={tableDataSource}
@@ -225,7 +275,8 @@ const Customers: React.FC = () => {
             pagination={false}
             scroll={{ x: '700' }}
           />
-           {/* Custom Pagination + PageSize */}
+
+          {/* Custom Pagination + PageSize */}
           <div className="mt-4 w-full flex items-center justify-end gap-2">
             
             <Pagination
@@ -262,6 +313,119 @@ const Customers: React.FC = () => {
           </div>
         </div>
       </div>
+      <Modal
+  title={
+    <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
+      Add New Customer
+    </h2>
+  }
+  open={addModalOpen}
+  onCancel={() => setAddModalOpen(false)}
+  footer={null}
+  width={700}
+>
+  <Form
+    form={form}
+    layout="vertical"
+    onFinish={async (values) => {
+      try {
+        const payload = {
+          ...values,
+          name: values.business_name,
+          state: values.state?.value,
+
+        };
+        // You'll need a createCustomer API function
+        await createCustomer(post, payload);
+        notify('Customer added successfully', 'success');
+        fetchCustomers();
+        setAddModalOpen(false);
+        form.resetFields();
+      } catch (err) {
+        notify('Failed to add customer', 'error');
+      }
+    }}
+  >
+    <Form.Item name="business_name" label="Business Name" rules={[{ required: true }]}>
+      <Input />
+    </Form.Item>
+    <Form.Item name="address1" label="Address 1" rules={[{ required: true }]}>
+      <Input />
+    </Form.Item>
+    <Form.Item name="address2" label="Address 2">
+      <Input />
+    </Form.Item>
+    <Form.Item name="address3" label="Address 3">
+      <Input />
+    </Form.Item>
+    <Form.Item name="state" label="State" rules={[{ required: true }]}>
+      <Select
+        placeholder="Select a State"
+        showSearch
+        labelInValue
+        optionFilterProp="children"
+        className="w-full"
+      >
+        {states.map((state) => (
+          <Select.Option key={state.id} value={state.id}>
+            {state.name}
+          </Select.Option>
+        ))}
+      </Select>
+    </Form.Item>
+    <Form.Item name="pincode" label="Pincode">
+      <Input />
+    </Form.Item>
+   <Form.Item
+  name="mobile_number1"
+  label="Mobile Number 1"
+  rules={[
+    {
+      pattern: /^\d{10}$/,
+      message: 'Mobile number must be exactly 10 digits',
+    },
+  ]}
+>
+  <Input maxLength={10} />
+</Form.Item>
+
+   <Form.Item
+  name="mobile_number2"
+  label="Mobile Number 2"
+  rules={[
+    {
+      pattern: /^\d{10}$/,
+      message: 'Mobile number must be exactly 10 digits',
+    },
+  ]}
+>
+  <Input maxLength={10} />
+</Form.Item>
+
+    <Form.Item
+  name="email"
+  label="Email"
+  rules={[
+    {
+      type: 'email',
+      message: 'Please enter a valid email address',
+    },
+  ]}
+>
+  <Input />
+</Form.Item>
+
+    <Form.Item name="gstn" label="GSTN">
+      <Input />
+    </Form.Item>
+    <Button
+      title="Create Customer"
+      type="submit"
+      className="text-white bg-blue-600 mt-3"
+    />
+  </Form>
+</Modal>
+
 
       {/* Edit Modal */}
       <Modal
@@ -276,88 +440,48 @@ const Customers: React.FC = () => {
         width={700}
       >
         <Form form={form} layout="vertical" onFinish={handleUpdateCustomer}>
-          <Form.Item
-            name="business_name"
-            label={<span style={{ fontWeight: 'bold' }}>Business Name</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="business_name" label="Business Name">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="address1"
-            label={<span style={{ fontWeight: 'bold' }}>Address 1</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="address1" label="Address 1">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="address2"
-            label={<span style={{ fontWeight: 'bold' }}>Address 2</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="address2" label="Address 2">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="address3"
-            label={<span style={{ fontWeight: 'bold' }}>Address 3</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="address3" label="Address 3">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="state_name"
-            label={<span style={{ fontWeight: 'bold' }}>State</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+     <Form.Item name="state" label="State">
+  <Select
+    placeholder="Select a State"
+    showSearch
+    labelInValue
+    className="w-full"
+    optionFilterProp="children"
+  >
+    {states.map((state) => (
+      <Select.Option key={state.id} value={state.id}>
+        {state.name}
+      </Select.Option>
+    ))}
+  </Select>
+</Form.Item>
+          <Form.Item name="pincode" label="Pincode">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="pincode"
-            label={<span style={{ fontWeight: 'bold' }}>Pincode</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="mobile_number1" label="Mobile Number 1">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="mobile_number1"
-            label={<span style={{ fontWeight: 'bold' }}>Mobile Number 1</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="mobile_number2" label="Mobile Number 2">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="mobile_number2"
-            label={<span style={{ fontWeight: 'bold' }}>Mobile Number 2</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="email" label="Email">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="email"
-            label={<span style={{ fontWeight: 'bold' }}>Email</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
+          <Form.Item name="gstn" label="GSTN">
+            <Input />
           </Form.Item>
-
-          <Form.Item
-            name="gst_no"
-            label={<span style={{ fontWeight: 'bold' }}>GSTN</span>}
-          >
-            <Input
-              style={{ width: '100%', maxWidth: '600px', height: '36px' }}
-            />
-          </Form.Item>
-
           <Button
             title="Update Customer"
             type="submit"
