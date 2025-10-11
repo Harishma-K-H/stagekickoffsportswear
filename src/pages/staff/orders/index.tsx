@@ -683,9 +683,9 @@ const ModalDetails: React.FC<any> = ({
 
   {modalId === 2 && orderDetails && (
     <>
-      <h3 className="mb-3 text-xl font-semibold">
+      {/* <h3 className="mb-3 text-xl font-semibold">
         Customer Details - {orderDetails?.orderID}
-      </h3>
+      </h3> */}
       <div className="p-4 mb-3 bg-gray-200 rounded-md">
         <div className="grid grid-cols-1 gap-x-3 gap-y-1 md:grid-cols-2">
           <div>

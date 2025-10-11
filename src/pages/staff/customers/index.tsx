@@ -7,8 +7,8 @@ import { Form, Input, Modal, Pagination, Table, Select } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
-
-import { getCustomers, updateCustomer } from './api';
+import { fetchStates } from "../orders/new/api";
+import { getCustomers, updateCustomer,createCustomer } from './api';
 
 // Define Customer interface
 interface Customer {
@@ -20,21 +20,25 @@ interface Customer {
   address2: string;
   address3?: string;
   state_name?: string;
+  state?: string;
   pincode?: string;
   email?: string;
   gst_no?: string;
 }
 
 const Customers: React.FC = () => {
-  const { get, put } = useApiJSON();
+  const { get, put,post } = useApiJSON();
 
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
   const [form] = Form.useForm();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
+    const [states, setStates] = useState<{ id: number; name: string }[]>([]);
   const [pageSize, setPageSize] = useState<number>(25);
   const [paginationData, setPaginationData] = useState({
     count: 0,
@@ -43,6 +47,12 @@ const Customers: React.FC = () => {
     pageNumber: 1,
     pageSize: 20,
   });
+ const handleAddCustomerClick = () => {
+  form.resetFields(); // Clear old form values
+  setSelectedCustomer(null); // Make sure no customer is selected
+  setAddModalOpen(true); // Open the modal
+};
+
 
   const handleSubmit = (values: { customerName: string }) => {
     if (values?.customerName !== '') {
@@ -77,7 +87,18 @@ const Customers: React.FC = () => {
     },
     [get, pageNumber, pageSize],
   );
+  useEffect(() => {
+    const getStates = async () => {
+      try {
+        const { data } = await fetchStates(get);
+        setStates(data); // Assuming `data` is an array of state names or objects
+      } catch (error) {
+        notify('Failed to fetch states', 'error');
+      }
+    };
 
+    getStates();
+  }, [get]);
   const tableDataSource = customers.map((customer, index) => ({
     key: customer.id,
     slNo: (pageNumber - 1) * pageSize + index + 1,
@@ -164,7 +185,11 @@ const Customers: React.FC = () => {
       address2: customer.address2,
       address3: customer.address3,
       email: customer.email,
-      state_name: customer.state_name,
+      state: {
+      label: customer.state_name || '', // e.g., "KARNATAKA"
+      value: customer.state,            // e.g., 20
+    },
+  
       pincode: customer.pincode,
       gstn: customer.gst_no,
     });
@@ -172,16 +197,24 @@ const Customers: React.FC = () => {
   };
 
   const handleUpdateCustomer = async (values: any) => {
-    if (!selectedCustomer) return;
-    try {
-      await updateCustomer(put, selectedCustomer.id, values);
-      notify('Customer updated successfully', 'success');
-      fetchCustomers();
-      setEditModalOpen(false);
-    } catch (error) {
-      notify('Failed to update customer', 'error');
-    }
+  if (!selectedCustomer) return;
+
+  const payload = {
+    ...values,
+    name: values.business_name, 
+    state: values.state?.value, // ✅ Extract just the state ID
   };
+
+  try {
+    await updateCustomer(put, selectedCustomer.id, payload);
+    notify('Customer updated successfully', 'success');
+    fetchCustomers();
+    setEditModalOpen(false);
+  } catch (error) {
+    notify('Failed to update customer', 'error');
+  }
+};
+
 
   useEffect(() => {
     fetchCustomers();
@@ -197,6 +230,7 @@ const Customers: React.FC = () => {
           <h3 className="text-2xl md:text-3xl font-bold text-[#191D23]">
             Customers
           </h3>
+          
         </div>
         <div className="p-3 bg-white md:p-5 custom-table">
            <Form
@@ -222,7 +256,15 @@ const Customers: React.FC = () => {
                           title=""
                           icon={<IoSearch className="text-xl" />}
                           className="text-white bg-gray-500 rounded-md !py-3"
-                        />
+              />
+ <Button
+  type="button"
+  title="New"
+  className="px-[15px] py-3 transition-all text-white bg-[#D92D20] hover:bg-[#B42318] rounded-md invisible xl:visible"
+  handleClick={handleAddCustomerClick}
+/>
+
+
                       </div>
                     </Form>
           {/* Table */}
@@ -271,6 +313,119 @@ const Customers: React.FC = () => {
           </div>
         </div>
       </div>
+      <Modal
+  title={
+    <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
+      Add New Customer
+    </h2>
+  }
+  open={addModalOpen}
+  onCancel={() => setAddModalOpen(false)}
+  footer={null}
+  width={700}
+>
+  <Form
+    form={form}
+    layout="vertical"
+    onFinish={async (values) => {
+      try {
+        const payload = {
+          ...values,
+          name: values.business_name,
+          state: values.state?.value,
+
+        };
+        // You'll need a createCustomer API function
+        await createCustomer(post, payload);
+        notify('Customer added successfully', 'success');
+        fetchCustomers();
+        setAddModalOpen(false);
+        form.resetFields();
+      } catch (err) {
+        notify('Failed to add customer', 'error');
+      }
+    }}
+  >
+    <Form.Item name="business_name" label="Business Name" rules={[{ required: true }]}>
+      <Input />
+    </Form.Item>
+    <Form.Item name="address1" label="Address 1" rules={[{ required: true }]}>
+      <Input />
+    </Form.Item>
+    <Form.Item name="address2" label="Address 2">
+      <Input />
+    </Form.Item>
+    <Form.Item name="address3" label="Address 3">
+      <Input />
+    </Form.Item>
+    <Form.Item name="state" label="State" rules={[{ required: true }]}>
+      <Select
+        placeholder="Select a State"
+        showSearch
+        labelInValue
+        optionFilterProp="children"
+        className="w-full"
+      >
+        {states.map((state) => (
+          <Select.Option key={state.id} value={state.id}>
+            {state.name}
+          </Select.Option>
+        ))}
+      </Select>
+    </Form.Item>
+    <Form.Item name="pincode" label="Pincode">
+      <Input />
+    </Form.Item>
+   <Form.Item
+  name="mobile_number1"
+  label="Mobile Number 1"
+  rules={[
+    {
+      pattern: /^\d{10}$/,
+      message: 'Mobile number must be exactly 10 digits',
+    },
+  ]}
+>
+  <Input maxLength={10} />
+</Form.Item>
+
+   <Form.Item
+  name="mobile_number2"
+  label="Mobile Number 2"
+  rules={[
+    {
+      pattern: /^\d{10}$/,
+      message: 'Mobile number must be exactly 10 digits',
+    },
+  ]}
+>
+  <Input maxLength={10} />
+</Form.Item>
+
+    <Form.Item
+  name="email"
+  label="Email"
+  rules={[
+    {
+      type: 'email',
+      message: 'Please enter a valid email address',
+    },
+  ]}
+>
+  <Input />
+</Form.Item>
+
+    <Form.Item name="gstn" label="GSTN">
+      <Input />
+    </Form.Item>
+    <Button
+      title="Create Customer"
+      type="submit"
+      className="text-white bg-blue-600 mt-3"
+    />
+  </Form>
+</Modal>
+
 
       {/* Edit Modal */}
       <Modal
@@ -297,9 +452,21 @@ const Customers: React.FC = () => {
           <Form.Item name="address3" label="Address 3">
             <Input />
           </Form.Item>
-          <Form.Item name="state_name" label="State">
-            <Input />
-          </Form.Item>
+     <Form.Item name="state" label="State">
+  <Select
+    placeholder="Select a State"
+    showSearch
+    labelInValue
+    className="w-full"
+    optionFilterProp="children"
+  >
+    {states.map((state) => (
+      <Select.Option key={state.id} value={state.id}>
+        {state.name}
+      </Select.Option>
+    ))}
+  </Select>
+</Form.Item>
           <Form.Item name="pincode" label="Pincode">
             <Input />
           </Form.Item>

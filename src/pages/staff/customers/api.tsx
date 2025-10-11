@@ -18,3 +18,10 @@ export const updateCustomer = async (
 ) => {
   return await put(`/customers/${customerId}/`, payload);
 };
+// Create a new customer
+export const createCustomer = async (
+  post: (url: string, data: any) => Promise<any>,
+  payload: any,
+) => {
+  return await post('/customers/', payload);
+};
