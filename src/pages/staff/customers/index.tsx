@@ -9,7 +9,7 @@ import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
 import { fetchStates } from "../orders/new/api";
 import { getCustomers, updateCustomer,createCustomer } from './api';
-
+import { fetchBranches } from '@pages/admin/items/api';
 // Define Customer interface
 interface Customer {
   id: number;
@@ -32,6 +32,8 @@ const Customers: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
 
+  const [branches, setBranches] = useState([]);
+
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
@@ -53,7 +55,13 @@ const Customers: React.FC = () => {
   setAddModalOpen(true); // Open the modal
 };
 
-
+useEffect(() => {
+  const loadBranches = async () => {
+    const res = await fetchBranches(get);
+    setBranches(res.data);
+  };
+  loadBranches();
+}, []);
   const handleSubmit = (values: { customerName: string }) => {
     if (values?.customerName !== '') {
       fetchCustomers(values.customerName);
@@ -203,6 +211,7 @@ const Customers: React.FC = () => {
     ...values,
     name: values.business_name, 
     state: values.state?.value, // ✅ Extract just the state ID
+    branch_id: values.branch,
   };
 
   try {
@@ -346,6 +355,21 @@ const Customers: React.FC = () => {
       }
     }}
   >
+ {/* <Form.Item
+  name="branch_id"
+  label="Branch"
+  rules={[{ required: true, message: "Please select a branch" }]}
+>
+  <Select placeholder="Select a Branch" className="w-full">
+    {branches.map((branch: any) => (
+      <Select.Option key={branch.id} value={branch.id}>
+        {branch.name}
+      </Select.Option>
+    ))}
+  </Select>
+</Form.Item> */}
+
+
     <Form.Item name="business_name" label="Business Name" rules={[{ required: true }]}>
       <Input />
     </Form.Item>
@@ -383,6 +407,8 @@ const Customers: React.FC = () => {
     {
       pattern: /^\d{10}$/,
       message: 'Mobile number must be exactly 10 digits',
+      required:true
+      
     },
   ]}
 >

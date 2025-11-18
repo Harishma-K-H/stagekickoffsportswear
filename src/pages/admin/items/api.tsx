@@ -12,6 +12,24 @@ export const items = async (
 
   return { data: response.data, status: response.status, ok: response.ok };
 };
+// export const items = async (
+//   get: (url: string) => Promise<any>,
+//   pageNumber: number,
+//   pageSize: number,
+//   branchId: any,
+//   modelId: any,
+// ): Promise<any> => {
+
+//   let url = `/api_item/?branch_search=${branchId}&model_search=${modelId}`;
+
+//   // Only add pagination when both filters empty
+//   if (!branchId && !modelId) {
+//     url += `&pageNumber=${pageNumber}&pageSize=${pageSize}`;
+//   }
+
+//   const response = await get(url);
+//   return { data: response.data, status: response.status, ok: response.ok };
+// };
 
 // Define the get branches function
 export const fetchBranches = async (

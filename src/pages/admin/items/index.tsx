@@ -78,6 +78,7 @@ const Items: React.FC = () => {
   const [paginationData, setPaginationData] = useState({
     count: 0,
     hasPreviousPage: false,
+    totalPages: 0,
     hasNextPage: false,
     pageNumber: pageNumber,
     pageSize: pageSize,
@@ -132,6 +133,7 @@ const Items: React.FC = () => {
       message.error('An error occurred while updating status');
     }
   };
+
 
   // const toBoolean = (val: any) => {
   //   if (typeof val === 'boolean') return val;
@@ -656,6 +658,7 @@ const Items: React.FC = () => {
           hasNextPage: data?.hasNextPage,
           pageNumber: data?.pageNumber,
           pageSize: data?.pageSize,
+           totalPages: data?.totalPages
         });
 
         // Set the new item ID if provided
@@ -759,6 +762,8 @@ const Items: React.FC = () => {
                     setSelectedBranch(
                       option as { value: string; label: string },
                     );
+                     // RESET PAGE WHEN FILTER CHANGES ✔️
+                    setPageNumber(1);
                     if (option.value === '') {
                       editItemForm.setFieldValue('branch', null);
                     } else {
@@ -790,6 +795,8 @@ const Items: React.FC = () => {
                     setSelectedModel(
                       option as { value: string; label: string },
                     );
+                     // RESET PAGE WHEN FILTER CHANGES ✔️
+                    setPageNumber(1);
                     if (option.value === '') {
                       editItemForm.setFieldValue('models', null);
                     } else {
@@ -844,7 +851,9 @@ const Items: React.FC = () => {
                       <Pagination
                         current={pageNumber}
                         pageSize={pageSize}
-                        total={paginationData.count}
+                        // total={paginationData.count}
+
+                        total={paginationData.totalPages * pageSize}
                         onChange={(page) => setPageNumber(page)}
                         showSizeChanger={false} // we hide default changer
             />
