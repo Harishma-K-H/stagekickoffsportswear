@@ -8,6 +8,8 @@
     "start:dev": "vite --mode dev",
     "build": "tsc && vite build --mode prod",
     "build:staging": "tsc && vite build --mode dev",
+    "start:stage": "vite --mode stage",
+    "build:stage": "tsc && vite build --mode stage",
     "lint": "eslint \"src/**/*.{js,ts,tsx}\" --report-unused-disable-directives --max-warnings=-1",
     "lint:ci": "eslint \"src/**/*.{js,ts,tsx}\" --report-unused-disable-directives",
     "lint:fix": "eslint \"src/**/*.{js,ts,tsx}\" --fix --max-warnings=-1",

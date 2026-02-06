@@ -9,7 +9,7 @@ import { Helmet } from 'react-helmet';
 import { IoSearch } from 'react-icons/io5';
 import { fetchStates } from "../orders/new/api";
 import { getCustomers, updateCustomer,createCustomer } from './api';
-import { fetchBranches } from '@pages/admin/items/api';
+// import { fetchBranches } from '@pages/admin/items/api';
 // Define Customer interface
 interface Customer {
   id: number;
@@ -32,7 +32,7 @@ const Customers: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
 
-  const [branches, setBranches] = useState([]);
+  // const [branches, setBranches] = useState([]);
 
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
@@ -55,13 +55,13 @@ const Customers: React.FC = () => {
   setAddModalOpen(true); // Open the modal
 };
 
-useEffect(() => {
-  const loadBranches = async () => {
-    const res = await fetchBranches(get);
-    setBranches(res.data);
-  };
-  loadBranches();
-}, []);
+// useEffect(() => {
+//   const loadBranches = async () => {
+//     const res = await fetchBranches(get);
+//     setBranches(res.data);
+//   };
+//   loadBranches();
+// }, []);
   const handleSubmit = (values: { customerName: string }) => {
     if (values?.customerName !== '') {
       fetchCustomers(values.customerName);
@@ -112,7 +112,9 @@ useEffect(() => {
     slNo: (pageNumber - 1) * pageSize + index + 1,
     businessName: customer.business_name.toUpperCase(),
     mobile: `${customer.mobile_number1}${customer.mobile_number2 ? `, ${customer.mobile_number2}` : ''}`,
-    address: `${customer.address1} ${customer.address2} ${customer.address3}`,
+    address: [customer.address1, customer.address2, customer.address3]
+    .filter(Boolean)
+    .join(' '),
     email: customer.email || '-',
     gstn: customer.gst_no || '-',
     pincode: customer.pincode || '-',
